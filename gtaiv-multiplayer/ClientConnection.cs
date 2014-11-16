@@ -9,7 +9,7 @@ using System.Net.Sockets;
 
 namespace gtaiv_multiplayer
 {
-    class ClientConnection
+    public class ClientConnection
     {
         TcpClient connection;
         //NetworkStream stream;

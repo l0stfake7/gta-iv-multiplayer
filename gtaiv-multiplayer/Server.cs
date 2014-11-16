@@ -10,23 +10,25 @@ using System.Timers;
 
 namespace gtaiv_multiplayer
 {
-    class Server
+    public class Server
     {
         TcpListener server;
-        Dictionary<byte, Player> playerpool;
+        public Dictionary<byte, Player> playerpool;
         public static Server instance;
+        public ServerApi api;
 
 
         public Server(int port)
         {
             instance = this;
+            api = new ServerApi(this);
             server = new TcpListener(IPAddress.Any, port);
             server.Start();
             server.BeginAcceptTcpClient(onIncomingConnection, null);
             playerpool = new Dictionary<byte, Player>();
             Timer timer = new Timer();
             timer.Elapsed += onBroadcastTimer;
-            timer.Interval = 80;
+            timer.Interval = 40;
             timer.Enabled = true;
             timer.Start();
             Console.WriteLine("Started server on port " + port.ToString());
@@ -53,6 +55,7 @@ namespace gtaiv_multiplayer
         {
             if (player.position != null)
             {
+                broadcastNick(player);
                 UpdateDataStruct data = new UpdateDataStruct();
                 data.pos_x = player.position.x;
                 data.pos_y = player.position.y;
@@ -117,7 +120,6 @@ namespace gtaiv_multiplayer
                 player.id = findLowestFreeId();
                 player.nick = nick;
                 playerpool.Add(player.id, player);
-                broadcastNick(player);
             };
 
             connection.startReceiving();

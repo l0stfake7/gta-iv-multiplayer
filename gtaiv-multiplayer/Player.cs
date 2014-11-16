@@ -7,7 +7,7 @@ using multiplayer_sdk;
 
 namespace gtaiv_multiplayer
 {
-    class Player
+    public class Player
     {
         public byte id;
         public string nick;

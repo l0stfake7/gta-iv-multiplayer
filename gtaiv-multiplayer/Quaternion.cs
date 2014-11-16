@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace gtaiv_multiplayer
 {
-    class Quaternion
+    public class Quaternion
     {
         public float x, y, z, a;
         public Quaternion(float x, float y, float z, float a)

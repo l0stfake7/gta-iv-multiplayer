@@ -6,14 +6,13 @@ using System.Threading.Tasks;
 
 namespace gtaiv_multiplayer
 {
-    public class Vec3
+    abstract class Gamemode
     {
-        public float x, y, z;
-        public Vec3(float x, float y, float z)
+        private ServerApi api;
+
+        public Gamemode(ServerApi api)
         {
-            this.x = x;
-            this.y = y;
-            this.z = z;
+            this.api = api;
         }
     }
 }

@@ -19,7 +19,15 @@ namespace multiplayer_sdk
 
     }
 
-    public struct UpdateDataStruct
+    public enum PlayerState
+    {
+        inVehicle = 0,
+        isAiming = 2,
+        isShooting = 4
+
+    }
+
+    public class UpdateDataStruct
     {
         public float pos_x, pos_y, pos_z, rot_x, rot_y, rot_z, rot_a, vel_x, vel_y, vel_z, speed, heading;
         public int vehicle_model, ped_health, veh_health;

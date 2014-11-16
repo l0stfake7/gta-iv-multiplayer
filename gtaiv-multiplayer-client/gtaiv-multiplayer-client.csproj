@@ -44,6 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChatInputForm.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Client.cs" />
     <Compile Include="PlayerVehicleController.cs" />
     <Compile Include="PlayerPedController.cs" />

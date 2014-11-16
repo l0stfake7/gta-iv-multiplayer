@@ -46,7 +46,7 @@ namespace gtaiv_multiplayer_client
             pedController = new PlayerPedController();
             vehicleController = new PlayerVehicleController();
             currentState = ClientState.Initializing;
-            Interval = 65;
+            Interval = 40;
             this.KeyDown += new GTA.KeyEventHandler(this.eventOnKeyDown);
             this.Tick += new EventHandler(this.eventOnTick);
             dlabel = new Label();
@@ -54,6 +54,14 @@ namespace gtaiv_multiplayer_client
             dlabel.Location = new System.Drawing.Point(10, 10);
             Form form = new Form();
             form.Controls.Add(dlabel);
+            form.Transparency = 0.0f;
+            form.StartPosition = FormStartPosition.Fixed;
+            form.Location = new System.Drawing.Point(10, 10);
+            form.BackColor = System.Drawing.Color.Transparent;
+            //form.Show();
+            //form.KeyDown += new GTA.KeyEventHandler(this.eventOnKeyDown);
+            //Game.Mouse.Enabled = false;
+           // Player.CanControlCharacter = true;
             //form.Show();
             currentState = ClientState.Disconnected;
             serverName = "Not connected";
@@ -101,6 +109,11 @@ namespace gtaiv_multiplayer_client
                 if (e.Key == (System.Windows.Forms.Keys)id && e.Control) teleportToBindPoint(id - (int)System.Windows.Forms.Keys.D0);
             }
 
+            if (e.Key == System.Windows.Forms.Keys.Enter)
+            {
+          //      ChatInputForm.show();
+            }
+
             if (e.Key == System.Windows.Forms.Keys.L)
             {
                 try
@@ -138,14 +151,14 @@ namespace gtaiv_multiplayer_client
 
                     buffer = new byte[512];
                     client.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
-                    //World.CurrentDayTime = new TimeSpan(12, 00, 00);
-                    //World.PedDensity = 0;
-                    //World.CarDensity = 0;
-                   /* var peds = World.GetPeds(Player.Character.Position, 200.0f);
-                    foreach (Ped a in peds) if (a.Exists() && a.isAlive && a != Player.Character) a.Delete();
-                    foreach (Vehicle v in World.GetAllVehicles()) if (v.Exists()) v.Delete();*/
+                    World.CurrentDayTime = new TimeSpan(12, 00, 00);
+                    World.PedDensity = 0;
+                    World.CarDensity = 0;
+                     var peds = World.GetPeds(Player.Character.Position, 200.0f);
+                     foreach (Ped a in peds) if (a.Exists() && a.isAlive && a != Player.Character) a.Delete();
+                     foreach (Vehicle v in World.GetAllVehicles()) if (v.Exists()) v.Delete();
                     log("connected");
-                    
+
                 }
                 catch (Exception ex)
                 {
@@ -164,43 +177,45 @@ namespace gtaiv_multiplayer_client
         {
             //try
             //{
-                client.Client.EndReceive(iar);
-                if (iar.IsCompleted)
+            client.Client.EndReceive(iar);
+            if (iar.IsCompleted)
+            {
+                if (buffer.Length > 0)
                 {
-                    if (buffer.Length > 0)
+                    switch ((multiplayer_sdk.Commands)BitConverter.ToUInt16(buffer, 0))
                     {
-                        switch ((multiplayer_sdk.Commands)BitConverter.ToUInt16(buffer, 0))
-                        {
-                            case multiplayer_sdk.Commands.UpdateData:
-                                {
-                                        byte playerid = buffer[2];
-                                        
-                                        //log(strb.ToString());
-                                        //log("reading data for received player " + playerid.ToString());
-                                        multiplayer_sdk.UpdateDataStruct data = multiplayer_sdk.UpdateDataStruct.unserialize(buffer, 3);
-                                        if (!playersdata.ContainsKey(playerid)) playersdata.Add(playerid, data);
-                                        else playersdata[playerid] = data;
-                                        //log("X " + data.pos_x.ToString());
-                                        //log("Y " + data.pos_y.ToString());
+                        case multiplayer_sdk.Commands.UpdateData:
+                            {
+                                byte playerid = buffer[2];
 
-                                        //log("Positioned a ped playerid " + playerid.ToString());
-                                }
-                                break;
-                            case multiplayer_sdk.Commands.InfoPlayerName:
+                                //log(strb.ToString());
+                                //log("reading data for received player " + playerid.ToString());
+                                multiplayer_sdk.UpdateDataStruct data = multiplayer_sdk.UpdateDataStruct.unserialize(buffer, 3);
+                                if (!playersdata.ContainsKey(playerid)) playersdata.Add(playerid, data);
+                                else playersdata[playerid] = data;
+                                //log("X " + data.pos_x.ToString());
+                                //log("Y " + data.pos_y.ToString());
+
+                                //log("Positioned a ped playerid " + playerid.ToString());
+                            }
+                            break;
+                        case multiplayer_sdk.Commands.InfoPlayerName:
+                            {
+                                byte playerid = buffer[2];
+                                if (playersdata.ContainsKey(playerid))
                                 {
-                                    byte playerid = buffer[2];
                                     var list = buffer.ToList();
                                     int nickLength = BitConverter.ToInt32(buffer, 3);
                                     string nick = Encoding.UTF8.GetString(list.Skip(3 + 4).Take(nickLength).ToArray());
-                                    var a = playersdata[playerid];
-                                    a.nick = nick;
+                                    playersdata[playerid].nick = nick;
                                 }
-                                break;
+                            }
+                            break;
 
-                        }
                     }
                 }
-                client.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
+            }
+            client.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
             /*}
             catch (Exception e)
             {
@@ -345,9 +360,11 @@ namespace gtaiv_multiplayer_client
                             bool in_vehicle = elem.Value.vehicle_model > 0;
                             //log("TRYING SET positioning");
                             //log(elem.Value.pos_x.ToString());
-                            var posnew = new Vector3(elem.Value.pos_x, elem.Value.pos_y, elem.Value.pos_z - 2.0f);
+                            var posnew = new Vector3(elem.Value.pos_x, elem.Value.pos_y, elem.Value.pos_z);
                             Ped ped = pedController.getById(elem.Key, posnew);
                             ped.Invincible = true;
+                            ped.WillFlyThroughWindscreen = false;
+                            ped.RelationshipGroup = RelationshipGroup.NetworkPlayer_01;
 
                             if (elem.Value.nick != null && elem.Value.nick.Length > 0)
                             {
@@ -361,17 +378,21 @@ namespace gtaiv_multiplayer_client
                                 {
                                     ped.CurrentVehicle.PassengersLeaveVehicle(true);
                                 }
-                                if (posnew.DistanceTo(ped.Position) > 5.0)
+                                ped.Position = posnew;
+                                ped.Heading = elem.Value.rot_y;
+                                
+                                ped.PreventRagdoll = true;
+                                ped.Velocity = new Vector3(elem.Value.vel_x, elem.Value.vel_y, elem.Value.vel_z);
+                                ped.Task.ClearAllImmediately();
+                                if (ped.Velocity.Length() > 0)
                                 {
-                                    ped.Position = posnew;
-                                    ped.Heading = elem.Value.rot_y;
+                                    var animset = new AnimationSet("move_f@bness_b");
+                                    if (!ped.Animation.isPlaying(animset, "run"))
+                                    {
+                                        ped.Animation.Play(animset, "run", 1.0f);
+                                    }
                                 }
-                                else if (posnew.DistanceTo(ped.Position) > 1.0)
-                                {
-                                    ped.Task.RunTo(posnew, false);
-                                    ped.PreventRagdoll = true;
-                                    ped.Velocity = new Vector3(elem.Value.vel_x, elem.Value.vel_y, elem.Value.vel_z);
-                                }
+                                
                             }
                             else
                             {
@@ -380,10 +401,15 @@ namespace gtaiv_multiplayer_client
                                 {
                                     ped.WarpIntoVehicle(veh, VehicleSeat.RightFront);
                                 }
-                                veh.Position = new Vector3(elem.Value.pos_x, elem.Value.pos_y, elem.Value.pos_z);
-                                veh.Velocity = new Vector3(elem.Value.vel_x, elem.Value.vel_y, elem.Value.vel_z);
-                                veh.Speed = elem.Value.speed;
+                                veh.EngineRunning = true;
+                                veh.InteriorLightOn = true;
+                                veh.HazardLightsOn = true;
                                 veh.RotationQuaternion = new Quaternion(elem.Value.rot_x, elem.Value.rot_y, elem.Value.rot_z, elem.Value.rot_a);
+                                veh.Position = new Vector3(elem.Value.pos_x, elem.Value.pos_y, elem.Value.pos_z);
+                                veh.Velocity = new Vector3(elem.Value.vel_x, elem.Value.vel_y, elem.Value.vel_z) * 1.4f;
+                                veh.Speed = elem.Value.speed;
+                                veh.Repair();
+                                ped.Task.DrivePointRoute(veh, 999.0f, veh.Position + (veh.Velocity * 10)); 
                             }
                             //log("GOT IT AND SET positioning");
                         }
@@ -401,7 +427,8 @@ namespace gtaiv_multiplayer_client
                     streamFlush();
                     currentState = ClientState.Connected;
                 }
-            } catch {}
+            }
+            catch { }
         }
 
     }

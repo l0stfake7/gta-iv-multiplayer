@@ -42,11 +42,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClientConnection.cs" />
+    <Compile Include="Gamemode.cs" />
+    <Compile Include="GamemodeManager.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Quaternion.cs" />
     <Compile Include="Server.cs" />
+    <Compile Include="ServerApi.cs" />
     <Compile Include="Vec3.cs" />
   </ItemGroup>
   <ItemGroup>
