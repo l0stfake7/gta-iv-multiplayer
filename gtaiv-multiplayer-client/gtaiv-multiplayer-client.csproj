@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Client.cs" />
+    <Compile Include="PlayerVehicleController.cs" />
     <Compile Include="PlayerPedController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

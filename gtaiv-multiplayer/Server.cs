@@ -26,7 +26,7 @@ namespace gtaiv_multiplayer
             playerpool = new Dictionary<byte, Player>();
             Timer timer = new Timer();
             timer.Elapsed += onBroadcastTimer;
-            timer.Interval = 1000;
+            timer.Interval = 80;
             timer.Enabled = true;
             timer.Start();
             Console.WriteLine("Started server on port " + port.ToString());
@@ -57,18 +57,45 @@ namespace gtaiv_multiplayer
                 data.pos_x = player.position.x;
                 data.pos_y = player.position.y;
                 data.pos_z = player.position.z;
-                data.rot_x = 0.0f;
+                data.rot_x = player.orientation.x;
                 data.rot_y = player.orientation.y;
-                data.rot_z = 0.0f;
-                data.rot_a = 0.0f;
+                data.rot_z = player.orientation.z;
+                data.rot_a = player.orientation.a;
+                data.heading = player.heading;
+                data.ped_health = player.pedHealth;
+                data.speed = player.speed;
+                data.veh_health = player.vehicleHealth;
+                data.vehicle_model = player.vehicle_model;
+                data.vel_x = player.velocity.x;
+                data.vel_y = player.velocity.y;
+                data.vel_z = player.velocity.z;
                 foreach (var single in playerpool)
                 {
                     if (single.Value.id != player.id)
                     {
                         single.Value.connection.streamWrite(Commands.UpdateData);
-                        single.Value.connection.streamWrite((byte)player.id);
+                        single.Value.connection.streamWrite(new byte[1] { (byte)player.id });
                         single.Value.connection.streamWrite(data);
+                        single.Value.connection.streamFlush();
                         Console.WriteLine("Streaming to player " + single.Value.nick);
+                    }
+                }
+            }
+        }
+        public void broadcastNick(Player player)
+        {
+            if (player.position != null)
+            {
+                foreach (var single in playerpool)
+                {
+                    if (single.Value.id != player.id)
+                    {
+                        single.Value.connection.streamWrite(Commands.InfoPlayerName);
+                        single.Value.connection.streamWrite(new byte[1] { (byte)player.id });
+                        single.Value.connection.streamWrite(player.nick.Length);
+                        single.Value.connection.streamWrite(player.nick);
+                        single.Value.connection.streamFlush();
+                        Console.WriteLine("Streaming nick TO " + single.Value.nick);
                     }
                 }
             }
@@ -90,6 +117,7 @@ namespace gtaiv_multiplayer
                 player.id = findLowestFreeId();
                 player.nick = nick;
                 playerpool.Add(player.id, player);
+                broadcastNick(player);
             };
 
             connection.startReceiving();

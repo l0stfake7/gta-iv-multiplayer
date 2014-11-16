@@ -27,6 +27,7 @@ namespace gtaiv_multiplayer
         {
             connection = client;
             buffer = new byte[512];
+            streamBegin();
             //stream = connection.GetStream();
         }
 
@@ -35,89 +36,99 @@ namespace gtaiv_multiplayer
             connection.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
         }
 
+        byte[] tempbuf;
+
+        public void streamBegin()
+        {
+            tempbuf = new byte[0];
+        }
+
+        public void streamFlush()
+        {
+            connection.Client.Send(tempbuf, tempbuf.Length, SocketFlags.None);
+            streamBegin();
+        }
+
+
+        public byte[] appendBytes(byte[] byte1, byte[] byte2)
+        {
+            var list = byte1.ToList();
+            list.AddRange(byte2);
+            return list.ToArray();
+        }
+
+
+        public void streamReadString(byte[] buffer)
+        {
+            //streamWrite(buffer.Length);
+            //stream.Write(buffer, 0, buffer.Length);
+        }
+
         public void streamWrite(byte[] buffer)
         {
-            streamWrite(buffer.Length);
-            connection.Client.Send(buffer, buffer.Length, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buffer);
         }
         public void streamWrite(List<byte> buffer)
         {
-            streamWrite(buffer.Count);
-            connection.Client.Send(buffer.ToArray(), buffer.Count, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buffer.ToArray());
         }
         public void streamWrite(string buffer)
         {
             byte[] buf = Encoding.UTF8.GetBytes(buffer);
-            streamWrite(buf.Length);
-            connection.Client.Send(buf, buf.Length, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buf);
         }
         public void streamWrite(multiplayer_sdk.UpdateDataStruct buffer)
         {
             byte[] buf = buffer.serialize();
-            //streamWrite(buf.Length);
-            connection.Client.Send(buf, buf.Length, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buf);
         }
         public void streamWrite(multiplayer_sdk.Commands command)
         {
             byte[] buf = BitConverter.GetBytes((ushort)command);
-            streamWrite(buf.Length);
-            connection.Client.Send(buf, buf.Length, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buf);
         }
         public void streamWrite(int integer)
         {
             byte[] buf = BitConverter.GetBytes(integer);
-            connection.Client.Send(buf, buf.Length, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buf);
         }
-        public void streamWrite(byte b)
-        {
-            byte[] buf = new byte[1]{b};
-            connection.Client.Send(buf, buf.Length, SocketFlags.None);
-        }
-
-        /**
-         *  zrob petle w funckji tryexecutecommands ktora pobiera z listy buforowanej bajty i zczytuje
-         *  stos byte moglby byc
-         *  
-         */
 
         private void onReceive(IAsyncResult iar)
         {
             //try
             //{
-                int count = connection.Client.EndReceive(iar);
-                if (iar.IsCompleted)
+            Console.WriteLine("receiving...");
+            int count = connection.Client.EndReceive(iar);
+            if (iar.IsCompleted)
+            {
+                if (buffer.Length > 0)
                 {
-                    if (buffer.Length > 0)
+                    //foreach (byte by in buffer) Console.Write(by.ToString("X") + " ");
+                    switch ((multiplayer_sdk.Commands)BitConverter.ToUInt16(buffer, 0))
                     {
-                        switch ((multiplayer_sdk.Commands)BitConverter.ToUInt16(buffer, 0))
-                        {
-                            case multiplayer_sdk.Commands.Disconnect:
-                                {
-                                    if(onDisconnect != null) onDisconnect.Invoke();
-                                }
-                                break;
-                            case multiplayer_sdk.Commands.Connect:
-                                {
-                                    var list = buffer.ToList();
-                                    int nickLength = BitConverter.ToInt32(buffer, 2);
-                                    if (onConnect != null) onConnect.Invoke(Encoding.UTF8.GetString(list.Skip(2 + 4).Take(nickLength).ToArray()));
-                                }
-                                break;
-                            case multiplayer_sdk.Commands.UpdateData:
-                                {
-                                    if (count < 2 + 7 * sizeof(float))
-                                    {
-                                        throw new Exception();
-                                    }
-                                    multiplayer_sdk.UpdateDataStruct data = multiplayer_sdk.UpdateDataStruct.unserialize(buffer, 2);
-                                    if(onUpdateData != null) onUpdateData.Invoke(data);
-                                }
-                                break;
+                        case multiplayer_sdk.Commands.Disconnect:
+                            {
+                                if (onDisconnect != null) onDisconnect.Invoke();
+                            }
+                            break;
+                        case multiplayer_sdk.Commands.Connect:
+                            {
+                                var list = buffer.ToList();
+                                int nickLength = BitConverter.ToInt32(buffer, 2);
+                                if (onConnect != null) onConnect.Invoke(Encoding.UTF8.GetString(list.Skip(2 + 4).Take(nickLength).ToArray()));
+                            }
+                            break;
+                        case multiplayer_sdk.Commands.UpdateData:
+                            {
+                                multiplayer_sdk.UpdateDataStruct data = multiplayer_sdk.UpdateDataStruct.unserialize(buffer, 2);
+                                if (onUpdateData != null) onUpdateData.Invoke(data);
+                            }
+                            break;
 
-                        }
                     }
                 }
-                connection.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
+            }
+            connection.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
             /*}
             catch (Exception e)
             {

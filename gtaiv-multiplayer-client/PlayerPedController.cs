@@ -16,12 +16,13 @@ namespace gtaiv_multiplayer_client
             peds = new Dictionary<byte, Ped>();
         }
 
-        public Ped getById(byte id)
+        public Ped getById(byte id, Vector3 position)
         {
             if (!peds.ContainsKey(id))
             {
                 //if (peds.ContainsKey(id)) peds.Remove(id);
-                peds.Add(id, World.CreatePed(new Vector3(0, 0, 0), Gender.Male));
+                peds.Add(id, World.CreatePed(position, Gender.Male));
+                Client.log("Created ped instance");
             }
             return peds[id];
         }

@@ -19,8 +19,10 @@ namespace gtaiv_multiplayer_client
         string serverName;
         string nick;
         static Client instance;
-        
+
         PlayerPedController pedController;
+        PlayerVehicleController vehicleController;
+        Dictionary<byte, UpdateDataStruct> playersdata;
         byte[] buffer;
 
         enum ClientState
@@ -38,11 +40,13 @@ namespace gtaiv_multiplayer_client
 
         public Client()
         {
+            playersdata = new Dictionary<byte, UpdateDataStruct>();
             buffer = new byte[512];
             instance = this;
             pedController = new PlayerPedController();
+            vehicleController = new PlayerVehicleController();
             currentState = ClientState.Initializing;
-            Interval = 250;
+            Interval = 65;
             this.KeyDown += new GTA.KeyEventHandler(this.eventOnKeyDown);
             this.Tick += new EventHandler(this.eventOnTick);
             dlabel = new Label();
@@ -76,13 +80,33 @@ namespace gtaiv_multiplayer_client
             return Player;
         }
 
+        Dictionary<int, Vector3> bindPoints;
+        private void saveBindPoint(int id)
+        {
+            if (bindPoints == null) bindPoints = new Dictionary<int, Vector3>();
+            if (bindPoints.ContainsKey(id)) bindPoints[id] = getPlayerPed().Position;
+            else bindPoints.Add(id, getPlayerPed().Position);
+        }
+        private void teleportToBindPoint(int id)
+        {
+            if (bindPoints == null) bindPoints = new Dictionary<int, Vector3>();
+            if (bindPoints.ContainsKey(id)) getPlayerPed().Position = bindPoints[id];
+        }
+
         private void eventOnKeyDown(object sender, GTA.KeyEventArgs e)
         {
+            foreach (int id in Enumerable.Range((int)System.Windows.Forms.Keys.D0, (int)System.Windows.Forms.Keys.D9))
+            {
+                if (e.Key == (System.Windows.Forms.Keys)id && e.Alt) saveBindPoint(id - (int)System.Windows.Forms.Keys.D0);
+                if (e.Key == (System.Windows.Forms.Keys)id && e.Control) teleportToBindPoint(id - (int)System.Windows.Forms.Keys.D0);
+            }
+
             if (e.Key == System.Windows.Forms.Keys.L)
             {
                 try
                 {
                     currentState = ClientState.Connecting;
+                    streamBegin();
                     if (client != null && client.Connected)
                     {
                         client.Close();
@@ -93,18 +117,34 @@ namespace gtaiv_multiplayer_client
                     nick = ini.getString("nick");
                     int port = ini.getInt("port");
                     client.Connect(address, port);
+                    Client.currentData = new UpdateDataStruct();
+                    Client.currentData.pos_x = 0;
+                    Client.currentData.pos_y = 0;
+                    Client.currentData.pos_z = 0;
+                    Client.currentData.rot_x = 0;
+                    Client.currentData.rot_y = 0;
+                    Client.currentData.rot_z = 0;
+                    Client.currentData.rot_a = 0;
+                    Client.currentData.heading = 0;
+                    Client.currentData.ped_health = 0;
+                    Client.currentData.speed = 0;
+                    Client.currentData.veh_health = 0;
+                    Client.currentData.vehicle_model = 0;
+                    Client.currentData.vel_x = 0;
+                    Client.currentData.vel_y = 0;
+                    Client.currentData.vel_z = 0;
                     //stream = client.GetStream();
                     //stream.Write(buf, 0, buf.Length);
 
                     buffer = new byte[512];
                     client.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
-                    log("connected");
                     //World.CurrentDayTime = new TimeSpan(12, 00, 00);
                     //World.PedDensity = 0;
                     //World.CarDensity = 0;
-                    var peds = World.GetPeds(Player.Character.Position, 200.0f);
+                   /* var peds = World.GetPeds(Player.Character.Position, 200.0f);
                     foreach (Ped a in peds) if (a.Exists() && a.isAlive && a != Player.Character) a.Delete();
-                    //foreach (Vehicle v in World.GetAllVehicles()) if (v.Exists()) v.Delete();
+                    foreach (Vehicle v in World.GetAllVehicles()) if (v.Exists()) v.Delete();*/
+                    log("connected");
                     
                 }
                 catch (Exception ex)
@@ -133,15 +173,27 @@ namespace gtaiv_multiplayer_client
                         {
                             case multiplayer_sdk.Commands.UpdateData:
                                 {
-                                    try
-                                    {
                                         byte playerid = buffer[2];
+                                        
+                                        //log(strb.ToString());
+                                        //log("reading data for received player " + playerid.ToString());
                                         multiplayer_sdk.UpdateDataStruct data = multiplayer_sdk.UpdateDataStruct.unserialize(buffer, 3);
-                                        Ped ped = pedController.getById(playerid);
-                                        ped.Position = new Vector3((float)data.pos_x, (float)data.pos_y, (float)data.pos_z);
-                                        ped.Heading = (float)data.rot_y;
-                                    }
-                                    catch { }
+                                        if (!playersdata.ContainsKey(playerid)) playersdata.Add(playerid, data);
+                                        else playersdata[playerid] = data;
+                                        //log("X " + data.pos_x.ToString());
+                                        //log("Y " + data.pos_y.ToString());
+
+                                        //log("Positioned a ped playerid " + playerid.ToString());
+                                }
+                                break;
+                            case multiplayer_sdk.Commands.InfoPlayerName:
+                                {
+                                    byte playerid = buffer[2];
+                                    var list = buffer.ToList();
+                                    int nickLength = BitConverter.ToInt32(buffer, 3);
+                                    string nick = Encoding.UTF8.GetString(list.Skip(3 + 4).Take(nickLength).ToArray());
+                                    var a = playersdata[playerid];
+                                    a.nick = nick;
                                 }
                                 break;
 
@@ -164,6 +216,26 @@ namespace gtaiv_multiplayer_client
          * 
          */
 
+        private byte[] appendBytes(byte[] byte1, byte[] byte2)
+        {
+            var list = byte1.ToList();
+            list.AddRange(byte2);
+            return list.ToArray();
+        }
+
+        byte[] tempbuf;
+
+        private void streamBegin()
+        {
+            tempbuf = new byte[0];
+        }
+
+        private void streamFlush()
+        {
+            client.Client.Send(tempbuf, tempbuf.Length, SocketFlags.None);
+            streamBegin();
+        }
+
         private void streamReadString(byte[] buffer)
         {
             //streamWrite(buffer.Length);
@@ -172,37 +244,34 @@ namespace gtaiv_multiplayer_client
 
         private void streamWrite(byte[] buffer)
         {
-            streamWrite(buffer.Length);
-            client.Client.Send(buffer, buffer.Length, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buffer);
         }
         private void streamWrite(List<byte> buffer)
         {
-            streamWrite(buffer.Count);
-            client.Client.Send(buffer.ToArray(), buffer.Count, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buffer.ToArray());
         }
         private void streamWrite(string buffer)
         {
             byte[] buf = Encoding.UTF8.GetBytes(buffer);
-            streamWrite(buf.Length);
-            client.Client.Send(buf, buf.Length, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buf);
         }
         private void streamWrite(UpdateDataStruct buffer)
         {
             byte[] buf = buffer.serialize();
-            streamWrite(buf.Length);
-            client.Client.Send(buf, buf.Length, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buf);
         }
         private void streamWrite(Commands command)
         {
             byte[] buf = BitConverter.GetBytes((ushort)command);
-            streamWrite(buf.Length);
-            client.Client.Send(buf, buf.Length, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buf);
         }
         private void streamWrite(int integer)
         {
             byte[] buf = BitConverter.GetBytes(integer);
-            client.Client.Send(buf, buf.Length, SocketFlags.None);
+            tempbuf = appendBytes(tempbuf, buf);
         }
+
+        public static UpdateDataStruct currentData;
 
         private void eventOnTick(object sender, EventArgs e)
         {
@@ -215,36 +284,121 @@ namespace gtaiv_multiplayer_client
                 if (currentState == ClientState.Connected)
                 {
                     UpdateDataStruct data = new UpdateDataStruct();
-                    Vector3 pos = Player.Character.Position;
-                    data.pos_x = pos.X;
-                    data.pos_y = pos.Y;
-                    data.pos_z = pos.Z;
-                    log("my X is " + data.pos_x.ToString());
+                    //log("my X is " + data.pos_x.ToString());
                     if (Player.Character.isInVehicle())
                     {
+                        Vector3 pos = Player.Character.CurrentVehicle.Position;
+                        data.pos_x = pos.X;
+                        data.pos_y = pos.Y;
+                        data.pos_z = pos.Z;
+
+                        Vector3 vel = Player.Character.CurrentVehicle.Velocity;
+                        data.vel_x = vel.X;
+                        data.vel_y = vel.Y;
+                        data.vel_z = vel.Z;
+
                         Quaternion quat = Player.Character.CurrentVehicle.RotationQuaternion;
                         data.rot_x = quat.X;
                         data.rot_y = quat.Y;
                         data.rot_z = quat.Z;
                         data.rot_a = quat.W;
+
+                        data.vehicle_model = Player.Character.CurrentVehicle.Model.Hash;
+                        data.veh_health = Player.Character.CurrentVehicle.Health;
+                        data.ped_health = Player.Character.Health;
+                        data.speed = Player.Character.CurrentVehicle.Speed;
+                        data.heading = Player.Character.CurrentVehicle.Heading;
                     }
                     else
                     {
-                        data.rot_y = Player.Character.Heading;
+                        Vector3 pos = Player.Character.Position;
+                        data.pos_x = pos.X;
+                        data.pos_y = pos.Y;
+                        data.pos_z = pos.Z;
 
-                        data.rot_x = Player.Character.Heading;
-                        data.rot_z = Player.Character.Heading;
-                        data.rot_a = Player.Character.Heading;
+                        Vector3 vel = Player.Character.Velocity;
+                        data.vel_x = vel.X;
+                        data.vel_y = vel.Y;
+                        data.vel_z = vel.Z;
+
+                        data.rot_x = 0;
+                        data.rot_y = 0;
+                        data.rot_z = 0;
+                        data.rot_a = 0;
+
+                        data.vehicle_model = 0;
+                        data.veh_health = 0;
+                        data.ped_health = Player.Character.Health;
+                        data.speed = 0;
+                        data.heading = Player.Character.Heading;
                     }
                     streamWrite(Commands.UpdateData);
                     streamWrite(data);
+                    streamFlush();
+                    currentData = data;
+                    //log("sent data");
+                    // process players
+                    foreach (var elem in playersdata)
+                    {
+                        try
+                        {
+                            bool in_vehicle = elem.Value.vehicle_model > 0;
+                            //log("TRYING SET positioning");
+                            //log(elem.Value.pos_x.ToString());
+                            var posnew = new Vector3(elem.Value.pos_x, elem.Value.pos_y, elem.Value.pos_z - 2.0f);
+                            Ped ped = pedController.getById(elem.Key, posnew);
+                            ped.Invincible = true;
+
+                            if (elem.Value.nick != null && elem.Value.nick.Length > 0)
+                            {
+                                ped.GiveFakeNetworkName(elem.Value.nick, System.Drawing.Color.Red);
+                            }
+
+                            if (!in_vehicle)
+                            {
+                                vehicleController.destroy(elem.Key);
+                                if (ped.isInVehicle())
+                                {
+                                    ped.CurrentVehicle.PassengersLeaveVehicle(true);
+                                }
+                                if (posnew.DistanceTo(ped.Position) > 5.0)
+                                {
+                                    ped.Position = posnew;
+                                    ped.Heading = elem.Value.rot_y;
+                                }
+                                else if (posnew.DistanceTo(ped.Position) > 1.0)
+                                {
+                                    ped.Task.RunTo(posnew, false);
+                                    ped.PreventRagdoll = true;
+                                    ped.Velocity = new Vector3(elem.Value.vel_x, elem.Value.vel_y, elem.Value.vel_z);
+                                }
+                            }
+                            else
+                            {
+                                Vehicle veh = vehicleController.getById(elem.Key, elem.Value.vehicle_model, posnew);
+                                if (!ped.isInVehicle(veh))
+                                {
+                                    ped.WarpIntoVehicle(veh, VehicleSeat.RightFront);
+                                }
+                                veh.Position = new Vector3(elem.Value.pos_x, elem.Value.pos_y, elem.Value.pos_z);
+                                veh.Velocity = new Vector3(elem.Value.vel_x, elem.Value.vel_y, elem.Value.vel_z);
+                                veh.Speed = elem.Value.speed;
+                                veh.RotationQuaternion = new Quaternion(elem.Value.rot_x, elem.Value.rot_y, elem.Value.rot_z, elem.Value.rot_a);
+                            }
+                            //log("GOT IT AND SET positioning");
+                        }
+                        catch
+                        {
+                            //log("failed positioning");
+                        }
+                    }
                 }
                 if (currentState == ClientState.Connecting)
                 {
                     streamWrite(Commands.Connect);
-                    byte[] buf = Encoding.UTF8.GetBytes(nick);
-                    streamWrite(buf.Length);
-                    client.Client.Send(buf, buf.Length, SocketFlags.None);
+                    streamWrite(nick.Length);
+                    streamWrite(nick);
+                    streamFlush();
                     currentState = ClientState.Connected;
                 }
             } catch {}
