@@ -1,4 +1,5 @@
 gta-iv-multiplayer
 ==================
 
-GTA IV multiplayer client and server. unplayable for now
+GTA IV multiplayer client and server.
+Playable but limited.
