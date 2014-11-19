@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace gtaiv_multiplayer
+namespace MIVServer
 {
-    abstract class Gamemode
+    public abstract class Gamemode
     {
-        private ServerApi api;
+        protected ServerApi api;
 
         public Gamemode(ServerApi api)
         {

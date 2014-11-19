@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 
-namespace gtaiv_multiplayer
+namespace MIVServer
 {
     public class ClientConnection
     {
@@ -15,13 +15,15 @@ namespace gtaiv_multiplayer
         //NetworkStream stream;
         byte[] buffer;
 
-        public delegate void onUpdateDataDelegate(multiplayer_sdk.UpdateDataStruct data);
+        public delegate void onUpdateDataDelegate(MIVSDK.UpdateDataStruct data);
         public delegate void onDisconnectDelegate();
         public delegate void onConnectDelegate(string nick);
+        public delegate void onChatSendMessageDelegate(string line);
 
         public event onUpdateDataDelegate onUpdateData;
         public event onDisconnectDelegate onDisconnect;
         public event onConnectDelegate onConnect;
+        public event onChatSendMessageDelegate onChatSendMessage;
 
         public ClientConnection(TcpClient client)
         {
@@ -77,12 +79,12 @@ namespace gtaiv_multiplayer
             byte[] buf = Encoding.UTF8.GetBytes(buffer);
             tempbuf = appendBytes(tempbuf, buf);
         }
-        public void streamWrite(multiplayer_sdk.UpdateDataStruct buffer)
+        public void streamWrite(MIVSDK.UpdateDataStruct buffer)
         {
             byte[] buf = buffer.serialize();
             tempbuf = appendBytes(tempbuf, buf);
         }
-        public void streamWrite(multiplayer_sdk.Commands command)
+        public void streamWrite(MIVSDK.Commands command)
         {
             byte[] buf = BitConverter.GetBytes((ushort)command);
             tempbuf = appendBytes(tempbuf, buf);
@@ -93,34 +95,42 @@ namespace gtaiv_multiplayer
             tempbuf = appendBytes(tempbuf, buf);
         }
 
+
+
         private void onReceive(IAsyncResult iar)
         {
             //try
             //{
-            Console.WriteLine("receiving...");
             int count = connection.Client.EndReceive(iar);
             if (iar.IsCompleted)
             {
                 if (buffer.Length > 0)
                 {
                     //foreach (byte by in buffer) Console.Write(by.ToString("X") + " ");
-                    switch ((multiplayer_sdk.Commands)BitConverter.ToUInt16(buffer, 0))
+                    switch ((MIVSDK.Commands)BitConverter.ToUInt16(buffer, 0))
                     {
-                        case multiplayer_sdk.Commands.Disconnect:
+                        case MIVSDK.Commands.Disconnect:
                             {
                                 if (onDisconnect != null) onDisconnect.Invoke();
                             }
                             break;
-                        case multiplayer_sdk.Commands.Connect:
+                        case MIVSDK.Commands.Connect:
                             {
                                 var list = buffer.ToList();
                                 int nickLength = BitConverter.ToInt32(buffer, 2);
                                 if (onConnect != null) onConnect.Invoke(Encoding.UTF8.GetString(list.Skip(2 + 4).Take(nickLength).ToArray()));
                             }
                             break;
-                        case multiplayer_sdk.Commands.UpdateData:
+                        case MIVSDK.Commands.Chat_sendMessage:
                             {
-                                multiplayer_sdk.UpdateDataStruct data = multiplayer_sdk.UpdateDataStruct.unserialize(buffer, 2);
+                                var list = buffer.ToList();
+                                int len = BitConverter.ToInt32(buffer, 2);
+                                if (onChatSendMessage != null) onChatSendMessage.Invoke(Encoding.UTF8.GetString(list.Skip(2 + 4).Take(len).ToArray()));
+                            }
+                            break;
+                        case MIVSDK.Commands.UpdateData:
+                            {
+                                MIVSDK.UpdateDataStruct data = MIVSDK.UpdateDataStruct.unserialize(buffer, 2);
                                 if (onUpdateData != null) onUpdateData.Invoke(data);
                             }
                             break;

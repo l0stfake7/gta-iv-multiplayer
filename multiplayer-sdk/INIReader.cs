@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace multiplayer_sdk
+namespace MIVSDK
 {
     public class INIReader
     {

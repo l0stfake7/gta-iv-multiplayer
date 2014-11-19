@@ -7,7 +7,7 @@ using GTA;
 using GTA.Forms;
 using System.Drawing;
 
-namespace gtaiv_multiplayer_client
+namespace MIVClient
 {
     class ChatInputForm : Form
     {

@@ -4,17 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace gtaiv_multiplayer
+namespace MIVServer
 {
-    public class Quaternion
+    public class Quaternion : Vector4
     {
-        public float x, y, z, a;
-        public Quaternion(float x, float y, float z, float a)
+        public Quaternion(float X, float Y, float Z, float W)
+            : base(X, Y, Z, W)
         {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-            this.a = a;
+
+        }
+
+        public static Quaternion Zero
+        {
+            get { return new Quaternion(0, 0, 0, 0); }
+            set { }
         }
     }
 }

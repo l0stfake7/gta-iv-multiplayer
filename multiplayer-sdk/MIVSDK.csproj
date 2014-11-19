@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D5B51644-8C7E-481B-9033-E5D7D5FCC839}</ProjectGuid>
+    <ProjectGuid>{7C8C7046-1230-4A8F-952B-B2770F2971FE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>gtaiv_multiplayer_client</RootNamespace>
-    <AssemblyName>gtaiv_multiplayer_client.net</AssemblyName>
+    <RootNamespace>MIVSDK</RootNamespace>
+    <AssemblyName>MIVSDK</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -30,13 +30,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ScriptHookDotNet">
-      <HintPath>I:\Program Files (x86)\Steam\SteamApps\common\Grand Theft Auto IV\GTAIV\scripts\for Developers\bin\ScriptHookDotNet.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -44,19 +39,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ChatInputForm.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Client.cs" />
-    <Compile Include="PlayerVehicleController.cs" />
-    <Compile Include="PlayerPedController.cs" />
+    <Compile Include="INIReader.cs" />
+    <Compile Include="PacketFormatter.cs" />
+    <Compile Include="UpdateDataStruct.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\multiplayer-sdk\multiplayer-sdk.csproj">
-      <Project>{7c8c7046-1230-4a8f-952b-b2770f2971fe}</Project>
-      <Name>multiplayer-sdk</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace multiplayer_sdk
+namespace MIVSDK
 {
     public enum Commands
     {
@@ -17,6 +17,23 @@ namespace multiplayer_sdk
         GetServerName,
         InfoPlayerName,
 
+        Chat_clear,
+        Chat_writeLine,
+        Chat_sendMessage,
+
+        Player_setPosition,
+        Player_warpIntoVehicle,
+        Player_setHeading,
+        Player_setVelocity,
+
+        Vehicle_setPosition,
+        Vehicle_create,
+        vehicle_setVelocity,
+        vehicle_setOrientation,
+        vehicle_removePeds,
+        vehicle_repair,
+        vehicle_repaint
+
     }
 
     public enum PlayerState
@@ -25,6 +42,16 @@ namespace multiplayer_sdk
         isAiming = 2,
         isShooting = 4
 
+    }
+    public enum ClientState
+    {
+        Invalid,
+        Disconnected,
+        Disconnecting,
+        Initializing,
+        Connecting,
+        Connected,
+        Streaming
     }
 
     public class UpdateDataStruct
@@ -82,6 +109,32 @@ namespace multiplayer_sdk
             output.veh_health = BitConverter.ToInt32(data, 56 + offset);
 
             return output;
+        }
+
+        public static UpdateDataStruct Zero
+        {
+            get
+            {
+                return new UpdateDataStruct()
+                { 
+                    pos_x = 0,
+                    pos_y = 0,
+                    pos_z = 0,
+                    rot_x = 0,
+                    rot_y = 0,
+                    rot_z = 0,
+                    rot_a = 0,
+                    heading = 0,
+                    ped_health = 0,
+                    speed = 0,
+                    veh_health = 0,
+                    vehicle_model = 0,
+                    vel_x = 0,
+                    vel_y = 0,
+                    vel_z = 0
+                };
+            }
+            set { }
         }
 
     }

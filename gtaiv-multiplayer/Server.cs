@@ -5,30 +5,36 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
-using multiplayer_sdk;
+using MIVSDK;
 using System.Timers;
 
-namespace gtaiv_multiplayer
+namespace MIVServer
 {
     public class Server
     {
         TcpListener server;
-        public Dictionary<byte, Player> playerpool;
+        public Dictionary<byte, ServerPlayer> playerpool;
         public static Server instance;
         public ServerApi api;
-
+        public ServerVehicleController vehicleController;
+        private GamemodeManager gamemodeManager;
+        public ServerChat chat;
 
         public Server(int port)
         {
+            chat = new ServerChat();
             instance = this;
+            vehicleController = new ServerVehicleController();
             api = new ServerApi(this);
+            gamemodeManager = new GamemodeManager(api);
+            gamemodeManager.loadFromFile("DeathmatchGamemode.dll");
             server = new TcpListener(IPAddress.Any, port);
             server.Start();
             server.BeginAcceptTcpClient(onIncomingConnection, null);
-            playerpool = new Dictionary<byte, Player>();
+            playerpool = new Dictionary<byte, ServerPlayer>();
             Timer timer = new Timer();
             timer.Elapsed += onBroadcastTimer;
-            timer.Interval = 40;
+            timer.Interval = 60;
             timer.Enabled = true;
             timer.Start();
             Console.WriteLine("Started server on port " + port.ToString());
@@ -36,9 +42,20 @@ namespace gtaiv_multiplayer
 
         void onBroadcastTimer(object sender, ElapsedEventArgs e)
         {
-            foreach (Player player in playerpool.Values)
+            foreach (ServerPlayer player in playerpool.Values)
             {
                 broadcastData(player);
+            }
+            string currentMessage;
+            while ((currentMessage = chat.dequeue()) != null)
+            {
+                foreach (ServerPlayer player in playerpool.Values)
+                {
+                    player.connection.streamWrite(Commands.Chat_writeLine);
+                    player.connection.streamWrite(currentMessage.Length);
+                    player.connection.streamWrite(currentMessage);
+                    player.connection.streamFlush();
+                }
             }
         }
 
@@ -51,41 +68,44 @@ namespace gtaiv_multiplayer
             throw new Exception("No free ids");
         }
 
-        public void broadcastData(Player player)
+        public void broadcastData(ServerPlayer player)
         {
-            if (player.position != null)
+            try
             {
-                broadcastNick(player);
-                UpdateDataStruct data = new UpdateDataStruct();
-                data.pos_x = player.position.x;
-                data.pos_y = player.position.y;
-                data.pos_z = player.position.z;
-                data.rot_x = player.orientation.x;
-                data.rot_y = player.orientation.y;
-                data.rot_z = player.orientation.z;
-                data.rot_a = player.orientation.a;
-                data.heading = player.heading;
-                data.ped_health = player.pedHealth;
-                data.speed = player.speed;
-                data.veh_health = player.vehicleHealth;
-                data.vehicle_model = player.vehicle_model;
-                data.vel_x = player.velocity.x;
-                data.vel_y = player.velocity.y;
-                data.vel_z = player.velocity.z;
-                foreach (var single in playerpool)
+                if (player.position != null)
                 {
-                    if (single.Value.id != player.id)
+                    broadcastNick(player);
+                    UpdateDataStruct data = new UpdateDataStruct();
+                    data.pos_x = player.position.X;
+                    data.pos_y = player.position.Y;
+                    data.pos_z = player.position.Z;
+                    data.rot_x = player.orientation.X;
+                    data.rot_y = player.orientation.Y;
+                    data.rot_z = player.orientation.Z;
+                    data.rot_a = player.orientation.W;
+                    data.heading = player.heading;
+                    data.ped_health = player.pedHealth;
+                    data.speed = player.speed;
+                    data.veh_health = player.vehicleHealth;
+                    data.vehicle_model = player.vehicle_model;
+                    data.vel_x = player.velocity.X;
+                    data.vel_y = player.velocity.Y;
+                    data.vel_z = player.velocity.Z;
+                    foreach (var single in playerpool)
                     {
-                        single.Value.connection.streamWrite(Commands.UpdateData);
-                        single.Value.connection.streamWrite(new byte[1] { (byte)player.id });
-                        single.Value.connection.streamWrite(data);
-                        single.Value.connection.streamFlush();
-                        Console.WriteLine("Streaming to player " + single.Value.nick);
+                        //if (single.Value.id != player.id)
+                        {
+                            single.Value.connection.streamWrite(Commands.UpdateData);
+                            single.Value.connection.streamWrite(new byte[1] { (byte)player.id });
+                            single.Value.connection.streamWrite(data);
+                            single.Value.connection.streamFlush();
+                            Console.WriteLine("Streaming to player " + single.Value.nick);
+                        }
                     }
                 }
-            }
+            } catch (Exception e){ Console.WriteLine(e); }
         }
-        public void broadcastNick(Player player)
+        public void broadcastNick(ServerPlayer player)
         {
             if (player.position != null)
             {
@@ -98,7 +118,7 @@ namespace gtaiv_multiplayer
                         single.Value.connection.streamWrite(player.nick.Length);
                         single.Value.connection.streamWrite(player.nick);
                         single.Value.connection.streamFlush();
-                        Console.WriteLine("Streaming nick TO " + single.Value.nick);
+                        //Console.WriteLine("Streaming nick TO " + single.Value.nick);
                     }
                 }
             }
@@ -116,10 +136,11 @@ namespace gtaiv_multiplayer
             connection.onConnect += delegate(string nick)
             {
                 Console.WriteLine("Connect from " + nick); 
-                Player player = new Player(nick, connection);
+                ServerPlayer player = new ServerPlayer(nick, connection);
                 player.id = findLowestFreeId();
                 player.nick = nick;
                 playerpool.Add(player.id, player);
+                api.invokeOnPlayerConnect(client.Client.RemoteEndPoint, player);
             };
 
             connection.startReceiving();

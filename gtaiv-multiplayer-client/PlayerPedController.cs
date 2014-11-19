@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using GTA;
 
-namespace gtaiv_multiplayer_client
+namespace MIVClient
 {
-    class PlayerPedController
+    public class PlayerPedController
     {
         Dictionary<byte, Ped> peds;
 
@@ -23,6 +23,14 @@ namespace gtaiv_multiplayer_client
                 //if (peds.ContainsKey(id)) peds.Remove(id);
                 peds.Add(id, World.CreatePed(position, Gender.Male));
                 Client.log("Created ped instance");
+            }
+            if (!Game.Exists(peds[id]) || !peds[id].isAliveAndWell)
+            {
+                if (Game.Exists(peds[id]))
+                {
+                    peds[id].Delete();
+                }
+                peds[id] = World.CreatePed(position, Gender.Male);
             }
             return peds[id];
         }

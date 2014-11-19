@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 
-namespace gtaiv_multiplayer
+namespace MIVServer
 {
-    class GamemodeManager
+    public class GamemodeManager
     {
         ServerApi api;
         public Gamemode current;
@@ -18,7 +18,7 @@ namespace gtaiv_multiplayer
 
         public void loadFromFile(string file)
         {
-            Assembly asm = Assembly.LoadFile(file);
+            Assembly asm = Assembly.LoadFile(System.IO.Path.GetFullPath(file));
             List<Type> types = asm.GetTypes().ToList();
             Gamemode gamemode = 
                 (Gamemode)types.First(a => a.BaseType == typeof(Gamemode))

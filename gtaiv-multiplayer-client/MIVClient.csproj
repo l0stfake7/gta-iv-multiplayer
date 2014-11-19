@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{E2279B36-F782-4B62-964A-A80C0CE40D3E}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{D5B51644-8C7E-481B-9033-E5D7D5FCC839}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>gtaiv_multiplayer</RootNamespace>
-    <AssemblyName>gtaiv-multiplayer</AssemblyName>
+    <RootNamespace>MIVClient</RootNamespace>
+    <AssemblyName>miv_client.net</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -32,8 +30,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ScriptHookDotNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Downloads\scripthookdotnet_src\bin\ScriptHookDotNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,24 +45,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientConnection.cs" />
-    <Compile Include="Gamemode.cs" />
-    <Compile Include="GamemodeManager.cs" />
-    <Compile Include="Player.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="ChatController.cs" />
+    <Compile Include="ChatInputForm.cs" />
+    <Compile Include="Client.cs" />
+    <Compile Include="KeyboardHandler.cs" />
+    <Compile Include="PerFrameRenderer.cs" />
+    <Compile Include="ServerConnection.cs" />
+    <Compile Include="VehicleController.cs" />
+    <Compile Include="PlayerVehicleController.cs" />
+    <Compile Include="PlayerPedController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Quaternion.cs" />
-    <Compile Include="Server.cs" />
-    <Compile Include="ServerApi.cs" />
-    <Compile Include="Vec3.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\multiplayer-sdk\multiplayer-sdk.csproj">
+    <ProjectReference Include="..\multiplayer-sdk\MIVSDK.csproj">
       <Project>{7c8c7046-1230-4a8f-952b-b2770f2971fe}</Project>
-      <Name>multiplayer-sdk</Name>
+      <Name>MIVSDK</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
