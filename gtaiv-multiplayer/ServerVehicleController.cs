@@ -1,9 +1,6 @@
-﻿using System;
+﻿using MIVSDK.Math;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MIVSDK.Math;
 
 namespace MIVServer
 {
@@ -12,6 +9,7 @@ namespace MIVServer
         public uint id;
         public ServerVehicle vehicle;
     }
+
     public class ServerVehicleController
     {
         public Dictionary<uint, ServerVehicle> vehicles;
@@ -39,14 +37,14 @@ namespace MIVServer
             return vehicles[id];
         }
 
-        public ServerVehicleInfo create(string model, Vector3 position, Quaternion orientation, Vector3 velocity)
+        public ServerVehicleInfo create(string model, Vector3 position, Quaternion orientation)
         {
             uint vid = findLowestFreeId();
             ServerVehicle veh = new ServerVehicle(vid);
             veh.position = position;
             veh.orientation = orientation;
             veh.model = model;
-            veh.velocity = velocity;
+            veh.velocity = Vector3.Zero;
             vehicles.Add(vid, veh);
             return new ServerVehicleInfo() { id = vid, vehicle = veh };
         }

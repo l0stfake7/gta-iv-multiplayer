@@ -1,18 +1,15 @@
-﻿using System;
+﻿using MIVSDK;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
-using MIVSDK;
 using System.Timers;
 
 namespace MIVServer
 {
     public class Server
     {
-        TcpListener server;
+        private TcpListener server;
         public Dictionary<byte, ServerPlayer> playerpool;
         public static Server instance;
         public ServerApi api;
@@ -34,13 +31,13 @@ namespace MIVServer
             playerpool = new Dictionary<byte, ServerPlayer>();
             Timer timer = new Timer();
             timer.Elapsed += onBroadcastTimer;
-            timer.Interval = 40;
+            timer.Interval = 80;
             timer.Enabled = true;
             timer.Start();
             Console.WriteLine("Started server on port " + port.ToString());
         }
 
-        void onBroadcastTimer(object sender, ElapsedEventArgs e)
+        private void onBroadcastTimer(object sender, ElapsedEventArgs e)
         {
             foreach (ServerPlayer player in playerpool.Values)
             {
@@ -67,14 +64,15 @@ namespace MIVServer
             }
             throw new Exception("No free ids");
         }
-
+        
         public void broadcastData(ServerPlayer player)
         {
+            if (player.data.client_has_been_set) return;
+            else player.data.client_has_been_set = true;
             try
             {
                 if (player.data != null)
                 {
-                    broadcastNick(player);
                     foreach (var single in playerpool)
                     {
                         if (single.Value.id != player.id)
@@ -87,7 +85,8 @@ namespace MIVServer
                         }
                     }
                 }
-            } catch (Exception e){ Console.WriteLine(e); }
+            }
+            catch (Exception e) { Console.WriteLine(e); }
         }
 
         public void broadcastVehiclesToPlayer(ServerPlayer player)
@@ -115,26 +114,7 @@ namespace MIVServer
             }
             player.connection.streamFlush();
         }
-
-        public void broadcastNick(ServerPlayer player)
-        {
-            if (player.data != null)
-            {
-                foreach (var single in playerpool)
-                {
-                    if (single.Value.id != player.id)
-                    {
-                        single.Value.connection.streamWrite(Commands.InfoPlayerName);
-                        single.Value.connection.streamWrite(new byte[1] { (byte)player.id });
-                        single.Value.connection.streamWrite(player.nick.Length);
-                        single.Value.connection.streamWrite(player.nick);
-                        single.Value.connection.streamFlush();
-                        //Console.WriteLine("Streaming nick TO " + single.Value.nick);
-                    }
-                }
-            }
-        }
-
+        
         private void onIncomingConnection(IAsyncResult iar)
         {
             Console.WriteLine("Connecting");
@@ -146,18 +126,16 @@ namespace MIVServer
 
             connection.onConnect += delegate(string nick)
             {
-                Console.WriteLine("Connect from " + nick); 
+                Console.WriteLine("Connect from " + nick);
                 ServerPlayer player = new ServerPlayer(nick, connection);
                 player.id = findLowestFreeId();
                 player.nick = nick;
                 playerpool.Add(player.id, player);
-                api.invokeOnPlayerConnect(client.Client.RemoteEndPoint, player);
                 broadcastVehiclesToPlayer(player);
+                api.invokeOnPlayerConnect(client.Client.RemoteEndPoint, player);
             };
 
             connection.startReceiving();
-            
         }
-
     }
 }

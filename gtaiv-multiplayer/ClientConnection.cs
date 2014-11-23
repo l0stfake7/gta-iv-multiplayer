@@ -1,28 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 namespace MIVServer
 {
     public class ClientConnection
     {
-        TcpClient connection;
+        private TcpClient connection;
+
         //NetworkStream stream;
-        byte[] buffer;
+        private byte[] buffer;
 
         public delegate void onUpdateDataDelegate(MIVSDK.UpdateDataStruct data);
+
         public delegate void onDisconnectDelegate();
+
         public delegate void onConnectDelegate(string nick);
+
         public delegate void onChatSendMessageDelegate(string line);
 
         public event onUpdateDataDelegate onUpdateData;
+
         public event onDisconnectDelegate onDisconnect;
+
         public event onConnectDelegate onConnect;
+
         public event onChatSendMessageDelegate onChatSendMessage;
 
         public ClientConnection(TcpClient client)
@@ -38,7 +42,7 @@ namespace MIVServer
             connection.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
         }
 
-        byte[] tempbuf;
+        private byte[] tempbuf;
 
         public void streamBegin()
         {
@@ -51,14 +55,12 @@ namespace MIVServer
             streamBegin();
         }
 
-
         public byte[] appendBytes(byte[] byte1, byte[] byte2)
         {
             var list = byte1.ToList();
             list.AddRange(byte2);
             return list.ToArray();
         }
-
 
         public void streamReadString(byte[] buffer)
         {
@@ -70,31 +72,36 @@ namespace MIVServer
         {
             tempbuf = appendBytes(tempbuf, buffer);
         }
+
         public void streamWrite(List<byte> buffer)
         {
             tempbuf = appendBytes(tempbuf, buffer.ToArray());
         }
+
         public void streamWrite(string buffer)
         {
             byte[] buf = Encoding.UTF8.GetBytes(buffer);
             tempbuf = appendBytes(tempbuf, buf);
         }
+
         public void streamWrite(MIVSDK.UpdateDataStruct buffer)
         {
             byte[] buf = buffer.serialize();
             tempbuf = appendBytes(tempbuf, buf);
         }
+
         public void streamWrite(MIVSDK.Commands command)
         {
             byte[] buf = BitConverter.GetBytes((ushort)command);
             tempbuf = appendBytes(tempbuf, buf);
         }
+
         public void streamWrite(int integer)
         {
             byte[] buf = BitConverter.GetBytes(integer);
             tempbuf = appendBytes(tempbuf, buf);
         }
-        
+
         private void onReceive(IAsyncResult iar)
         {
             //try
@@ -112,6 +119,7 @@ namespace MIVServer
                                 if (onDisconnect != null) onDisconnect.Invoke();
                             }
                             break;
+
                         case MIVSDK.Commands.Connect:
                             {
                                 var list = buffer.ToList();
@@ -119,6 +127,7 @@ namespace MIVServer
                                 if (onConnect != null) onConnect.Invoke(Encoding.UTF8.GetString(list.Skip(2 + 4).Take(nickLength).ToArray()));
                             }
                             break;
+
                         case MIVSDK.Commands.Chat_sendMessage:
                             {
                                 var list = buffer.ToList();
@@ -126,13 +135,13 @@ namespace MIVServer
                                 if (onChatSendMessage != null) onChatSendMessage.Invoke(Encoding.UTF8.GetString(list.Skip(2 + 4).Take(len).ToArray()));
                             }
                             break;
+
                         case MIVSDK.Commands.UpdateData:
                             {
                                 MIVSDK.UpdateDataStruct data = MIVSDK.UpdateDataStruct.unserialize(buffer, 2);
                                 if (onUpdateData != null) onUpdateData.Invoke(data);
                             }
                             break;
-
                     }
                 }
             }
@@ -144,6 +153,5 @@ namespace MIVServer
                 throw e;
             }*/
         }
-
     }
 }

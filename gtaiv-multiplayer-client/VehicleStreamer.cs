@@ -1,22 +1,22 @@
-﻿using System;
+﻿using GTA;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA;
+
 //using MIVSDK;
 
 namespace MIVClient
 {
     public class StreamedVehicle
     {
-        VehicleStreamer streamer;
+        private VehicleStreamer streamer;
         public uint id;
         public string model;
         public Vector3 position;
         public Quaternion orientation;
         public bool streamedIn;
         public Vehicle gameReference;
+
         public StreamedVehicle(VehicleStreamer streamer, uint id, string model, Vector3 position, Quaternion orientation)
         {
             this.streamer = streamer;
@@ -32,12 +32,11 @@ namespace MIVClient
         {
             streamer.delete(this);
         }
-
     }
 
     public class VehicleStreamer
     {
-        Client client;
+        private Client client;
         public List<StreamedVehicle> vehicles;
 
         public VehicleStreamer(Client client)
@@ -45,7 +44,7 @@ namespace MIVClient
             this.client = client;
             vehicles = new List<StreamedVehicle>();
         }
-        
+
         public void add(StreamedVehicle vehicle)
         {
             vehicles.Add(vehicle);
@@ -70,7 +69,7 @@ namespace MIVClient
                 {
                     float distance = playerPos.DistanceTo(vehicle.position);
                     //client.chatController.writeChat(playerPos.X.ToString() + " " + playerPos.Y.ToString() + " " + playerPos.Z.ToString() + " ");
-                    if (distance < 60.0f)
+                    if (distance < 300.0f)
                     {
                         if (!vehicle.streamedIn || vehicle.gameReference == null || !vehicle.gameReference.Exists())
                         {

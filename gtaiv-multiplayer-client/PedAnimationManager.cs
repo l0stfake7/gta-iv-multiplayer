@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA;
+﻿using GTA;
 
 namespace MIVClient
 {
@@ -16,34 +11,43 @@ namespace MIVClient
         Run,
         Ragdoll
     }
+
     public class PedAnimationManager
     {
-
-        StreamedPed ped;
-        PedAnimations currentAnimation;
-        static AnimationSet animset;
+        private StreamedPed ped;
+        private PedAnimations currentAnimation;
+        private static AnimationSet animset;
 
         public PedAnimationManager(StreamedPed ped)
         {
             this.ped = ped;
             currentAnimation = PedAnimations.StandStill;
-            animset = new AnimationSet("move_rpg");
+            animset = new AnimationSet("move_m@casual");
         }
 
         public void playAnimation(PedAnimations anim)
         {
-            if (!ped.streamedIn)
+            if (!ped.streamedIn || ped.gameReference == null || !ped.gameReference.Exists())
             {
                 currentAnimation = PedAnimations.NotStreamed;
             }
-            else if (currentAnimation != anim)
+            else if (!ped.gameReference.Animation.isPlaying(animset, "sprint") &&
+                !ped.gameReference.Animation.isPlaying(animset, "walk") &&
+                !ped.gameReference.Animation.isPlaying(animset, "idle"))
             {
+                //currentAnimation = PedAnimations.StandStill;
+            }
+            if (currentAnimation != anim)
+            {
+                ped.gameReference.Task.ClearAllImmediately();
                 switch (anim)
                 {
-                    case PedAnimations.Run: ped.gameReference.Animation.Play(animset, "sprint", 0.5f, AnimationFlags.Unknown05);
+                    case PedAnimations.Run: ped.gameReference.Animation.Play(animset, "sprint", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
                         break;
+
                     case PedAnimations.Walk: ped.gameReference.Animation.Play(animset, "walk", 1.0f, AnimationFlags.Unknown05);
                         break;
+
                     case PedAnimations.StandStill: ped.gameReference.Animation.Play(animset, "idle", 1.0f);
                         break;
                 }

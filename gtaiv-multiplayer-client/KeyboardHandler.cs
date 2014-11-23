@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using GTA;
 using MIVSDK;
-using GTA;
-using System.Drawing;
+using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
@@ -13,9 +9,9 @@ namespace MIVClient
 {
     public class KeyboardHandler
     {
-        Client client;
+        private Client client;
         public bool inKeyboardTypingMode;
-        GTA.KeyboardLayoutUS keyboardUS;
+        private GTA.KeyboardLayoutUS keyboardUS;
 
         public KeyboardHandler(Client client)
         {
@@ -25,11 +21,11 @@ namespace MIVClient
             client.KeyDown += new GTA.KeyEventHandler(this.eventOnKeyDown);
         }
 
-        float gamescale;
+        private float gamescale;
         public int cursorpos = 0;
+
         private void eventOnKeyDown(object sender, GTA.KeyEventArgs e)
         {
-
             if (!inKeyboardTypingMode && e.Key == System.Windows.Forms.Keys.T)
             {
                 inKeyboardTypingMode = true;
@@ -69,7 +65,7 @@ namespace MIVClient
                 }
                 else if (e.Key == System.Windows.Forms.Keys.Back)
                 {
-                    string leftcut = client.chatController.currentTypedText.Substring(0, cursorpos - 1);
+                    string leftcut = cursorpos > 0 ? client.chatController.currentTypedText.Substring(0, cursorpos - 1) : client.chatController.currentTypedText;
                     string rightcut = client.chatController.currentTypedText.Substring(cursorpos, client.chatController.currentTypedText.Length - cursorpos);
                     client.chatController.currentTypedText = leftcut + rightcut;
                     cursorpos = cursorpos > 0 ? cursorpos - 1 : cursorpos;
@@ -78,9 +74,9 @@ namespace MIVClient
                 {
                     string leftcut = client.chatController.currentTypedText.Substring(0, cursorpos);
 
-                    string rightcut = 
-                        cursorpos >= client.chatController.currentTypedText.Length ? 
-                        "" : 
+                    string rightcut =
+                        cursorpos >= client.chatController.currentTypedText.Length ?
+                        "" :
                         client.chatController.currentTypedText.Substring(cursorpos, client.chatController.currentTypedText.Length - cursorpos);
                     string newstr = keyboardUS.ParseKey((int)e.Key, e.Shift, e.Control, e.Alt);
                     client.chatController.currentTypedText = leftcut + newstr + rightcut;
@@ -148,8 +144,6 @@ namespace MIVClient
                     World.CurrentDayTime = new TimeSpan(12, 00, 00);
                     World.PedDensity = 0;
                     World.CarDensity = 0;
-
-
                 }
                 catch (Exception ex)
                 {
@@ -162,6 +156,5 @@ namespace MIVClient
                 }
             }
         }
-
     }
 }

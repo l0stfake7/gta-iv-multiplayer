@@ -1,20 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MIVSDK;
-using GTA;
+﻿using GTA;
+using System;
 using System.Drawing;
+using System.Text;
 
 namespace MIVClient
 {
     public class PerFrameRenderer
     {
-        Client client;
-        GTA.Font font;
-        RectangleF chatPosition;
-        Color chatBackground;
+        private Client client;
+        private GTA.Font font;
+        private RectangleF chatPosition;
+        private Color chatBackground;
+
         public PerFrameRenderer(Client client)
         {
             this.client = client;
@@ -24,12 +21,12 @@ namespace MIVClient
             client.PerFrameDrawing += Client_PerFrameDrawing;
         }
 
-        void Client_PerFrameDrawing(object sender, GraphicsEventArgs e)
+        private void Client_PerFrameDrawing(object sender, GraphicsEventArgs e)
         {
             e.Graphics.Scaling = FontScaling.Pixel;
             e.Graphics.DrawRectangle(chatPosition, chatBackground);
             int yoffset = 15;
-            for (int i = 0; i < client.chatController.chatconsole.Count; i++ )
+            for (int i = 0; i < client.chatController.chatconsole.Count; i++)
             {
                 e.Graphics.DrawText(client.chatController.chatconsole.ToArray()[i], 15, yoffset, font);
                 yoffset += 30;
@@ -39,17 +36,16 @@ namespace MIVClient
                 int cpos = client.keyboardHandler.cursorpos;
                 string prefix = client.nick + ": ";
                 string currenttext = prefix + client.chatController.currentTypedText;
-                
+
                 e.Graphics.DrawText(currenttext, 25, 15 + 30 * 8 + 20, font);
                 if (DateTime.Now.Millisecond < 500)
                 {
                     StringBuilder cstr = new StringBuilder();
-                    cstr.Append(' ', cpos + prefix.Length); 
+                    cstr.Append(' ', cpos + prefix.Length);
                     cstr.Append('|');
                     e.Graphics.DrawText(cstr.ToString(), 25, 15 + 30 * 8 + 20, font);
                 }
             }
-
         }
     }
 }

@@ -1,9 +1,6 @@
-﻿using System;
+﻿using GTA;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA;
 
 namespace MIVClient
 {
@@ -12,6 +9,7 @@ namespace MIVClient
         public uint id;
         public Vehicle vehicle;
     }
+
     public class VehicleController
     {
         public Dictionary<uint, StreamedVehicle> vehicles;
@@ -40,6 +38,7 @@ namespace MIVClient
             }
             return vehicles[id];
         }
+
         public StreamedVehicle getByVehicle(Vehicle vehicle)
         {
             foreach (var pair in streamer.vehicles)

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MIVSDK
 {
@@ -36,7 +33,6 @@ namespace MIVSDK
         vehicle_removePeds,
         vehicle_repair,
         vehicle_repaint
-
     }
 
     public enum PlayerState
@@ -45,8 +41,8 @@ namespace MIVSDK
         InVehicle = 1,
         IsAiming = 2,
         IsShooting = 4
-
     }
+
     public enum ClientState
     {
         Invalid,
@@ -57,23 +53,27 @@ namespace MIVSDK
         Connected,
         Streaming
     }
-    
+
     public class UpdateDataStruct
     {
+        public long timestamp;
         public float pos_x, pos_y, pos_z, rot_x, rot_y, rot_z, rot_a, vel_x, vel_y, vel_z, speed, heading;
         public int vehicle_model, ped_health, vehicle_health, weapon;
         public uint vehicle_id;
         public string nick;
         public PlayerState state;
+        public bool client_has_been_set;
 
         public MIVSDK.Math.Vector3 getPositionVector()
         {
             return new Math.Vector3(pos_x, pos_y, pos_z);
         }
+
         public MIVSDK.Math.Vector3 getVelocityVector()
         {
             return new Math.Vector3(vel_x, vel_y, vel_z);
         }
+
         public MIVSDK.Math.Quaternion getOrientationQuaternion()
         {
             return new Math.Quaternion(rot_x, rot_y, rot_z, rot_a);
@@ -82,6 +82,7 @@ namespace MIVSDK
         public byte[] serialize()
         {
             List<byte> output = new List<byte>();
+            output.AddRange(BitConverter.GetBytes(System.Diagnostics.Stopwatch.GetTimestamp()));
             output.AddRange(BitConverter.GetBytes(pos_x));
             output.AddRange(BitConverter.GetBytes(pos_y));
             output.AddRange(BitConverter.GetBytes(pos_z));
@@ -104,35 +105,37 @@ namespace MIVSDK
             output.AddRange(BitConverter.GetBytes(weapon));
             output.AddRange(BitConverter.GetBytes(vehicle_id));
             output.Add((byte)state);
+            output.AddRange(Serializers.serialize(nick));
             return output.ToArray();
         }
 
         public static UpdateDataStruct unserialize(byte[] data, int offset)
         {
             UpdateDataStruct output = new UpdateDataStruct();
-            output.pos_x = BitConverter.ToSingle(data, 0 + offset);
-            output.pos_y = BitConverter.ToSingle(data, 4 + offset);
-            output.pos_z = BitConverter.ToSingle(data, 8 + offset);
+            output.timestamp = BitConverter.ToInt64(data, offset);
+            output.pos_x = BitConverter.ToSingle(data, (offset += 8));
+            output.pos_y = BitConverter.ToSingle(data, (offset += 4));
+            output.pos_z = BitConverter.ToSingle(data, (offset += 4));
 
-            output.rot_x = BitConverter.ToSingle(data, 12 + offset);
-            output.rot_y = BitConverter.ToSingle(data, 16 + offset);
-            output.rot_z = BitConverter.ToSingle(data, 20 + offset);
-            output.rot_a = BitConverter.ToSingle(data, 24 + offset);
+            output.rot_x = BitConverter.ToSingle(data, (offset += 4));
+            output.rot_y = BitConverter.ToSingle(data, (offset += 4));
+            output.rot_z = BitConverter.ToSingle(data, (offset += 4));
+            output.rot_a = BitConverter.ToSingle(data, (offset += 4));
 
-            output.vel_x = BitConverter.ToSingle(data, 28 + offset);
-            output.vel_y = BitConverter.ToSingle(data, 32 + offset);
-            output.vel_z = BitConverter.ToSingle(data, 36 + offset);
+            output.vel_x = BitConverter.ToSingle(data, (offset += 4));
+            output.vel_y = BitConverter.ToSingle(data, (offset += 4));
+            output.vel_z = BitConverter.ToSingle(data, (offset += 4));
 
-            output.speed = BitConverter.ToSingle(data, 40 + offset);
-            output.heading = BitConverter.ToSingle(data, 44 + offset);
+            output.speed = BitConverter.ToSingle(data, (offset += 4));
+            output.heading = BitConverter.ToSingle(data, (offset += 4));
 
-            output.vehicle_model = BitConverter.ToInt32(data, 48 + offset);
-            output.ped_health = BitConverter.ToInt32(data, 52 + offset);
-            output.vehicle_health = BitConverter.ToInt32(data, 56 + offset);
-            output.weapon = BitConverter.ToInt32(data, 60 + offset);
-            output.vehicle_id = BitConverter.ToUInt32(data, 64 + offset);
-            output.state = (PlayerState)data[64 + offset];
-
+            output.vehicle_model = BitConverter.ToInt32(data, (offset += 4));
+            output.ped_health = BitConverter.ToInt32(data, (offset += 4));
+            output.vehicle_health = BitConverter.ToInt32(data, (offset += 4));
+            output.weapon = BitConverter.ToInt32(data, (offset += 4));
+            output.vehicle_id = BitConverter.ToUInt32(data, (offset += 4));
+            output.state = (PlayerState)data[(offset += 4)];
+            output.nick = Serializers.unserialize_string(data, (offset += 1));
             return output;
         }
 
@@ -141,7 +144,7 @@ namespace MIVSDK
             get
             {
                 return new UpdateDataStruct()
-                { 
+                {
                     pos_x = 0,
                     pos_y = 0,
                     pos_z = 0,
@@ -159,11 +162,12 @@ namespace MIVSDK
                     vel_y = 0,
                     vel_z = 0,
                     state = PlayerState.None,
-                    weapon = 0
+                    weapon = 0,
+                    nick = "",
+                    client_has_been_set = false
                 };
             }
             set { }
         }
-
     }
 }

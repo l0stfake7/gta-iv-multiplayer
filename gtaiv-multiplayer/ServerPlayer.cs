@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MIVSDK;
+﻿using MIVSDK;
 using MIVSDK.Math;
+using System;
 
 namespace MIVServer
 {
@@ -27,10 +23,11 @@ namespace MIVServer
             connection.onChatSendMessage += connection_onChatSendMessage;
         }
 
-        void connection_onChatSendMessage(string line)
+        private void connection_onChatSendMessage(string line)
         {
-            Server.instance.chat.addLine(nick + ": " + line);
+            Server.instance.api.invokeOnPlayerSendText(this, line);
         }
+
         private void onConnnect(string nick)
         {
             this.nick = nick;
@@ -46,9 +43,9 @@ namespace MIVServer
                 Server.instance.vehicleController.vehicles[data.vehicle_id].orientation = data.getOrientationQuaternion();
                 Server.instance.vehicleController.vehicles[data.vehicle_id].velocity = data.getVelocityVector();
             }
+            Server.instance.api.invokeOnPlayerUpdate(this);
             //Server.instance.broadcastData(this);
             //Console.WriteLine("Updated player " + nick);
-
         }
 
         public Vector3 Position
@@ -66,6 +63,7 @@ namespace MIVServer
                 connection.streamFlush();
             }
         }
+
         public Vector3 Velocity
         {
             get { return data.getVelocityVector(); }
@@ -81,6 +79,7 @@ namespace MIVServer
                 connection.streamFlush();
             }
         }
+
         public float Heading
         {
             get { return data.heading; }
@@ -92,6 +91,7 @@ namespace MIVServer
                 connection.streamFlush();
             }
         }
+
         public float Gravity
         {
             get { return this.gravity; }
@@ -103,6 +103,7 @@ namespace MIVServer
                 connection.streamFlush();
             }
         }
+
         public TimeSpan GameTime
         {
             get { return this.gametime; }

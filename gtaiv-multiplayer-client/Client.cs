@@ -1,14 +1,9 @@
-﻿using System;
+﻿using GTA;
+using MIVSDK;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA;
-using GTA.Forms;
-using System.Net;
 using System.Net.Sockets;
-using MIVSDK;
-using System.Drawing;
 
 namespace MIVClient
 {
@@ -32,7 +27,6 @@ namespace MIVClient
         {
             actionQueue.Enqueue(action);
         }
-
 
         public ClientState currentState = ClientState.Initializing;
 
@@ -62,10 +56,7 @@ namespace MIVClient
                 }
             });
             perFrameRenderer = new PerFrameRenderer(this);
-            
         }
-
-
 
         private void Client_ScriptCommand(ParameterCollection Parameters)
         {
@@ -93,7 +84,6 @@ namespace MIVClient
             log("Saved");
         }
 
-
         public static Client getInstance()
         {
             return instance;
@@ -109,34 +99,33 @@ namespace MIVClient
         {
             return Player.Character;
         }
+
         public Player getPlayer()
         {
             return Player;
         }
 
-        Dictionary<int, GTA.Vector3> bindPoints;
+        private Dictionary<int, GTA.Vector3> bindPoints;
+
         public void saveBindPoint(int id)
         {
             if (bindPoints == null) bindPoints = new Dictionary<int, Vector3>();
             if (bindPoints.ContainsKey(id)) bindPoints[id] = getPlayerPed().Position;
             else bindPoints.Add(id, getPlayerPed().Position);
         }
+
         public void teleportToBindPoint(int id)
         {
             if (bindPoints == null) bindPoints = new Dictionary<int, Vector3>();
             if (bindPoints.ContainsKey(id)) getPlayerPed().Position = bindPoints[id];
         }
 
-
-
-
         /*
          * Structure of packet is as follows
          * 0x00               0x01               0x05
          * [(ushort)COMMAND_ID] [(int)DATA_LENGTH] [(mixed)DATA]
-         * 
+         *
          */
-
 
         public static UpdateDataStruct currentData;
 
@@ -168,6 +157,7 @@ namespace MIVClient
                 {
                     Player.WantedLevel = 0;
                     UpdateDataStruct data = new UpdateDataStruct();
+                    data.nick = nick;
                     //log("my X is " + data.pos_x.ToString());
                     if (Player.Character.isInVehicle())
                     {
@@ -232,7 +222,6 @@ namespace MIVClient
                     serverConnection.streamWrite(data);
                     serverConnection.streamFlush();
                     currentData = data;
-
                 }
                 catch (Exception ex)
                 {
@@ -240,7 +229,6 @@ namespace MIVClient
                 }
                 try
                 {
-
                     vehicleController.streamer.update();
                     pedController.streamer.update();
                 }
@@ -255,8 +243,12 @@ namespace MIVClient
                 {
                     var elemKey = serverConnection.playersdata.Keys.ToArray()[i];
                     var elemValue = serverConnection.playersdata[elemKey];
-                    bool in_vehicle = elemValue.vehicle_id > 0;
-                    var posnew = new Vector3(elemValue.pos_x, elemValue.pos_y, !in_vehicle ? elemValue.pos_z - 1.0f : elemValue.pos_z);
+
+                    if (elemValue.client_has_been_set) continue;
+                    else elemValue.client_has_been_set = true;
+
+                    //bool in_vehicle = elemValue.vehicle_id > 0;
+                    var posnew = new Vector3(elemValue.pos_x, elemValue.pos_y, elemValue.pos_z - 1.0f);
                     StreamedPed ped = pedController.getById(elemKey, posnew);
                     try
                     {
@@ -265,7 +257,7 @@ namespace MIVClient
                     catch (Exception ex)
                     {
                         log("Failed updating streamed vehicle data for player " + ex.Message);
-                    } 
+                    }
                     try
                     {
                         updatePed(elemValue, ped);
@@ -274,7 +266,6 @@ namespace MIVClient
                     {
                         log("Failed updating streamed ped data for player " + ex.Message);
                     }
-                    
                 }
             }
             if (currentState == ClientState.Connecting)
@@ -287,6 +278,5 @@ namespace MIVClient
                 chatController.writeChat("Connected");
             }
         }
-
     }
 }

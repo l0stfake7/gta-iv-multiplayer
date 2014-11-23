@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MIVSDK
+﻿namespace MIVSDK
 {
     namespace Math
     {
         public class Vector4
         {
             public float X, Y, Z, W;
+
             public Vector4()
             {
                 this.X = 0;
@@ -45,10 +40,12 @@ namespace MIVSDK
             {
                 return v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z && v1.W == v2.W;
             }
+
             public static bool operator !=(Vector4 v1, Vector4 v2)
             {
                 return v1.X != v2.X || v1.Y != v2.Y || v1.Z != v2.Z || v1.W != v2.W;
             }
+
             public static Vector4 operator +(Vector4 v1, Vector4 v2)
             {
                 Vector4 ret = new Vector4(v1);

@@ -1,22 +1,22 @@
-﻿using System;
+﻿using GTA;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA;
+
 //using MIVSDK;
 
 namespace MIVClient
 {
     public class StreamedPed
     {
-        PedStreamer streamer;
+        private PedStreamer streamer;
         public uint id;
         public Vector3 position;
         public float heading;
         public bool streamedIn;
         public Ped gameReference;
         public PedAnimationManager animator;
+        public bool hasNetworkName;
 
         public StreamedPed(PedStreamer streamer, uint id, Vector3 position, float heading)
         {
@@ -25,6 +25,7 @@ namespace MIVClient
             this.position = position;
             this.heading = heading;
             streamedIn = false;
+            hasNetworkName = false;
             streamer.add(this);
             animator = new PedAnimationManager(this);
         }
@@ -33,12 +34,11 @@ namespace MIVClient
         {
             streamer.delete(this);
         }
-
     }
 
     public class PedStreamer
     {
-        Client client;
+        private Client client;
         public List<StreamedPed> peds;
 
         public PedStreamer(Client client)
@@ -71,7 +71,7 @@ namespace MIVClient
                 {
                     float distance = playerPos.DistanceTo(ped.position);
                     //client.chatController.writeChat(playerPos.X.ToString() + " " + playerPos.Y.ToString() + " " + playerPos.Z.ToString() + " ");
-                    if (distance < 30.0f)
+                    if (distance < 300.0f)
                     {
                         if (!ped.streamedIn || ped.gameReference == null || !ped.gameReference.Exists())
                         {
@@ -84,6 +84,7 @@ namespace MIVClient
                     {
                         ped.gameReference.Delete();
                         ped.gameReference = null;
+                        ped.hasNetworkName = false;
                         ped.streamedIn = false;
                     }
                 }

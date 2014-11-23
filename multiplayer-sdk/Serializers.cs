@@ -1,9 +1,8 @@
-﻿using System;
+﻿using MIVSDK.Math;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using MIVSDK.Math;
 
 namespace MIVSDK
 {
@@ -15,10 +14,12 @@ namespace MIVSDK
             buffer.InsertRange(0, BitConverter.GetBytes(buffer.Count));
             return buffer.ToArray();
         }
+
         public static string unserialize_string(byte[] b, int o)
         {
             return Encoding.UTF8.GetString(b, o + 4, BitConverter.ToInt32(b, o));
         }
+
         public static string unserialize_string(byte[] b, int o, out int length)
         {
             int count = BitConverter.ToInt32(b, o);

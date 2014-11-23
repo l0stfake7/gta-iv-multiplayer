@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MIVSDK
+﻿namespace MIVSDK
 {
     namespace Math
     {
@@ -13,7 +7,6 @@ namespace MIVSDK
             public Quaternion(float X, float Y, float Z, float W)
                 : base(X, Y, Z, W)
             {
-
             }
 
             public static Quaternion Zero
@@ -23,5 +16,4 @@ namespace MIVSDK
             }
         }
     }
-
 }

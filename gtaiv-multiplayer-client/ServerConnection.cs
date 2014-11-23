@@ -1,19 +1,17 @@
-﻿using System;
+﻿using GTA;
+using MIVSDK;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net;
 using System.Net.Sockets;
-using MIVSDK;
-using GTA;
+using System.Text;
 
 namespace MIVClient
 {
     public class ServerConnection
     {
-        Client client;
-        byte[] buffer;
+        private Client client;
+        private byte[] buffer;
         public Dictionary<byte, UpdateDataStruct> playersdata;
 
         public ServerConnection(Client client)
@@ -24,7 +22,6 @@ namespace MIVClient
             streamBegin();
             client.client.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
         }
-
 
         private void onReceive(IAsyncResult iar)
         {
@@ -43,25 +40,6 @@ namespace MIVClient
                                     MIVSDK.UpdateDataStruct data = MIVSDK.UpdateDataStruct.unserialize(buffer, 3);
                                     if (!playersdata.ContainsKey(playerid)) playersdata.Add(playerid, data);
                                     else playersdata[playerid] = data;
-                                    StreamedPed ped = client.pedController.getById(playerid, new Vector3(data.pos_x, data.pos_y, data.pos_z));
-                                    if (data.vehicle_id > 0)
-                                    {
-                                        StreamedVehicle veh = client.vehicleController.streamer.vehicles.First(a => a.id == data.vehicle_id);
-                                        veh.position = new Vector3(data.pos_x, data.pos_y, data.pos_z);
-                                        veh.orientation = new Quaternion(data.rot_x, data.rot_y, data.rot_z, data.rot_a);
-                                    }
-                                }
-                                break;
-                            case MIVSDK.Commands.InfoPlayerName:
-                                {
-                                    byte playerid = buffer[2];
-                                    if (playersdata.ContainsKey(playerid))
-                                    {
-                                        var list = buffer.ToList();
-                                        int nickLength = BitConverter.ToInt32(buffer, 3);
-                                        string nick = Encoding.UTF8.GetString(list.Skip(3 + 4).Take(nickLength).ToArray());
-                                        playersdata[playerid].nick = nick;
-                                    }
                                 }
                                 break;
 
@@ -71,7 +49,6 @@ namespace MIVClient
                                     int lineLength = BitConverter.ToInt32(buffer, 2);
                                     string line = Encoding.UTF8.GetString(list.Skip(2 + 4).Take(lineLength).ToArray());
                                     client.chatController.writeChat(line);
-
                                 }
                                 break;
 
@@ -115,10 +92,10 @@ namespace MIVClient
                                     }
                                 }
                                 break;
-
                         }
                     }
                 }
+                buffer = new byte[1024 * 1024];
                 client.client.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
             }
             catch (Exception e)
@@ -129,7 +106,6 @@ namespace MIVClient
             }
         }
 
-
         private byte[] appendBytes(byte[] byte1, byte[] byte2)
         {
             var list = byte1.ToList();
@@ -137,7 +113,7 @@ namespace MIVClient
             return list.ToArray();
         }
 
-        byte[] tempbuf;
+        private byte[] tempbuf;
 
         public void streamBegin()
         {
@@ -149,34 +125,39 @@ namespace MIVClient
             client.client.Client.Send(tempbuf, tempbuf.Length, SocketFlags.None);
             streamBegin();
         }
+
         public void streamWrite(byte[] buffer)
         {
             tempbuf = appendBytes(tempbuf, buffer);
         }
+
         public void streamWrite(List<byte> buffer)
         {
             tempbuf = appendBytes(tempbuf, buffer.ToArray());
         }
+
         public void streamWrite(string buffer)
         {
             byte[] buf = Encoding.UTF8.GetBytes(buffer);
             tempbuf = appendBytes(tempbuf, buf);
         }
+
         public void streamWrite(UpdateDataStruct buffer)
         {
             byte[] buf = buffer.serialize();
             tempbuf = appendBytes(tempbuf, buf);
         }
+
         public void streamWrite(Commands command)
         {
             byte[] buf = BitConverter.GetBytes((ushort)command);
             tempbuf = appendBytes(tempbuf, buf);
         }
+
         public void streamWrite(int integer)
         {
             byte[] buf = BitConverter.GetBytes(integer);
             tempbuf = appendBytes(tempbuf, buf);
         }
-
     }
 }
