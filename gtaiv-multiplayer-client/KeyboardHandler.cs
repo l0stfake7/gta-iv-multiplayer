@@ -25,13 +25,15 @@ namespace MIVClient
             client.KeyDown += new GTA.KeyEventHandler(this.eventOnKeyDown);
         }
 
-
+        float gamescale;
+        public int cursorpos = 0;
         private void eventOnKeyDown(object sender, GTA.KeyEventArgs e)
         {
 
             if (!inKeyboardTypingMode && e.Key == System.Windows.Forms.Keys.T)
             {
                 inKeyboardTypingMode = true;
+                cursorpos = 0;
                 client.getPlayer().CanControlCharacter = false;
             }
             else if (inKeyboardTypingMode)
@@ -47,23 +49,42 @@ namespace MIVClient
                         client.serverConnection.streamFlush();
                     }
                     client.chatController.currentTypedText = "";
+                    cursorpos = 0;
                     inKeyboardTypingMode = false;
                     client.getPlayer().CanControlCharacter = true;
                 }
                 else if (e.Key == System.Windows.Forms.Keys.Escape)
                 {
                     client.chatController.currentTypedText = "";
+                    cursorpos = 0;
                     inKeyboardTypingMode = false;
+                }
+                else if (e.Key == System.Windows.Forms.Keys.Left)
+                {
+                    cursorpos = cursorpos > 0 ? cursorpos - 1 : cursorpos;
+                }
+                else if (e.Key == System.Windows.Forms.Keys.Right)
+                {
+                    cursorpos = cursorpos >= client.chatController.currentTypedText.Length ? client.chatController.currentTypedText.Length : cursorpos + 1;
                 }
                 else if (e.Key == System.Windows.Forms.Keys.Back)
                 {
-                    client.chatController.currentTypedText = client.chatController.currentTypedText.Length > 1 ?
-                        client.chatController.currentTypedText.Substring(0, client.chatController.currentTypedText.Length) :
-                        client.chatController.currentTypedText;
+                    string leftcut = client.chatController.currentTypedText.Substring(0, cursorpos - 1);
+                    string rightcut = client.chatController.currentTypedText.Substring(cursorpos, client.chatController.currentTypedText.Length - cursorpos);
+                    client.chatController.currentTypedText = leftcut + rightcut;
+                    cursorpos = cursorpos > 0 ? cursorpos - 1 : cursorpos;
                 }
                 else
                 {
-                    client.chatController.currentTypedText += keyboardUS.ParseKey((int)e.Key, e.Shift, e.Control, e.Alt);
+                    string leftcut = client.chatController.currentTypedText.Substring(0, cursorpos);
+
+                    string rightcut = 
+                        cursorpos >= client.chatController.currentTypedText.Length ? 
+                        "" : 
+                        client.chatController.currentTypedText.Substring(cursorpos, client.chatController.currentTypedText.Length - cursorpos);
+                    string newstr = keyboardUS.ParseKey((int)e.Key, e.Shift, e.Control, e.Alt);
+                    client.chatController.currentTypedText = leftcut + newstr + rightcut;
+                    cursorpos += newstr.Length;
                 }
                 return;
             }
@@ -74,9 +95,33 @@ namespace MIVClient
                 if (e.Key == (System.Windows.Forms.Keys)id && e.Control) client.teleportToBindPoint(id - (int)System.Windows.Forms.Keys.D0);
             }
 
-            if (e.Key == System.Windows.Forms.Keys.Enter)
+            if (gamescale == null) gamescale = 1.0f;
+            if (e.Key == System.Windows.Forms.Keys.Add)
             {
-                //      ChatInputForm.show();
+                gamescale *= 1.3f;
+                Game.TimeScale = gamescale;
+            }
+            if (e.Key == System.Windows.Forms.Keys.Subtract)
+            {
+                gamescale *= 0.7f;
+                Game.TimeScale = gamescale;
+            }
+            if (e.Key == System.Windows.Forms.Keys.Multiply)
+            {
+                gamescale = 1.0f;
+                Game.TimeScale = gamescale;
+            }
+
+            if (e.Key == System.Windows.Forms.Keys.Insert)
+            {
+                if (client.getPlayerPed().isInVehicle())
+                {
+                    client.getPlayerPed().CurrentVehicle.Velocity *= 2.0f;
+                }
+                else
+                {
+                    client.getPlayerPed().Velocity *= 2.0f;
+                }
             }
 
             if (e.Key == System.Windows.Forms.Keys.L)
@@ -103,9 +148,7 @@ namespace MIVClient
                     World.CurrentDayTime = new TimeSpan(12, 00, 00);
                     World.PedDensity = 0;
                     World.CarDensity = 0;
-                    var peds = World.GetPeds(client.getPlayerPed().Position, 200.0f);
-                    foreach (Ped a in peds) if (a.Exists() && a.isAlive && a != client.getPlayerPed()) a.Delete();
-                    foreach (Vehicle v in World.GetAllVehicles()) if (v.Exists()) v.Delete();
+
 
                 }
                 catch (Exception ex)

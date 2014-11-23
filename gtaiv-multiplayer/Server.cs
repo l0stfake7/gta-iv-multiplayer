@@ -34,7 +34,7 @@ namespace MIVServer
             playerpool = new Dictionary<byte, ServerPlayer>();
             Timer timer = new Timer();
             timer.Elapsed += onBroadcastTimer;
-            timer.Interval = 60;
+            timer.Interval = 40;
             timer.Enabled = true;
             timer.Start();
             Console.WriteLine("Started server on port " + port.ToString());
@@ -72,42 +72,53 @@ namespace MIVServer
         {
             try
             {
-                if (player.position != null)
+                if (player.data != null)
                 {
                     broadcastNick(player);
-                    UpdateDataStruct data = new UpdateDataStruct();
-                    data.pos_x = player.position.X;
-                    data.pos_y = player.position.Y;
-                    data.pos_z = player.position.Z;
-                    data.rot_x = player.orientation.X;
-                    data.rot_y = player.orientation.Y;
-                    data.rot_z = player.orientation.Z;
-                    data.rot_a = player.orientation.W;
-                    data.heading = player.heading;
-                    data.ped_health = player.pedHealth;
-                    data.speed = player.speed;
-                    data.veh_health = player.vehicleHealth;
-                    data.vehicle_model = player.vehicle_model;
-                    data.vel_x = player.velocity.X;
-                    data.vel_y = player.velocity.Y;
-                    data.vel_z = player.velocity.Z;
                     foreach (var single in playerpool)
                     {
-                        //if (single.Value.id != player.id)
+                        if (single.Value.id != player.id)
                         {
                             single.Value.connection.streamWrite(Commands.UpdateData);
                             single.Value.connection.streamWrite(new byte[1] { (byte)player.id });
-                            single.Value.connection.streamWrite(data);
+                            single.Value.connection.streamWrite(player.data);
                             single.Value.connection.streamFlush();
-                            Console.WriteLine("Streaming to player " + single.Value.nick);
+                            //Console.WriteLine("Streaming to player " + single.Value.nick);
                         }
                     }
                 }
             } catch (Exception e){ Console.WriteLine(e); }
         }
+
+        public void broadcastVehiclesToPlayer(ServerPlayer player)
+        {
+            player.connection.streamWrite(Commands.Vehicle_create_multi);
+            player.connection.streamWrite(BitConverter.GetBytes(vehicleController.vehicles.Count));
+            foreach (var pair in vehicleController.vehicles)
+            {
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.id));
+
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.X));
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.Y));
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.Z));
+
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.orientation.X));
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.orientation.Y));
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.orientation.Z));
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.orientation.W));
+
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.velocity.X));
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.velocity.Y));
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.velocity.Z));
+                player.connection.streamWrite(Serializers.serialize(pair.Value.model));
+                //Console.WriteLine("sent vehicle " + pair.Value.id);
+            }
+            player.connection.streamFlush();
+        }
+
         public void broadcastNick(ServerPlayer player)
         {
-            if (player.position != null)
+            if (player.data != null)
             {
                 foreach (var single in playerpool)
                 {
@@ -141,6 +152,7 @@ namespace MIVServer
                 player.nick = nick;
                 playerpool.Add(player.id, player);
                 api.invokeOnPlayerConnect(client.Client.RemoteEndPoint, player);
+                broadcastVehiclesToPlayer(player);
             };
 
             connection.startReceiving();

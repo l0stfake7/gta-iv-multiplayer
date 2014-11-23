@@ -14,23 +14,25 @@ namespace MIVClient
     }
     public class VehicleController
     {
-        Dictionary<uint, Vehicle> vehicles;
+        public Dictionary<uint, StreamedVehicle> vehicles;
+        public VehicleStreamer streamer;
 
         public VehicleController()
         {
-            vehicles = new Dictionary<uint, Vehicle>();
+            vehicles = new Dictionary<uint, StreamedVehicle>();
+            streamer = new VehicleStreamer(Client.getInstance());
         }
 
         private uint findLowestFreeId()
         {
-            for (uint i = 0; i < uint.MaxValue; i++)
+            for (uint i = 1; i < uint.MaxValue; i++)
             {
                 if (!vehicles.ContainsKey(i)) return i;
             }
             throw new Exception("No free ids");
         }
 
-        public Vehicle getById(uint id, int model, Vector3 position)
+        public StreamedVehicle getById(uint id)
         {
             if (!vehicles.ContainsKey(id))
             {
@@ -38,22 +40,27 @@ namespace MIVClient
             }
             return vehicles[id];
         }
-
-        public VehicleInfo create(int model, Vector3 position, Quaternion orientation, Vector3 velocity)
+        public StreamedVehicle getByVehicle(Vehicle vehicle)
         {
-            uint vid = findLowestFreeId();
-            Vehicle veh = World.CreateVehicle(new Model(model), position);
-            veh.RotationQuaternion = orientation;
-            veh.Velocity = velocity;
-            vehicles.Add(vid, veh);
-            return new VehicleInfo() { id = vid, vehicle = veh };
+            foreach (var pair in streamer.vehicles)
+            {
+                if (pair.gameReference != null && pair.gameReference == vehicle) return pair;
+            }
+            return null;
+        }
+
+        public StreamedVehicle create(uint vid, string model, Vector3 position, Quaternion orientation, Vector3 velocity)
+        {
+            var v = new StreamedVehicle(streamer, vid, model, position, orientation);
+            this.vehicles.Add(vid, v);
+            return v;
         }
 
         public void destroy(byte id)
         {
             if (vehicles.ContainsKey(id))
             {
-                vehicles[id].Delete();
+                vehicles[id].delete();
                 vehicles.Remove(id);
             }
         }

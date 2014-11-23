@@ -25,9 +25,12 @@ namespace MIVSDK
         Player_warpIntoVehicle,
         Player_setHeading,
         Player_setVelocity,
+        Player_setGravity,
+        Player_setWeather,
+        Player_setGameTime,
 
         Vehicle_setPosition,
-        Vehicle_create,
+        Vehicle_create_multi,
         vehicle_setVelocity,
         vehicle_setOrientation,
         vehicle_removePeds,
@@ -38,9 +41,10 @@ namespace MIVSDK
 
     public enum PlayerState
     {
-        inVehicle = 0,
-        isAiming = 2,
-        isShooting = 4
+        None = 0,
+        InVehicle = 1,
+        IsAiming = 2,
+        IsShooting = 4
 
     }
     public enum ClientState
@@ -53,12 +57,27 @@ namespace MIVSDK
         Connected,
         Streaming
     }
-
+    
     public class UpdateDataStruct
     {
         public float pos_x, pos_y, pos_z, rot_x, rot_y, rot_z, rot_a, vel_x, vel_y, vel_z, speed, heading;
-        public int vehicle_model, ped_health, veh_health;
+        public int vehicle_model, ped_health, vehicle_health, weapon;
+        public uint vehicle_id;
         public string nick;
+        public PlayerState state;
+
+        public MIVSDK.Math.Vector3 getPositionVector()
+        {
+            return new Math.Vector3(pos_x, pos_y, pos_z);
+        }
+        public MIVSDK.Math.Vector3 getVelocityVector()
+        {
+            return new Math.Vector3(vel_x, vel_y, vel_z);
+        }
+        public MIVSDK.Math.Quaternion getOrientationQuaternion()
+        {
+            return new Math.Quaternion(rot_x, rot_y, rot_z, rot_a);
+        }
 
         public byte[] serialize()
         {
@@ -81,7 +100,10 @@ namespace MIVSDK
 
             output.AddRange(BitConverter.GetBytes(vehicle_model));
             output.AddRange(BitConverter.GetBytes(ped_health));
-            output.AddRange(BitConverter.GetBytes(veh_health));
+            output.AddRange(BitConverter.GetBytes(vehicle_health));
+            output.AddRange(BitConverter.GetBytes(weapon));
+            output.AddRange(BitConverter.GetBytes(vehicle_id));
+            output.Add((byte)state);
             return output.ToArray();
         }
 
@@ -106,7 +128,10 @@ namespace MIVSDK
 
             output.vehicle_model = BitConverter.ToInt32(data, 48 + offset);
             output.ped_health = BitConverter.ToInt32(data, 52 + offset);
-            output.veh_health = BitConverter.ToInt32(data, 56 + offset);
+            output.vehicle_health = BitConverter.ToInt32(data, 56 + offset);
+            output.weapon = BitConverter.ToInt32(data, 60 + offset);
+            output.vehicle_id = BitConverter.ToUInt32(data, 64 + offset);
+            output.state = (PlayerState)data[64 + offset];
 
             return output;
         }
@@ -127,11 +152,14 @@ namespace MIVSDK
                     heading = 0,
                     ped_health = 0,
                     speed = 0,
-                    veh_health = 0,
+                    vehicle_health = 0,
+                    vehicle_id = 0,
                     vehicle_model = 0,
                     vel_x = 0,
                     vel_y = 0,
-                    vel_z = 0
+                    vel_z = 0,
+                    state = PlayerState.None,
+                    weapon = 0
                 };
             }
             set { }

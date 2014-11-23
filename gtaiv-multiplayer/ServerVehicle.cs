@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MIVSDK.Math;
 
 namespace MIVServer
 {
     public class ServerVehicle
     {
         public uint id;
-        public int model;
+        public string model;
         public Vector3 position, velocity;
         public Quaternion orientation;
         public int health;

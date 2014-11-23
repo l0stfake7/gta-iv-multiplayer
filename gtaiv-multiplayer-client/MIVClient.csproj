@@ -32,7 +32,7 @@
   <ItemGroup>
     <Reference Include="ScriptHookDotNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Downloads\scripthookdotnet_src\bin\ScriptHookDotNet.dll</HintPath>
+      <HintPath>..\..\..\..\..\Desktop\ScriptHookDotNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -46,15 +46,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChatController.cs" />
-    <Compile Include="ChatInputForm.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="KeyboardHandler.cs" />
+    <Compile Include="PedAnimationManager.cs" />
     <Compile Include="PerFrameRenderer.cs" />
+    <Compile Include="Positioners.cs" />
     <Compile Include="ServerConnection.cs" />
     <Compile Include="VehicleController.cs" />
     <Compile Include="PlayerVehicleController.cs" />
     <Compile Include="PlayerPedController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PedStreamer.cs" />
+    <Compile Include="VehicleStreamer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\multiplayer-sdk\MIVSDK.csproj">

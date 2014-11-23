@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MIVSDK;
+using MIVSDK.Math;
 
 namespace MIVServer
 {
@@ -11,28 +12,16 @@ namespace MIVServer
     {
         public byte id;
         public string nick;
-        public Vector3 position, velocity;
-        public Quaternion orientation;
-        public float heading, speed;
         public ClientConnection connection;
-        public int vehicle_model;
-        public bool isInVehicle;
-        public int pedHealth;
-        public int vehicleHealth;
+        public UpdateDataStruct data;
+        private float gravity;
+        private TimeSpan gametime;
 
         public ServerPlayer(string nick, ClientConnection connection)
         {
             this.nick = nick;
             this.connection = connection;
-            position = Vector3.Zero;
-            velocity = Vector3.Zero;
-            orientation = Quaternion.Zero;
-            heading = 0;
-            speed = 0;
-            vehicle_model = 0;
-            isInVehicle = false;
-            pedHealth = 100;
-            vehicleHealth = 100;
+            data = UpdateDataStruct.Zero;
             connection.onUpdateData += onUpdateData;
             connection.onConnect += onConnnect;
             connection.onChatSendMessage += connection_onChatSendMessage;
@@ -49,28 +38,81 @@ namespace MIVServer
 
         private void onUpdateData(UpdateDataStruct data)
         {
-            this.position = new Vector3(data.pos_x, data.pos_y, data.pos_z);
-            this.orientation = new Quaternion(data.rot_x, data.rot_y, data.rot_z, data.rot_a);
-            this.velocity = new Vector3(data.vel_x, data.vel_y, data.vel_z);
-            this.isInVehicle = data.vehicle_model > 0;
-            this.vehicle_model = data.vehicle_model;
-            this.heading = data.heading;
-            this.speed = data.speed;
-            this.pedHealth = data.ped_health;
-            this.vehicleHealth = data.veh_health;
+            this.data = data;
+
+            if (data.vehicle_id > 0)
+            {
+                Server.instance.vehicleController.vehicles[data.vehicle_id].position = data.getPositionVector();
+                Server.instance.vehicleController.vehicles[data.vehicle_id].orientation = data.getOrientationQuaternion();
+                Server.instance.vehicleController.vehicles[data.vehicle_id].velocity = data.getVelocityVector();
+            }
             //Server.instance.broadcastData(this);
-            Console.WriteLine("Updated player " + nick);
+            //Console.WriteLine("Updated player " + nick);
 
         }
 
-        public void teleport(Vector3 pos)
+        public Vector3 Position
         {
-            position = pos;
-            connection.streamWrite(Commands.Player_setPosition);
-            connection.streamWrite(BitConverter.GetBytes(pos.X));
-            connection.streamWrite(BitConverter.GetBytes(pos.Y));
-            connection.streamWrite(BitConverter.GetBytes(pos.Z));
-            connection.streamFlush();
+            get { return data.getPositionVector(); }
+            set
+            {
+                data.pos_x = value.X;
+                data.pos_y = value.Y;
+                data.pos_z = value.Z;
+                connection.streamWrite(Commands.Player_setPosition);
+                connection.streamWrite(BitConverter.GetBytes(value.X));
+                connection.streamWrite(BitConverter.GetBytes(value.Y));
+                connection.streamWrite(BitConverter.GetBytes(value.Z));
+                connection.streamFlush();
+            }
+        }
+        public Vector3 Velocity
+        {
+            get { return data.getVelocityVector(); }
+            set
+            {
+                data.vel_x = value.X;
+                data.vel_y = value.Y;
+                data.vel_z = value.Z;
+                connection.streamWrite(Commands.Player_setVelocity);
+                connection.streamWrite(BitConverter.GetBytes(value.X));
+                connection.streamWrite(BitConverter.GetBytes(value.Y));
+                connection.streamWrite(BitConverter.GetBytes(value.Z));
+                connection.streamFlush();
+            }
+        }
+        public float Heading
+        {
+            get { return data.heading; }
+            set
+            {
+                data.heading = value;
+                connection.streamWrite(Commands.Player_setHeading);
+                connection.streamWrite(BitConverter.GetBytes(value));
+                connection.streamFlush();
+            }
+        }
+        public float Gravity
+        {
+            get { return this.gravity; }
+            set
+            {
+                gravity = value;
+                connection.streamWrite(Commands.Player_setGravity);
+                connection.streamWrite(BitConverter.GetBytes(value));
+                connection.streamFlush();
+            }
+        }
+        public TimeSpan GameTime
+        {
+            get { return this.gametime; }
+            set
+            {
+                gametime = value;
+                connection.streamWrite(Commands.Player_setHeading);
+                connection.streamWrite(BitConverter.GetBytes(value.Seconds));
+                connection.streamFlush();
+            }
         }
     }
 }

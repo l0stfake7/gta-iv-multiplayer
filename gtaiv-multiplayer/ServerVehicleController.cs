@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MIVSDK.Math;
 
 namespace MIVServer
 {
@@ -13,7 +14,7 @@ namespace MIVServer
     }
     public class ServerVehicleController
     {
-        Dictionary<uint, ServerVehicle> vehicles;
+        public Dictionary<uint, ServerVehicle> vehicles;
 
         public ServerVehicleController()
         {
@@ -22,7 +23,7 @@ namespace MIVServer
 
         private uint findLowestFreeId()
         {
-            for (uint i = 0; i < uint.MaxValue; i++)
+            for (uint i = 1; i < uint.MaxValue; i++)
             {
                 if (!vehicles.ContainsKey(i)) return i;
             }
@@ -38,11 +39,13 @@ namespace MIVServer
             return vehicles[id];
         }
 
-        public ServerVehicleInfo create(int model, Vector3 position, Quaternion orientation, Vector3 velocity)
+        public ServerVehicleInfo create(string model, Vector3 position, Quaternion orientation, Vector3 velocity)
         {
             uint vid = findLowestFreeId();
             ServerVehicle veh = new ServerVehicle(vid);
+            veh.position = position;
             veh.orientation = orientation;
+            veh.model = model;
             veh.velocity = velocity;
             vehicles.Add(vid, veh);
             return new ServerVehicleInfo() { id = vid, vehicle = veh };

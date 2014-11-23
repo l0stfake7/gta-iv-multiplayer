@@ -28,7 +28,7 @@ namespace MIVServer
         public ClientConnection(TcpClient client)
         {
             connection = client;
-            buffer = new byte[512];
+            buffer = new byte[1024 * 1024];
             streamBegin();
             //stream = connection.GetStream();
         }
@@ -94,9 +94,7 @@ namespace MIVServer
             byte[] buf = BitConverter.GetBytes(integer);
             tempbuf = appendBytes(tempbuf, buf);
         }
-
-
-
+        
         private void onReceive(IAsyncResult iar)
         {
             //try

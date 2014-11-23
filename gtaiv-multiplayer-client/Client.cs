@@ -12,31 +12,41 @@ using System.Drawing;
 
 namespace MIVClient
 {
-    public class Client : Script
+    public partial class Client : Script
     {
         public TcpClient client;
         public string nick;
         public static Client instance;
 
         public PlayerPedController pedController;
-        public PlayerVehicleController vehicleController;
+        public PlayerVehicleController playerVehicleController;
+        public VehicleController vehicleController;
         public ServerConnection serverConnection;
         public KeyboardHandler keyboardHandler;
         public ChatController chatController;
         public PerFrameRenderer perFrameRenderer;
+
+        private Queue<Action> actionQueue;
+
+        public void enqueueAction(Action action)
+        {
+            actionQueue.Enqueue(action);
+        }
 
 
         public ClientState currentState = ClientState.Initializing;
 
         public Client()
         {
+            actionQueue = new Queue<Action>();
             instance = this;
             pedController = new PlayerPedController();
-            vehicleController = new PlayerVehicleController();
+            vehicleController = new VehicleController();
+            playerVehicleController = new PlayerVehicleController();
             chatController = new ChatController(this);
             keyboardHandler = new KeyboardHandler(this);
             currentState = ClientState.Initializing;
-            Interval = 70;
+            Interval = 40;
             this.Tick += new EventHandler(this.eventOnTick);
 
             currentState = ClientState.Disconnected;
@@ -52,6 +62,7 @@ namespace MIVClient
                 }
             });
             perFrameRenderer = new PerFrameRenderer(this);
+            
         }
 
 
@@ -67,7 +78,8 @@ namespace MIVClient
                     Player.Character.CurrentVehicle.RotationQuaternion.X + "f, " +
                     Player.Character.CurrentVehicle.RotationQuaternion.Y + "f, " +
                     Player.Character.CurrentVehicle.RotationQuaternion.Z + "f, " +
-                    Player.Character.CurrentVehicle.RotationQuaternion.W + "f; //" +
+                    Player.Character.CurrentVehicle.RotationQuaternion.W + "f; model = " +
+                    Player.Character.CurrentVehicle.Model.GetHashCode() + "; //" +
                     (Parameters.Count > 0 ? Parameters[0].ToString() : "") + "\r\n");
             }
             else
@@ -90,7 +102,7 @@ namespace MIVClient
         public static void log(string text)
         {
             System.IO.File.AppendAllText("multiv-log.txt", text + "\r\n");
-            GTA.Game.DisplayText(text);
+            //GTA.Game.DisplayText(text);
         }
 
         public Ped getPlayerPed()
@@ -102,7 +114,7 @@ namespace MIVClient
             return Player;
         }
 
-        Dictionary<int, Vector3> bindPoints;
+        Dictionary<int, GTA.Vector3> bindPoints;
         public void saveBindPoint(int id)
         {
             if (bindPoints == null) bindPoints = new Dictionary<int, Vector3>();
@@ -132,12 +144,29 @@ namespace MIVClient
         {
             try
             {
+                while (actionQueue.Count > 0)
+                {
+                    actionQueue.Dequeue().Invoke();
+                }
+            }
+            catch (Exception ex)
+            {
+                log("Failed executing action queue with message " + ex.Message);
+            }
+            try
+            {
                 Player.Character.Health = Player.Character.Health > 100 ? 100 : Player.Character.Health + 8;
                 Player.Character.Invincible = true;
-                //Game.Console.Print("HP: " + Player.Character.Health + ", Status: " + Enum.GetName(currentState.GetType(), currentState));
-                //dlabel.Text = "HP: " + Player.Character.Health + ", Status: " + Enum.GetName(currentState.GetType(), currentState);
-                if (currentState == ClientState.Connected)
+            }
+            catch (Exception ex)
+            {
+                log("Failed setting player health " + ex.Message);
+            }
+            if (currentState == ClientState.Connected)
+            {
+                try
                 {
+                    Player.WantedLevel = 0;
                     UpdateDataStruct data = new UpdateDataStruct();
                     //log("my X is " + data.pos_x.ToString());
                     if (Player.Character.isInVehicle())
@@ -159,10 +188,17 @@ namespace MIVClient
                         data.rot_a = quat.W;
 
                         data.vehicle_model = Player.Character.CurrentVehicle.Model.Hash;
-                        data.veh_health = Player.Character.CurrentVehicle.Health;
+                        data.vehicle_health = Player.Character.CurrentVehicle.Health;
+                        data.vehicle_id = vehicleController.getByVehicle(Player.Character.CurrentVehicle).id;
                         data.ped_health = Player.Character.Health;
                         data.speed = Player.Character.CurrentVehicle.Speed;
                         data.heading = Player.Character.CurrentVehicle.Heading;
+                        if (vehicleController.streamer.vehicles.Count(a => a.gameReference != null && a.gameReference == Player.Character.CurrentVehicle) > 0)
+                        {
+                            var cveh = vehicleController.streamer.vehicles.First(a => a.gameReference != null && a.gameReference == Player.Character.CurrentVehicle);
+                            cveh.position = pos;
+                            cveh.orientation = quat;
+                        }
                     }
                     else
                     {
@@ -182,97 +218,74 @@ namespace MIVClient
                         data.rot_a = 0;
 
                         data.vehicle_model = 0;
-                        data.veh_health = 0;
+                        data.vehicle_health = 0;
+                        data.vehicle_id = 0;
                         data.ped_health = Player.Character.Health;
                         data.speed = 0;
                         data.heading = Player.Character.Heading;
+                        data.weapon = Player.Character.Weapons.CurrentType.GetHashCode();
+                        data.state = 0;
+                        data.state |= Player.Character.isShooting ? PlayerState.IsShooting : 0;
+                        data.state |= Game.isGameKeyPressed(GameKey.Aim) ? PlayerState.IsAiming : 0;
                     }
                     serverConnection.streamWrite(Commands.UpdateData);
                     serverConnection.streamWrite(data);
                     serverConnection.streamFlush();
                     currentData = data;
-                    //writeChat("Wrote");
-                    //log("sent data");
-                    // process players
-                    foreach (var elem in serverConnection.playersdata)
-                    {
-                        try
-                        {
-                            bool in_vehicle = elem.Value.vehicle_model > 0;
-                            //log("TRYING SET positioning");
-                            //log(elem.Value.pos_x.ToString());
-                            var posnew = new Vector3(elem.Value.pos_x, elem.Value.pos_y, elem.Value.pos_z);
-                            Ped ped = pedController.getById(elem.Key, posnew);
-                            ped.Invincible = true;
-                            ped.WillFlyThroughWindscreen = false;
-                            ped.RelationshipGroup = RelationshipGroup.NetworkPlayer_01;
 
-                            if (elem.Value.nick != null && elem.Value.nick.Length > 0)
-                            {
-                                ped.GiveFakeNetworkName(elem.Value.nick, System.Drawing.Color.Red);
-                            }
-
-                            if (!in_vehicle)
-                            {
-                                vehicleController.destroy(elem.Key);
-                                if (ped.isInVehicle())
-                                {
-                                    ped.CurrentVehicle.PassengersLeaveVehicle(true);
-                                }
-                                ped.Position = posnew;
-                                ped.Heading = elem.Value.rot_y;
-
-                                ped.PreventRagdoll = true;
-                                ped.Velocity = new Vector3(elem.Value.vel_x, elem.Value.vel_y, elem.Value.vel_z);
-                                ped.Task.ClearAllImmediately();
-                                if (ped.Velocity.Length() > 0)
-                                {
-                                    var animset = new AnimationSet("move_f@bness_b");
-                                    if (!ped.Animation.isPlaying(animset, "run"))
-                                    {
-                                        ped.Animation.Play(animset, "run", 1.0f);
-                                    }
-                                }
-
-                            }
-                            else
-                            {
-                                Vehicle veh = vehicleController.getById(elem.Key, elem.Value.vehicle_model, posnew);
-                                if (!ped.isInVehicle(veh))
-                                {
-                                    ped.WarpIntoVehicle(veh, VehicleSeat.RightFront);
-                                }
-                                veh.EngineRunning = true;
-                                veh.InteriorLightOn = true;
-                                veh.HazardLightsOn = true;
-                                veh.RotationQuaternion = new Quaternion(elem.Value.rot_x, elem.Value.rot_y, elem.Value.rot_z, elem.Value.rot_a);
-                                veh.Position = new Vector3(elem.Value.pos_x, elem.Value.pos_y, elem.Value.pos_z);
-                                veh.Velocity = new Vector3(elem.Value.vel_x, elem.Value.vel_y, elem.Value.vel_z) * 1.4f;
-                                veh.Speed = elem.Value.speed;
-                                veh.Repair();
-                                ped.Task.DrivePointRoute(veh, 999.0f, veh.Position + (veh.Velocity * 10));
-                            }
-                            //log("GOT IT AND SET positioning");
-                            //writeChat("GOT");
-                        }
-                        catch (Exception e2)
-                        {
-                            chatController.writeChat(e2.Message);
-                            //log("failed positioning");
-                        }
-                    }
                 }
-                if (currentState == ClientState.Connecting)
+                catch (Exception ex)
                 {
-                    serverConnection.streamWrite(Commands.Connect);
-                    serverConnection.streamWrite(nick.Length);
-                    serverConnection.streamWrite(nick);
-                    serverConnection.streamFlush();
-                    currentState = ClientState.Connected;
-                    chatController.writeChat("Connected");
+                    log("Failed sending new player data with message " + ex.Message);
+                }
+                try
+                {
+
+                    vehicleController.streamer.update();
+                    pedController.streamer.update();
+                }
+                catch (Exception ex)
+                {
+                    log("Failed updating streamers with message " + ex.Message);
+                }
+                //writeChat("Wrote");
+                //log("sent data");
+                // process players
+                for (int i = 0; i < serverConnection.playersdata.Keys.Count; i++)
+                {
+                    var elemKey = serverConnection.playersdata.Keys.ToArray()[i];
+                    var elemValue = serverConnection.playersdata[elemKey];
+                    bool in_vehicle = elemValue.vehicle_id > 0;
+                    var posnew = new Vector3(elemValue.pos_x, elemValue.pos_y, !in_vehicle ? elemValue.pos_z - 1.0f : elemValue.pos_z);
+                    StreamedPed ped = pedController.getById(elemKey, posnew);
+                    try
+                    {
+                        updateVehicle(elemValue, ped);
+                    }
+                    catch (Exception ex)
+                    {
+                        log("Failed updating streamed vehicle data for player " + ex.Message);
+                    } 
+                    try
+                    {
+                        updatePed(elemValue, ped);
+                    }
+                    catch (Exception ex)
+                    {
+                        log("Failed updating streamed ped data for player " + ex.Message);
+                    }
+                    
                 }
             }
-            catch { }
+            if (currentState == ClientState.Connecting)
+            {
+                serverConnection.streamWrite(Commands.Connect);
+                serverConnection.streamWrite(nick.Length);
+                serverConnection.streamWrite(nick);
+                serverConnection.streamFlush();
+                currentState = ClientState.Connected;
+                chatController.writeChat("Connected");
+            }
         }
 
     }

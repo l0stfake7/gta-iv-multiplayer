@@ -55,9 +55,6 @@
     <Compile Include="ServerApi.cs" />
     <Compile Include="ServerVehicle.cs" />
     <Compile Include="ServerVehicleController.cs" />
-    <Compile Include="Vector4.cs" />
-    <Compile Include="Quaternion.cs" />
-    <Compile Include="Vector3.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
