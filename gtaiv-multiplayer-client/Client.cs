@@ -189,6 +189,7 @@ namespace MIVClient
                             cveh.position = pos;
                             cveh.orientation = quat;
                         }
+                        data.state = 0;
                     }
                     else
                     {
@@ -217,7 +218,15 @@ namespace MIVClient
                         data.state = 0;
                         data.state |= Player.Character.isShooting ? PlayerState.IsShooting : 0;
                         data.state |= Game.isGameKeyPressed(GameKey.Aim) ? PlayerState.IsAiming : 0;
+                        data.state |= Game.isGameKeyPressed(GameKey.Crouch) ? PlayerState.IsCrouching : 0;
+                        data.state |= Game.isGameKeyPressed(GameKey.Jump) ? PlayerState.IsJumping : 0;
+                        data.state |= Game.isGameKeyPressed(GameKey.Attack) ? PlayerState.IsShooting : 0;
                     }
+                    data.vstate = 0;
+                    data.vstate |= Game.isGameKeyPressed(GameKey.MoveForward) ? VehicleState.IsAccelerating : 0;
+                    data.vstate |= Game.isGameKeyPressed(GameKey.MoveBackward) ? VehicleState.IsBraking : 0;
+                    data.vstate |= Game.isGameKeyPressed(GameKey.MoveLeft) ? VehicleState.IsSterringLeft : 0;
+                    data.vstate |= Game.isGameKeyPressed(GameKey.MoveRight) ? VehicleState.IsSterringRight : 0;
                     serverConnection.streamWrite(Commands.UpdateData);
                     serverConnection.streamWrite(data);
                     serverConnection.streamFlush();
