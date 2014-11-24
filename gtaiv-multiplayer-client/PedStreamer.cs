@@ -17,6 +17,7 @@ namespace MIVClient
         public Ped gameReference;
         public PedAnimationManager animator;
         public bool hasNetworkName;
+        public Blip blip;
 
         public StreamedPed(PedStreamer streamer, uint id, Vector3 position, float heading)
         {
@@ -76,12 +77,18 @@ namespace MIVClient
                         if (!ped.streamedIn || ped.gameReference == null || !ped.gameReference.Exists())
                         {
                             ped.gameReference = World.CreatePed("M_Y_BOUNCER_02", ped.position, RelationshipGroup.Player);
+                            ped.blip = Blip.AddBlip(ped.gameReference);
+                            ped.blip.Color = BlipColor.LightOrange;
+                            ped.blip.Display = BlipDisplay.MapOnly;
+                            ped.blip.Icon = BlipIcon.Misc_Objective;
+                            ped.blip.Name = "Player";
                             ped.streamedIn = true;
                             ped.gameReference.Heading = ped.heading;
                         }
                     }
                     else if (ped.streamedIn)
                     {
+                        ped.blip.Delete();
                         ped.gameReference.Delete();
                         ped.gameReference = null;
                         ped.hasNetworkName = false;

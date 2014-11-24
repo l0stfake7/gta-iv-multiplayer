@@ -38,9 +38,19 @@ namespace MIVSDK
     public enum PlayerState
     {
         None = 0,
-        InVehicle = 1,
-        IsAiming = 2,
-        IsShooting = 4
+        IsAiming = 1,
+        IsShooting = 2,
+        IsCrouching = 4,
+        IsJumping = 8,
+        IsRagdoll = 16
+    }
+    public enum VehicleState
+    {
+        None = 0,
+        IsAccelerating = 1,
+        IsBraking = 2,
+        IsSterringLeft = 4,
+        IsSterringRight = 8
     }
 
     public enum ClientState
@@ -62,6 +72,7 @@ namespace MIVSDK
         public uint vehicle_id;
         public string nick;
         public PlayerState state;
+        public VehicleState vstate;
         public bool client_has_been_set;
 
         public MIVSDK.Math.Vector3 getPositionVector()
@@ -105,6 +116,7 @@ namespace MIVSDK
             output.AddRange(BitConverter.GetBytes(weapon));
             output.AddRange(BitConverter.GetBytes(vehicle_id));
             output.Add((byte)state);
+            output.Add((byte)vstate);
             output.AddRange(Serializers.serialize(nick));
             return output.ToArray();
         }
@@ -135,6 +147,7 @@ namespace MIVSDK
             output.weapon = BitConverter.ToInt32(data, (offset += 4));
             output.vehicle_id = BitConverter.ToUInt32(data, (offset += 4));
             output.state = (PlayerState)data[(offset += 4)];
+            output.vstate = (VehicleState)data[(offset += 1)];
             output.nick = Serializers.unserialize_string(data, (offset += 1));
             return output;
         }
@@ -162,7 +175,7 @@ namespace MIVSDK
                     vel_y = 0,
                     vel_z = 0,
                     state = PlayerState.None,
-                    weapon = 0,
+                    vstate = VehicleState.None,
                     nick = "",
                     client_has_been_set = false
                 };

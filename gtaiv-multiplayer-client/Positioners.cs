@@ -40,7 +40,7 @@ namespace MIVClient
         {
             if (data.vehicle_id > 0)
             {
-                var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z + 0.5f);
+                var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z);
                 StreamedVehicle veh = vehicleController.getById(data.vehicle_id);
                 if (veh != null)
                 {
@@ -53,9 +53,34 @@ namespace MIVClient
                             ped.gameReference.WarpIntoVehicle(veh.gameReference, VehicleSeat.Driver);
                         }
 
+                        //if (veh.gameReference.Position.DistanceTo(posnew) > 3.0f)
+                        //{
                         veh.gameReference.Position = posnew;
+                        //}
                         veh.gameReference.RotationQuaternion = veh.orientation;
                         veh.gameReference.Velocity = new Vector3(data.vel_x, data.vel_y, data.vel_z);
+                        //veh.gameReference.ApplyForce(new Vector3(data.vel_x, data.vel_y, data.vel_z) );
+                        if (data.vehicle_health > 10 && !veh.gameReference.isOnFire)
+                        {
+                            //veh.gameReference.Repair();
+                        }
+                        veh.gameReference.Health = data.vehicle_health;
+                        if ((data.vstate & VehicleState.IsBraking) != 0)
+                        {
+                            ped.gameReference.Task.DrivePointRoute(veh.gameReference, 999.0f, posnew - veh.gameReference.Velocity);
+                        }
+                        else if ((data.vstate & VehicleState.IsAccelerating) != 0)
+                        {
+                            ped.gameReference.Task.DrivePointRoute(veh.gameReference, 999.0f, posnew + veh.gameReference.Velocity);
+                        }
+                        else
+                        {
+                            //veh.gameReference.Position = posnew;
+                        }
+                        if ((data.vstate & VehicleState.IsSterringRight) != 0 || (data.vstate & VehicleState.IsSterringLeft) != 0)
+                        {
+                            //veh.gameReference.Position = posnew;
+                        }
                     }
                 }
             }
@@ -88,6 +113,21 @@ namespace MIVClient
                 if ((data.state & PlayerState.IsShooting) != 0)
                 {
                     ped.gameReference.ShootAt(posnew + vdelta);
+                }
+
+                if ((data.state & PlayerState.IsAiming) != 0)
+                {
+                    ped.animator.playAnimation(PedAnimations.Aim);
+                }
+
+                if ((data.state & PlayerState.IsRagdoll) != 0)
+                {
+                    ped.animator.playAnimation(PedAnimations.Ragdoll);
+                }
+
+                if ((data.state & PlayerState.IsCrouching) != 0)
+                {
+                    ped.animator.playAnimation(PedAnimations.Couch);
                 }
 
                 //ped.gameReference.Velocity = new Vector3(elemValue.vel_x, elemValue.vel_y, elemValue.vel_z);
