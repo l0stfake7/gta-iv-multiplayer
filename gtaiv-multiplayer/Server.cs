@@ -41,6 +41,7 @@ namespace MIVServer
         {
             foreach (ServerPlayer player in playerpool.Values)
             {
+                player.connection.streamBroadcastQueue();
                 broadcastData(player);
             }
             string currentMessage;
@@ -114,6 +115,21 @@ namespace MIVServer
             }
             player.connection.streamFlush();
         }
+
+        public void broadcastNPCsToPlayer(ServerPlayer player)
+        {
+            foreach (var pair in ServerNPC.NPCPool)
+            {
+                player.connection.streamWrite(Commands.NPC_create);
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.id));
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.X));
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.Y));
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.Z));
+                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.heading));
+                player.connection.streamWrite(Serializers.serialize(pair.Value.model + ";" + pair.Value.name));
+                player.connection.streamFlush();
+            }
+        }
         
         private void onIncomingConnection(IAsyncResult iar)
         {
@@ -128,10 +144,12 @@ namespace MIVServer
             {
                 Console.WriteLine("Connect from " + nick);
                 ServerPlayer player = new ServerPlayer(nick, connection);
+                connection.player = player;
                 player.id = findLowestFreeId();
                 player.nick = nick;
                 playerpool.Add(player.id, player);
                 broadcastVehiclesToPlayer(player);
+                broadcastNPCsToPlayer(player);
                 api.invokeOnPlayerConnect(client.Client.RemoteEndPoint, player);
             };
 

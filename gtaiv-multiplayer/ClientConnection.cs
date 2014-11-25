@@ -12,25 +12,17 @@ namespace MIVServer
 
         //NetworkStream stream;
         private byte[] buffer;
-
-        public delegate void onUpdateDataDelegate(MIVSDK.UpdateDataStruct data);
-
-        public delegate void onDisconnectDelegate();
-
         public delegate void onConnectDelegate(string nick);
-
-        public delegate void onChatSendMessageDelegate(string line);
-
-        public event onUpdateDataDelegate onUpdateData;
-
-        public event onDisconnectDelegate onDisconnect;
 
         public event onConnectDelegate onConnect;
 
-        public event onChatSendMessageDelegate onChatSendMessage;
+        public ServerPlayer player;
 
+        public Queue<byte[]> queue;
+        
         public ClientConnection(TcpClient client)
         {
+            queue = new Queue<byte[]>();
             connection = client;
             buffer = new byte[1024 * 1024];
             streamBegin();
@@ -42,6 +34,18 @@ namespace MIVServer
             connection.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
         }
 
+        public void streamBroadcastQueue()
+        {
+            lock (queue)
+            {
+                if (queue.Count > 0)
+                {
+                    byte[] arr = queue.Dequeue();
+                    connection.Client.Send(arr, arr.Length, SocketFlags.None);
+                }
+            }
+        }
+
         private byte[] tempbuf;
 
         public void streamBegin()
@@ -51,8 +55,13 @@ namespace MIVServer
 
         public void streamFlush()
         {
-            connection.Client.Send(tempbuf, tempbuf.Length, SocketFlags.None);
-            streamBegin();
+            lock (queue)
+            {
+                byte[] copy = new byte[tempbuf.Length];
+                tempbuf.CopyTo(copy, 0);
+                queue.Enqueue(copy);
+                streamBegin();
+            }
         }
 
         public byte[] appendBytes(byte[] byte1, byte[] byte2)
@@ -111,12 +120,16 @@ namespace MIVServer
             {
                 if (buffer.Length > 0)
                 {
+
                     //foreach (byte by in buffer) Console.Write(by.ToString("X") + " ");
                     switch ((MIVSDK.Commands)BitConverter.ToUInt16(buffer, 0))
                     {
                         case MIVSDK.Commands.Disconnect:
                             {
-                                if (onDisconnect != null) onDisconnect.Invoke();
+                                if (player != null)
+                                {
+                                    Server.instance.api.invokeOnPlayerDisconnect(player);
+                                }
                             }
                             break;
 
@@ -132,14 +145,46 @@ namespace MIVServer
                             {
                                 var list = buffer.ToList();
                                 int len = BitConverter.ToInt32(buffer, 2);
-                                if (onChatSendMessage != null) onChatSendMessage.Invoke(Encoding.UTF8.GetString(list.Skip(2 + 4).Take(len).ToArray()));
+                                Server.instance.api.invokeOnPlayerSendText(player, Encoding.UTF8.GetString(list.Skip(2 + 4).Take(len).ToArray()));
+                            }
+                            break;
+
+                        case MIVSDK.Commands.Keys_down:
+                            {
+                                if (player != null)
+                                {
+                                    int key = BitConverter.ToInt32(buffer, 2);
+                                    Server.instance.api.invokeOnPlayerKeyDown(player, (System.Windows.Forms.Keys)key);
+                                }
+                            }
+                            break;
+                        case MIVSDK.Commands.Keys_up:
+                            {
+                                if (player != null)
+                                {
+                                    int key = BitConverter.ToInt32(buffer, 2);
+                                    Server.instance.api.invokeOnPlayerKeyUp(player, (System.Windows.Forms.Keys)key);
+                                }
+                            }
+                            break;
+                        case MIVSDK.Commands.NPCDialog_sendResponse:
+                            {
+                                if (player != null)
+                                {
+                                    uint key = BitConverter.ToUInt32(buffer, 2);
+                                    byte answer = buffer[6];
+                                    ServerNPCDialog.invokeResponse(player, key, answer);
+                                }
                             }
                             break;
 
                         case MIVSDK.Commands.UpdateData:
                             {
-                                MIVSDK.UpdateDataStruct data = MIVSDK.UpdateDataStruct.unserialize(buffer, 2);
-                                if (onUpdateData != null) onUpdateData.Invoke(data);
+                                if (player != null)
+                                {
+                                    MIVSDK.UpdateDataStruct data = MIVSDK.UpdateDataStruct.unserialize(buffer, 2);
+                                    player.updateData(data);
+                                }
                             }
                             break;
                     }

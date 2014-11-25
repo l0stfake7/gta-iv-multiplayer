@@ -121,6 +121,31 @@ namespace MIVServer
             if (onPlayerTakeDamage != null) onPlayerTakeDamage.Invoke(player, before, after, delta);
         }
 
+        public delegate void onPlayerKeyDownDelegate(ServerPlayer player, System.Windows.Forms.Keys key);
+
+        public event onPlayerKeyDownDelegate onPlayerKeyDown;
+
+        public void invokeOnPlayerKeyDown(ServerPlayer player, System.Windows.Forms.Keys key)
+        {
+            if (onPlayerKeyDown != null) onPlayerKeyDown.Invoke(player, key);
+        }
+
+        public delegate void onPlayerKeyUpDelegate(ServerPlayer player, System.Windows.Forms.Keys key);
+
+        public event onPlayerKeyUpDelegate onPlayerKeyUp;
+
+        public void invokeOnPlayerKeyUp(ServerPlayer player, System.Windows.Forms.Keys key)
+        {
+            if (onPlayerKeyUp != null) onPlayerKeyUp.Invoke(player, key);
+        }
+
+        /// <summary>
+        /// separator
+        /// :>
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+
         public ServerPlayer getPlayer(byte id)
         {
             return server.playerpool[id];

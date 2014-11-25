@@ -50,6 +50,7 @@
     <Compile Include="KeyboardHandler.cs" />
     <Compile Include="PedAnimationManager.cs" />
     <Compile Include="PerFrameRenderer.cs" />
+    <Compile Include="NPCPedController.cs" />
     <Compile Include="Positioners.cs" />
     <Compile Include="ServerConnection.cs" />
     <Compile Include="VehicleController.cs" />

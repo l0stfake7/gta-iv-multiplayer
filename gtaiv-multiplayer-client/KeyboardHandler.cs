@@ -19,6 +19,7 @@ namespace MIVClient
             keyboardUS = new KeyboardLayoutUS();
             inKeyboardTypingMode = false;
             client.KeyDown += new GTA.KeyEventHandler(this.eventOnKeyDown);
+            client.KeyUp += new GTA.KeyEventHandler(this.eventOnKeyUp);
         }
 
         private float gamescale;
@@ -119,6 +120,15 @@ namespace MIVClient
                     client.getPlayerPed().Velocity *= 2.0f;
                 }
             }
+            if (e.Key == System.Windows.Forms.Keys.G)
+            {
+                Vehicle veh = World.GetClosestVehicle(client.getPlayerPed().Position, 20.0f);
+                if (veh != null && veh.Exists())
+                {
+                    VehicleSeat seat = veh.GetFreePassengerSeat();
+                    client.getPlayerPed().Task.EnterVehicle(veh, seat);
+                }
+            }
 
             if (e.Key == System.Windows.Forms.Keys.L)
             {
@@ -154,6 +164,23 @@ namespace MIVClient
                     }
                     throw ex;
                 }
+            }
+
+            if (client.currentState == ClientState.Connected)
+            {
+                client.serverConnection.streamWrite(Commands.Keys_down);
+                client.serverConnection.streamWrite((int)e.Key);
+                client.serverConnection.streamFlush();
+            }
+
+        }
+        private void eventOnKeyUp(object sender, GTA.KeyEventArgs e)
+        {
+            if (client.currentState == ClientState.Connected)
+            {
+                client.serverConnection.streamWrite(Commands.Keys_up);
+                client.serverConnection.streamWrite((int)e.Key);
+                client.serverConnection.streamFlush();
             }
         }
     }

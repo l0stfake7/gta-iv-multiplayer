@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace MIVSDK
 {
@@ -28,11 +29,31 @@ namespace MIVSDK
 
         Vehicle_setPosition,
         Vehicle_create_multi,
-        vehicle_setVelocity,
-        vehicle_setOrientation,
-        vehicle_removePeds,
-        vehicle_repair,
-        vehicle_repaint
+        Vehicle_setVelocity,
+        Vehicle_setOrientation,
+        Vehicle_removePeds,
+        Vehicle_repair,
+        Vehicle_repaint,
+
+        TextView_create,
+        TextView_destroy,
+        TextView_update,
+
+        NPCDialog_show,
+        NPCDialog_hide,
+        NPCDialog_sendResponse,
+
+        NPC_create,
+        NPC_destroy,
+        NPC_update,
+        NPC_walkTo,
+        NPC_setPosition,
+        NPC_enterVehicle,
+        NPC_leaveVehicle,
+        NPC_playAnimation,
+
+        Keys_down,
+        Keys_up,
     }
 
     public enum PlayerState
@@ -42,7 +63,10 @@ namespace MIVSDK
         IsShooting = 2,
         IsCrouching = 4,
         IsJumping = 8,
-        IsRagdoll = 16
+        IsRagdoll = 16,
+        IsPassenger1 = 32,
+        IsPassenger2 = 64,
+        IsPassenger3 = 128,
     }
     public enum VehicleState
     {
@@ -50,7 +74,8 @@ namespace MIVSDK
         IsAccelerating = 1,
         IsBraking = 2,
         IsSterringLeft = 4,
-        IsSterringRight = 8
+        IsSterringRight = 8,
+        IsAsPassenger = 16,
     }
 
     public enum ClientState
@@ -118,37 +143,43 @@ namespace MIVSDK
             output.Add((byte)state);
             output.Add((byte)vstate);
             output.AddRange(Serializers.serialize(nick));
+
             return output.ToArray();
         }
 
         public static UpdateDataStruct unserialize(byte[] data, int offset)
         {
+            var mstream = new MemoryStream(data);
+            BinaryReader reader = new BinaryReader(mstream);
             UpdateDataStruct output = new UpdateDataStruct();
-            output.timestamp = BitConverter.ToInt64(data, offset);
-            output.pos_x = BitConverter.ToSingle(data, (offset += 8));
-            output.pos_y = BitConverter.ToSingle(data, (offset += 4));
-            output.pos_z = BitConverter.ToSingle(data, (offset += 4));
+            output.timestamp = reader.ReadInt64();
+            output.pos_x = reader.ReadSingle();
+            output.pos_y = reader.ReadSingle();
+            output.pos_z = reader.ReadSingle();
 
-            output.rot_x = BitConverter.ToSingle(data, (offset += 4));
-            output.rot_y = BitConverter.ToSingle(data, (offset += 4));
-            output.rot_z = BitConverter.ToSingle(data, (offset += 4));
-            output.rot_a = BitConverter.ToSingle(data, (offset += 4));
+            output.rot_x = reader.ReadSingle();
+            output.rot_y = reader.ReadSingle();
+            output.rot_z = reader.ReadSingle();
+            output.rot_a = reader.ReadSingle();
 
-            output.vel_x = BitConverter.ToSingle(data, (offset += 4));
-            output.vel_y = BitConverter.ToSingle(data, (offset += 4));
-            output.vel_z = BitConverter.ToSingle(data, (offset += 4));
+            output.vel_x = reader.ReadSingle();
+            output.vel_y = reader.ReadSingle();
+            output.vel_z = reader.ReadSingle();
 
-            output.speed = BitConverter.ToSingle(data, (offset += 4));
-            output.heading = BitConverter.ToSingle(data, (offset += 4));
+            output.speed = reader.ReadSingle();
+            output.heading = reader.ReadSingle();
 
-            output.vehicle_model = BitConverter.ToInt32(data, (offset += 4));
-            output.ped_health = BitConverter.ToInt32(data, (offset += 4));
-            output.vehicle_health = BitConverter.ToInt32(data, (offset += 4));
-            output.weapon = BitConverter.ToInt32(data, (offset += 4));
-            output.vehicle_id = BitConverter.ToUInt32(data, (offset += 4));
-            output.state = (PlayerState)data[(offset += 4)];
-            output.vstate = (VehicleState)data[(offset += 1)];
-            output.nick = Serializers.unserialize_string(data, (offset += 1));
+            output.vehicle_model = reader.ReadInt32();
+            output.ped_health = reader.ReadInt32();
+            output.vehicle_health = reader.ReadInt32();
+            output.weapon = reader.ReadInt32();
+            output.vehicle_id = reader.ReadUInt32();
+
+            output.state = (PlayerState)reader.ReadByte();
+            output.vstate = (VehicleState)reader.ReadByte();
+
+            output.nick = Serializers.unserialize_string(data, (int)mstream.Position);
+
             return output;
         }
 

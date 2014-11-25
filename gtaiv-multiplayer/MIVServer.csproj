@@ -48,6 +48,8 @@
     <Compile Include="Gamemode.cs" />
     <Compile Include="GamemodeManager.cs" />
     <Compile Include="ServerChat.cs" />
+    <Compile Include="ServerNPC.cs" />
+    <Compile Include="ServerNPCDialog.cs" />
     <Compile Include="ServerPlayer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -55,6 +57,7 @@
     <Compile Include="ServerApi.cs" />
     <Compile Include="ServerVehicle.cs" />
     <Compile Include="ServerVehicleController.cs" />
+    <Compile Include="TextView.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

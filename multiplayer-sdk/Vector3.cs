@@ -33,6 +33,26 @@
                 this.Z = vec.Z;
             }
 
+            public float distanceTo(Vector3 vec)
+            {
+                return (this - vec).length;
+            }
+            public void normalize()
+            {
+                float len = length;
+                X /= len;
+                Y /= len;
+                Z /= len;
+            }
+
+            public float length
+            {
+                get
+                {
+                    return (float)System.Math.Sqrt(X * X + Y * Y + Z * Z);
+                }
+            }
+
             public static bool operator ==(Vector3 v1, Vector3 v2)
             {
                 if ((object)v1 == null && (object)v2 == null) return true;
@@ -54,6 +74,26 @@
                 ret.X += v2.X;
                 ret.Y += v2.Y;
                 ret.Z += v2.Z;
+
+                return ret;
+            }
+            public static Vector3 operator -(Vector3 v1, Vector3 v2)
+            {
+                Vector3 ret = new Vector3(v1);
+
+                ret.X -= v2.X;
+                ret.Y -= v2.Y;
+                ret.Z -= v2.Z;
+
+                return ret;
+            }
+            public static Vector3 operator *(Vector3 v1, float scalar)
+            {
+                Vector3 ret = new Vector3(v1);
+
+                ret.X *= scalar;
+                ret.Y *= scalar;
+                ret.Z *= scalar;
 
                 return ret;
             }

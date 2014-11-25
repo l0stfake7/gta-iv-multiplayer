@@ -16,6 +16,9 @@ namespace DeathmatchGamemode
             new Vector4(2235.377f, 136.2301f, 5.902038f, 346.8188f)*/
         };
 
+        ServerNPC npc;
+        ServerNPCDialog dialog;
+
         public DeathmatchGamemode(ServerApi a)
             : base(a)
         {
@@ -44,6 +47,31 @@ namespace DeathmatchGamemode
             api.createVehicle("ANNIHILATOR", new Vector3(2257.443f, 721.6019f, 15.438978f), new Quaternion(0.0003481103f, -0.003353917f, 0.8838975f, -0.4676686f));//18
             api.createVehicle("INFERNUS", new Vector3(2464.762f, 589.6474f, 15.437915f), new Quaternion(-0.001692423f, -0.002709477f, 0.9179366f, -0.3967145f));//10
             api.createVehicle("INFERNUS", new Vector3(2604.48f, 414.0821f, 5.438591f), new Quaternion(-0.002986294f, -0.002253091f, 0.9838318f, -0.1790559f));//20
+
+            dialog = new ServerNPCDialog("Witaj", "czego chcesz?");
+
+            dialog.addResponse("niczego nubie");
+
+            npc = new ServerNPC("Dupek", "F_Y_BANK_01", new Vector3(2191.345f, 615.6419f, 5.629018f), 1.0f, dialog);
+
+            dialog.onPlayerAnswerDialog += (player, key) =>
+            {
+                Server.instance.api.writeChat(player, "ok dobra no spierdalaj");
+            };
+
+            api.onPlayerKeyDown += api_onPlayerKeyDown;
+
+        }
+
+        void api_onPlayerKeyDown(ServerPlayer player, System.Windows.Forms.Keys key)
+        {
+            if (key == System.Windows.Forms.Keys.O)
+            {
+                if (npc.position.distanceTo(player.Position) < 5.0f)
+                {
+                    dialog.show(player);
+                }
+            }
         }
 
         void api_onPlayerSendText(ServerPlayer player, string text)

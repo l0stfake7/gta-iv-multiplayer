@@ -49,7 +49,9 @@ namespace MIVClient
                     case PedAnimations.Run: ped.gameReference.Animation.Play(animset, "sprint", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
                         break;
 
-                    case PedAnimations.Aim: ped.gameReference.Animation.Play(animset, "holster_2_aim", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
+                    case PedAnimations.Aim: 
+                        //ped.gameReference.Animation.Play(animset, "holster_2_aim", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
+                        ped.gameReference.Task.AimAt(ped.gameReference.Position + ped.direction, 9999);
                         break;
 
                     case PedAnimations.Couch: ped.gameReference.Animation.Play(animset, "unholster_crouch", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);

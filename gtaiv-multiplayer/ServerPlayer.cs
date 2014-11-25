@@ -18,22 +18,9 @@ namespace MIVServer
             this.nick = nick;
             this.connection = connection;
             data = UpdateDataStruct.Zero;
-            connection.onUpdateData += onUpdateData;
-            connection.onConnect += onConnnect;
-            connection.onChatSendMessage += connection_onChatSendMessage;
         }
 
-        private void connection_onChatSendMessage(string line)
-        {
-            Server.instance.api.invokeOnPlayerSendText(this, line);
-        }
-
-        private void onConnnect(string nick)
-        {
-            this.nick = nick;
-        }
-
-        private void onUpdateData(UpdateDataStruct data)
+        public void updateData(UpdateDataStruct data)
         {
             this.data = data;
 

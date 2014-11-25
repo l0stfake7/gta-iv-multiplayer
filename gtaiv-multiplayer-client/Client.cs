@@ -14,6 +14,7 @@ namespace MIVClient
         public static Client instance;
 
         public PlayerPedController pedController;
+        public NPCPedController npcPedController;
         public PlayerVehicleController playerVehicleController;
         public VehicleController vehicleController;
         public ServerConnection serverConnection;
@@ -29,6 +30,7 @@ namespace MIVClient
         }
 
         public ClientState currentState = ClientState.Initializing;
+        private int currentCounter;
 
         public Client()
         {
@@ -36,13 +38,14 @@ namespace MIVClient
             instance = this;
             pedController = new PlayerPedController();
             vehicleController = new VehicleController();
+            npcPedController = new NPCPedController();
             playerVehicleController = new PlayerVehicleController();
             chatController = new ChatController(this);
             keyboardHandler = new KeyboardHandler(this);
             currentState = ClientState.Initializing;
-            Interval = 40;
+            currentCounter = 0;
+            Interval = 80;
             this.Tick += new EventHandler(this.eventOnTick);
-
             currentState = ClientState.Disconnected;
             System.IO.File.WriteAllText("multiv-log.txt", "");
             BindConsoleCommand("savepos", Client_ScriptCommand);
@@ -159,7 +162,7 @@ namespace MIVClient
                     UpdateDataStruct data = new UpdateDataStruct();
                     data.nick = nick;
                     //log("my X is " + data.pos_x.ToString());
-                    if (Player.Character.isInVehicle())
+                    if (Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.Driver) == Player.Character)
                     {
                         Vector3 pos = Player.Character.CurrentVehicle.Position;
                         data.pos_x = pos.X;
@@ -203,14 +206,15 @@ namespace MIVClient
                         data.vel_y = vel.Y;
                         data.vel_z = vel.Z;
 
-                        data.rot_x = 0;
-                        data.rot_y = 0;
-                        data.rot_z = 0;
+                        data.rot_x = Player.Character.Direction.X;
+                        data.rot_y = Player.Character.Direction.Y;
+                        data.rot_z = Player.Character.Direction.Z;
                         data.rot_a = 0;
 
                         data.vehicle_model = 0;
                         data.vehicle_health = 0;
-                        data.vehicle_id = 0;
+                        // for passengers:)
+                        data.vehicle_id = Player.Character.isInVehicle() ? vehicleController.getByVehicle(Player.Character.CurrentVehicle).id  : 0;
                         data.ped_health = Player.Character.Health;
                         data.speed = 0;
                         data.heading = Player.Character.Heading;
@@ -221,12 +225,18 @@ namespace MIVClient
                         data.state |= Game.isGameKeyPressed(GameKey.Crouch) ? PlayerState.IsCrouching : 0;
                         data.state |= Game.isGameKeyPressed(GameKey.Jump) ? PlayerState.IsJumping : 0;
                         data.state |= Game.isGameKeyPressed(GameKey.Attack) ? PlayerState.IsShooting : 0;
+
+                        data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.RightFront) == Player.Character ? PlayerState.IsPassenger1 : 0;
+                        data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.LeftRear) == Player.Character ? PlayerState.IsPassenger2 : 0;
+                        data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.RightRear) == Player.Character ? PlayerState.IsPassenger3 : 0;
                     }
                     data.vstate = 0;
                     data.vstate |= Game.isGameKeyPressed(GameKey.MoveForward) ? VehicleState.IsAccelerating : 0;
                     data.vstate |= Game.isGameKeyPressed(GameKey.MoveBackward) ? VehicleState.IsBraking : 0;
                     data.vstate |= Game.isGameKeyPressed(GameKey.MoveLeft) ? VehicleState.IsSterringLeft : 0;
                     data.vstate |= Game.isGameKeyPressed(GameKey.MoveRight) ? VehicleState.IsSterringRight : 0;
+                    data.vstate |= (data.state & PlayerState.IsPassenger1) != 0 || (data.state & PlayerState.IsPassenger2) != 0 || (data.state & PlayerState.IsPassenger3) != 0
+                        ? VehicleState.IsAsPassenger : 0;
                     serverConnection.streamWrite(Commands.UpdateData);
                     serverConnection.streamWrite(data);
                     serverConnection.streamFlush();
@@ -240,6 +250,7 @@ namespace MIVClient
                 {
                     vehicleController.streamer.update();
                     pedController.streamer.update();
+                    npcPedController.streamer.update();
                 }
                 catch (Exception ex)
                 {
@@ -248,34 +259,8 @@ namespace MIVClient
                 //writeChat("Wrote");
                 //log("sent data");
                 // process players
-                for (int i = 0; i < serverConnection.playersdata.Keys.Count; i++)
-                {
-                    var elemKey = serverConnection.playersdata.Keys.ToArray()[i];
-                    var elemValue = serverConnection.playersdata[elemKey];
-
-                    if (elemValue.client_has_been_set) continue;
-                    else elemValue.client_has_been_set = true;
-
-                    //bool in_vehicle = elemValue.vehicle_id > 0;
-                    var posnew = new Vector3(elemValue.pos_x, elemValue.pos_y, elemValue.pos_z - 1.0f);
-                    StreamedPed ped = pedController.getById(elemKey, posnew);
-                    try
-                    {
-                        updateVehicle(elemValue, ped);
-                    }
-                    catch (Exception ex)
-                    {
-                        log("Failed updating streamed vehicle data for player " + ex.Message);
-                    }
-                    try
-                    {
-                        updatePed(elemValue, ped);
-                    }
-                    catch (Exception ex)
-                    {
-                        log("Failed updating streamed ped data for player " + ex.Message);
-                    }
-                }
+                updateAllPlayers();
+                
             }
             if (currentState == ClientState.Connecting)
             {
@@ -285,6 +270,38 @@ namespace MIVClient
                 serverConnection.streamFlush();
                 currentState = ClientState.Connected;
                 chatController.writeChat("Connected");
+            }
+        }
+
+        public void updateAllPlayers()
+        {
+            for (int i = 0; i < serverConnection.playersdata.Keys.Count; i++)
+            {
+                var elemKey = serverConnection.playersdata.Keys.ToArray()[i];
+                var elemValue = serverConnection.playersdata[elemKey];
+
+                if (elemValue.client_has_been_set) continue;
+                else elemValue.client_has_been_set = true;
+
+                //bool in_vehicle = elemValue.vehicle_id > 0;
+                var posnew = new Vector3(elemValue.pos_x, elemValue.pos_y, elemValue.pos_z - 1.0f);
+                StreamedPed ped = pedController.getById(elemKey, elemValue.nick, posnew);
+                try
+                {
+                    updateVehicle(elemValue, ped);
+                }
+                catch (Exception ex)
+                {
+                    log("Failed updating streamed vehicle data for player " + ex.Message);
+                }
+                try
+                {
+                    updatePed(elemValue, ped);
+                }
+                catch (Exception ex)
+                {
+                    log("Failed updating streamed ped data for player " + ex.Message);
+                }
             }
         }
     }

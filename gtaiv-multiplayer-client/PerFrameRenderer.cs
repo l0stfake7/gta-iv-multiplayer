@@ -64,6 +64,11 @@ namespace MIVClient
                     e.Graphics.DrawText(cstr.ToString(), 25, 15 + 30 * 8 + 20, font);
                 }
             }
+            try
+            {
+                client.updateAllPlayers();
+            }
+            catch { }
         }
     }
 }

@@ -84,12 +84,76 @@ namespace MIVClient
                                         float vy = BitConverter.ToSingle(buffer, offset); offset += 4;
                                         float vz = BitConverter.ToSingle(buffer, offset); offset += 4;
                                         string model = Serializers.unserialize_string(buffer, offset, out outlen); offset += outlen;
-                                        client.chatController.writeChat("1Created vehicle " + id);
                                         client.enqueueAction(new Action(delegate
                                         {
                                             client.vehicleController.create(id, model, new Vector3(x, y, z), new Quaternion(rx, ry, rz, rw), new Vector3(vx, vy, vz));
                                         }));
                                     }
+                                }
+                                break;
+                            case MIVSDK.Commands.NPC_create:
+                                {
+                                    // uint id, int model, float x y z, rx, ry, rz, rw, vx, vy, vz
+                                    int offset = 2;
+                                    int outlen = 0;
+                                    uint id = BitConverter.ToUInt32(buffer, offset); offset += 4;
+                                    float x = BitConverter.ToSingle(buffer, offset); offset += 4;
+                                    float y = BitConverter.ToSingle(buffer, offset); offset += 4;
+                                    float z = BitConverter.ToSingle(buffer, offset); offset += 4;
+                                    float heading = BitConverter.ToSingle(buffer, offset); offset += 4;
+
+                                    string modelname = Serializers.unserialize_string(buffer, offset, out outlen); offset += outlen;
+                                    string[] split = modelname.Split(';');
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.npcPedController.getById(id, split[0], split[1], heading, new Vector3(x, y, z));
+                                    }));
+
+                                }
+                                break;
+                            case MIVSDK.Commands.NPCDialog_show:
+                                {
+                                    // uint id, int model, float x y z, rx, ry, rz, rw, vx, vy, vz
+                                    int offset = 2;
+                                    uint id = BitConverter.ToUInt32(buffer, offset); offset += 4;
+                                    string str = Serializers.unserialize_string(buffer, offset);
+                                    string[] split = str.Split('\x01');
+                                    foreach (string s in split) Game.Console.Print(s);
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        GTA.Forms.Form form = new GTA.Forms.Form();
+
+                                        GTA.Forms.Label caption = new GTA.Forms.Label();
+                                        caption.Location = new System.Drawing.Point(10, 10);
+                                        caption.Text = split[0];
+
+                                        GTA.Forms.Label text = new GTA.Forms.Label();
+                                        text.Location = new System.Drawing.Point(10, 40);
+                                        text.Text = split[1];
+
+                                        form.Controls.Add(caption);
+                                        form.Controls.Add(text);
+
+                                        for (int i = 2; i < split.Length; i++)
+                                        {
+                                            GTA.Forms.Button button = new GTA.Forms.Button();
+                                            button.Location = new System.Drawing.Point(10, 40 + i*20);
+                                            button.Text = split[i];
+
+                                            button.MouseDown += (s, o) =>
+                                            {
+                                                streamWrite(Commands.NPCDialog_sendResponse);
+                                                streamWrite(BitConverter.GetBytes(id));
+                                                streamWrite(new byte[1] { (byte)(i - 2) });
+                                                streamFlush();
+                                                form.Close();
+                                            };
+
+                                            form.Controls.Add(button);
+                                        }
+                                        form.Show();
+                                    }));
+
                                 }
                                 break;
                         }
