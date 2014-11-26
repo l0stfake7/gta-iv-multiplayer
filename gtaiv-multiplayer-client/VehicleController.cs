@@ -4,16 +4,10 @@ using System.Collections.Generic;
 
 namespace MIVClient
 {
-    public class VehicleInfo
-    {
-        public uint id;
-        public Vehicle vehicle;
-    }
-
     public class VehicleController
     {
-        public Dictionary<uint, StreamedVehicle> vehicles;
         public VehicleStreamer streamer;
+        public Dictionary<uint, StreamedVehicle> vehicles;
 
         public VehicleController()
         {
@@ -21,13 +15,20 @@ namespace MIVClient
             streamer = new VehicleStreamer(Client.getInstance());
         }
 
-        private uint findLowestFreeId()
+        public StreamedVehicle create(uint vid, string model, Vector3 position, Quaternion orientation, Vector3 velocity)
         {
-            for (uint i = 1; i < uint.MaxValue; i++)
+            var v = new StreamedVehicle(streamer, vid, model, position, orientation);
+            this.vehicles.Add(vid, v);
+            return v;
+        }
+
+        public void destroy(byte id)
+        {
+            if (vehicles.ContainsKey(id))
             {
-                if (!vehicles.ContainsKey(i)) return i;
+                vehicles[id].delete();
+                vehicles.Remove(id);
             }
-            throw new Exception("No free ids");
         }
 
         public StreamedVehicle getById(uint id)
@@ -48,20 +49,19 @@ namespace MIVClient
             return null;
         }
 
-        public StreamedVehicle create(uint vid, string model, Vector3 position, Quaternion orientation, Vector3 velocity)
+        private uint findLowestFreeId()
         {
-            var v = new StreamedVehicle(streamer, vid, model, position, orientation);
-            this.vehicles.Add(vid, v);
-            return v;
-        }
-
-        public void destroy(byte id)
-        {
-            if (vehicles.ContainsKey(id))
+            for (uint i = 1; i < uint.MaxValue; i++)
             {
-                vehicles[id].delete();
-                vehicles.Remove(id);
+                if (!vehicles.ContainsKey(i)) return i;
             }
+            throw new Exception("No free ids");
         }
+    }
+
+    public class VehicleInfo
+    {
+        public uint id;
+        public Vehicle vehicle;
     }
 }

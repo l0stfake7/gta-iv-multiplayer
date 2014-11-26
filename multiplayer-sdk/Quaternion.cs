@@ -9,7 +9,7 @@
             {
             }
 
-            public static Quaternion Zero
+            public new static Quaternion Zero
             {
                 get { return new Quaternion(0, 0, 0, 0); }
                 set { }

@@ -1,21 +1,27 @@
-﻿using System;
+﻿using GTA;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA;
 
 namespace MIVClient
 {
     public class NPCPedController
     {
-        Dictionary<uint, StreamedPed> peds;
         public PedStreamer streamer;
+
+        private Dictionary<uint, StreamedPed> peds;
 
         public NPCPedController()
         {
             peds = new Dictionary<uint, StreamedPed>();
             streamer = new PedStreamer(Client.getInstance());
+        }
+
+        public void destroy(uint id)
+        {
+            if (peds.ContainsKey(id))
+            {
+                peds[id].delete();
+                peds.Remove(id);
+            }
         }
 
         public StreamedPed getById(uint id, string model, string name, float heading, Vector3 position)
@@ -27,15 +33,6 @@ namespace MIVClient
                 Client.log("Created npc instance");
             }
             return peds[id];
-        }
-
-        public void destroy(uint id)
-        {
-            if (peds.ContainsKey(id))
-            {
-                peds[id].delete();
-                peds.Remove(id);
-            }
         }
     }
 }

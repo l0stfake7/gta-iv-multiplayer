@@ -9,8 +9,11 @@ namespace MIVClient
 {
     public class KeyboardHandler
     {
-        private Client client;
+        public int cursorpos = 0;
         public bool inKeyboardTypingMode;
+
+        private Client client;
+        private float gamescale;
         private GTA.KeyboardLayoutUS keyboardUS;
 
         public KeyboardHandler(Client client)
@@ -22,11 +25,9 @@ namespace MIVClient
             client.KeyUp += new GTA.KeyEventHandler(this.eventOnKeyUp);
         }
 
-        private float gamescale;
-        public int cursorpos = 0;
-
         private void eventOnKeyDown(object sender, GTA.KeyEventArgs e)
         {
+            if (lastKeyDown != null && lastKeyDown == (int)e.Key) return;
             if (!inKeyboardTypingMode && e.Key == System.Windows.Forms.Keys.T)
             {
                 inKeyboardTypingMode = true;
@@ -39,11 +40,9 @@ namespace MIVClient
                 {
                     if (client.chatController.currentTypedText.Length > 0)
                     {
-                        //writeChat(currentTypedText);
-                        client.serverConnection.streamWrite(Commands.Chat_sendMessage);
-                        client.serverConnection.streamWrite(client.chatController.currentTypedText.Length);
-                        client.serverConnection.streamWrite(client.chatController.currentTypedText);
-                        client.serverConnection.streamFlush();
+                        var bpf = new BinaryPacketFormatter(Commands.Chat_sendMessage);
+                        bpf.add(client.chatController.currentTypedText);
+                        client.serverConnection.write(bpf.getBytes());
                     }
                     client.chatController.currentTypedText = "";
                     cursorpos = 0;
@@ -92,7 +91,6 @@ namespace MIVClient
                 if (e.Key == (System.Windows.Forms.Keys)id && e.Control) client.teleportToBindPoint(id - (int)System.Windows.Forms.Keys.D0);
             }
 
-            if (gamescale == null) gamescale = 1.0f;
             if (e.Key == System.Windows.Forms.Keys.Add)
             {
                 gamescale *= 1.3f;
@@ -134,7 +132,6 @@ namespace MIVClient
             {
                 try
                 {
-                    client.currentState = ClientState.Connecting;
                     if (client.client != null && client.client.Connected)
                     {
                         client.client.Close();
@@ -154,34 +151,43 @@ namespace MIVClient
                     World.CurrentDayTime = new TimeSpan(12, 00, 00);
                     World.PedDensity = 0;
                     World.CarDensity = 0;
+                    client.currentState = ClientState.Connecting;
                 }
-                catch (Exception ex)
+                catch
                 {
                     client.currentState = ClientState.Disconnected;
                     if (client.client != null && client.client.Connected)
                     {
                         client.client.Close();
                     }
-                    throw ex;
+                    throw;
                 }
             }
 
             if (client.currentState == ClientState.Connected)
             {
-                client.serverConnection.streamWrite(Commands.Keys_down);
-                client.serverConnection.streamWrite((int)e.Key);
-                client.serverConnection.streamFlush();
+                client.chatController.writeDebug("keydown");
+                var bpf = new BinaryPacketFormatter(Commands.Keys_down);
+                bpf.add((int)e.Key);
+                client.serverConnection.write(bpf.getBytes());
             }
-
+            lastKeyDown = (int)e.Key;
+            lastKeyUp = 0;
         }
+
+        int? lastKeyUp, lastKeyDown;
         private void eventOnKeyUp(object sender, GTA.KeyEventArgs e)
         {
+            if (lastKeyUp != null && lastKeyUp == (int)e.Key) return;
             if (client.currentState == ClientState.Connected)
             {
-                client.serverConnection.streamWrite(Commands.Keys_up);
-                client.serverConnection.streamWrite((int)e.Key);
-                client.serverConnection.streamFlush();
+                client.chatController.writeDebug("keyup");
+                var bpf = new BinaryPacketFormatter(Commands.Keys_up);
+                bpf.add((int)e.Key);
+                client.serverConnection.write(bpf.getBytes());
             }
+            lastKeyUp = (int)e.Key;
+            lastKeyDown = 0;
         }
     }
 }

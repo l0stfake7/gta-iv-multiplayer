@@ -4,12 +4,6 @@ using System.Collections.Generic;
 
 namespace MIVServer
 {
-    public class ServerVehicleInfo
-    {
-        public uint id;
-        public ServerVehicle vehicle;
-    }
-
     public class ServerVehicleController
     {
         public Dictionary<uint, ServerVehicle> vehicles;
@@ -17,24 +11,6 @@ namespace MIVServer
         public ServerVehicleController()
         {
             vehicles = new Dictionary<uint, ServerVehicle>();
-        }
-
-        private uint findLowestFreeId()
-        {
-            for (uint i = 1; i < uint.MaxValue; i++)
-            {
-                if (!vehicles.ContainsKey(i)) return i;
-            }
-            throw new Exception("No free ids");
-        }
-
-        public ServerVehicle getById(uint id, int model, Vector3 position)
-        {
-            if (!vehicles.ContainsKey(id))
-            {
-                throw new Exception("Not found");
-            }
-            return vehicles[id];
         }
 
         public ServerVehicleInfo create(string model, Vector3 position, Quaternion orientation)
@@ -56,5 +32,29 @@ namespace MIVServer
                 vehicles.Remove(id);
             }
         }
+
+        public ServerVehicle getById(uint id, int model, Vector3 position)
+        {
+            if (!vehicles.ContainsKey(id))
+            {
+                throw new Exception("Not found");
+            }
+            return vehicles[id];
+        }
+
+        private uint findLowestFreeId()
+        {
+            for (uint i = 1; i < uint.MaxValue; i++)
+            {
+                if (!vehicles.ContainsKey(i)) return i;
+            }
+            throw new Exception("No free ids");
+        }
+    }
+
+    public class ServerVehicleInfo
+    {
+        public uint id;
+        public ServerVehicle vehicle;
     }
 }

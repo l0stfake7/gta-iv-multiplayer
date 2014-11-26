@@ -9,13 +9,14 @@ namespace MIVClient
 {
     public class StreamedVehicle
     {
-        private VehicleStreamer streamer;
+        public Vehicle gameReference;
         public uint id;
         public string model;
-        public Vector3 position;
         public Quaternion orientation;
+        public Vector3 position;
         public bool streamedIn;
-        public Vehicle gameReference;
+
+        private VehicleStreamer streamer;
 
         public StreamedVehicle(VehicleStreamer streamer, uint id, string model, Vector3 position, Quaternion orientation)
         {
@@ -36,8 +37,9 @@ namespace MIVClient
 
     public class VehicleStreamer
     {
-        private Client client;
         public List<StreamedVehicle> vehicles;
+
+        private Client client;
 
         public VehicleStreamer(Client client)
         {
@@ -73,10 +75,19 @@ namespace MIVClient
                     {
                         if (!vehicle.streamedIn || vehicle.gameReference == null || !vehicle.gameReference.Exists())
                         {
-                            vehicle.gameReference = World.CreateVehicle(new Model(vehicle.model), vehicle.position);
-                            vehicle.gameReference.RotationQuaternion = vehicle.orientation;
-                            client.prepareVehicle(vehicle);
-                            vehicle.streamedIn = true;
+                            var model = new Model(vehicle.model);
+                            if (model.isValid)
+                            {
+                                vehicle.gameReference = World.CreateVehicle(new Model(vehicle.model), vehicle.position);
+                                vehicle.gameReference.RotationQuaternion = vehicle.orientation;
+                                client.prepareVehicle(vehicle);
+                                vehicle.streamedIn = true;
+                            }
+                            else
+                            {
+                                vehicle.delete();
+                                break;
+                            }
                         }
                     }
                     else if (vehicle.streamedIn)
@@ -88,7 +99,7 @@ namespace MIVClient
                 }
                 catch (Exception e)
                 {
-                    client.chatController.writeChat(e.Message);
+                    client.chatController.writeDebug("VStreamer" + e.Message);
                 }
             }
             //var peds = World.GetPeds(client.getPlayerPed().Position, 200.0f);

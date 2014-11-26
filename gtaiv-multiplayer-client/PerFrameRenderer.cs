@@ -5,12 +5,13 @@ using System.Text;
 
 namespace MIVClient
 {
-    public class PerFrameRenderer
+    public class PerFrameRenderer : IDisposable
     {
+        private Color chatBackground;
+        private RectangleF chatPosition;
         private Client client;
         private GTA.Font font;
-        private RectangleF chatPosition;
-        private Color chatBackground;
+        private GTA.Font font_small;
 
         public PerFrameRenderer(Client client)
         {
@@ -18,7 +19,14 @@ namespace MIVClient
             chatPosition = new RectangleF(10, 10, 400, 230);
             chatBackground = Color.FromArgb(70, 0, 0, 0);
             font = new GTA.Font("Consolas", 24, FontScaling.Pixel);
+            font_small = new GTA.Font("Consolas", 8, FontScaling.Pixel);
             client.PerFrameDrawing += Client_PerFrameDrawing;
+        }
+
+        public void Dispose()
+        {
+            font.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         private void Client_PerFrameDrawing(object sender, GraphicsEventArgs e)
@@ -30,6 +38,13 @@ namespace MIVClient
             {
                 e.Graphics.DrawText(client.chatController.chatconsole.ToArray()[i], 15, yoffset, font);
                 yoffset += 30;
+            }
+
+            yoffset = 100;
+            for (int i = 0; i < client.chatController.debugconsole.Count; i++)
+            {
+                e.Graphics.DrawText(client.chatController.debugconsole.ToArray()[i], (int)Math.Round(Game.Resolution.Width * 0.7), yoffset, font);
+                yoffset += 18;
             }
 
             if (Client.currentData != null)
@@ -48,7 +63,6 @@ namespace MIVClient
                 e.Graphics.DrawText(debugtext.ToString(), 15, Game.Resolution.Height - 100, font);
             }
 
-
             if (client.keyboardHandler.inKeyboardTypingMode)
             {
                 int cpos = client.keyboardHandler.cursorpos;
@@ -64,11 +78,6 @@ namespace MIVClient
                     e.Graphics.DrawText(cstr.ToString(), 25, 15 + 30 * 8 + 20, font);
                 }
             }
-            try
-            {
-                client.updateAllPlayers();
-            }
-            catch { }
         }
     }
 }

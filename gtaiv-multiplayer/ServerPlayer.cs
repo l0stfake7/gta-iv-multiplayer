@@ -6,18 +6,98 @@ namespace MIVServer
 {
     public class ServerPlayer
     {
-        public byte id;
-        public string nick;
         public ClientConnection connection;
         public UpdateDataStruct data;
-        private float gravity;
+        public byte id;
+        public string nick;
+
         private TimeSpan gametime;
+        private float gravity;
 
         public ServerPlayer(string nick, ClientConnection connection)
         {
             this.nick = nick;
             this.connection = connection;
             data = UpdateDataStruct.Zero;
+        }
+
+        public TimeSpan GameTime
+        {
+            get
+            {
+                return this.gametime;
+            }
+            set
+            {
+                gametime = value;
+                var bpf = new BinaryPacketFormatter(Commands.Player_setHeading);
+                bpf.add(value.Seconds);
+                connection.write(bpf.getBytes());
+            }
+        }
+
+        public float Gravity
+        {
+            get
+            {
+                return this.gravity;
+            }
+            set
+            {
+                gravity = value;
+                var bpf = new BinaryPacketFormatter(Commands.Player_setGravity);
+                bpf.add(value);
+                connection.write(bpf.getBytes());
+            }
+        }
+
+        public float Heading
+        {
+            get
+            {
+                return data.heading;
+            }
+            set
+            {
+                data.heading = value;
+                var bpf = new BinaryPacketFormatter(Commands.Player_setHeading);
+                bpf.add(value);
+                connection.write(bpf.getBytes());
+            }
+        }
+
+        public Vector3 Position
+        {
+            get
+            {
+                return data.getPositionVector();
+            }
+            set
+            {
+                data.pos_x = value.X;
+                data.pos_y = value.Y;
+                data.pos_z = value.Z;
+                var bpf = new BinaryPacketFormatter(Commands.Player_setPosition);
+                bpf.add(value);
+                connection.write(bpf.getBytes());
+            }
+        }
+
+        public Vector3 Velocity
+        {
+            get
+            {
+                return data.getVelocityVector();
+            }
+            set
+            {
+                data.vel_x = value.X;
+                data.vel_y = value.Y;
+                data.vel_z = value.Z;
+                var bpf = new BinaryPacketFormatter(Commands.Player_setVelocity);
+                bpf.add(value);
+                connection.write(bpf.getBytes());
+            }
         }
 
         public void updateData(UpdateDataStruct data)
@@ -33,74 +113,6 @@ namespace MIVServer
             Server.instance.api.invokeOnPlayerUpdate(this);
             //Server.instance.broadcastData(this);
             //Console.WriteLine("Updated player " + nick);
-        }
-
-        public Vector3 Position
-        {
-            get { return data.getPositionVector(); }
-            set
-            {
-                data.pos_x = value.X;
-                data.pos_y = value.Y;
-                data.pos_z = value.Z;
-                connection.streamWrite(Commands.Player_setPosition);
-                connection.streamWrite(BitConverter.GetBytes(value.X));
-                connection.streamWrite(BitConverter.GetBytes(value.Y));
-                connection.streamWrite(BitConverter.GetBytes(value.Z));
-                connection.streamFlush();
-            }
-        }
-
-        public Vector3 Velocity
-        {
-            get { return data.getVelocityVector(); }
-            set
-            {
-                data.vel_x = value.X;
-                data.vel_y = value.Y;
-                data.vel_z = value.Z;
-                connection.streamWrite(Commands.Player_setVelocity);
-                connection.streamWrite(BitConverter.GetBytes(value.X));
-                connection.streamWrite(BitConverter.GetBytes(value.Y));
-                connection.streamWrite(BitConverter.GetBytes(value.Z));
-                connection.streamFlush();
-            }
-        }
-
-        public float Heading
-        {
-            get { return data.heading; }
-            set
-            {
-                data.heading = value;
-                connection.streamWrite(Commands.Player_setHeading);
-                connection.streamWrite(BitConverter.GetBytes(value));
-                connection.streamFlush();
-            }
-        }
-
-        public float Gravity
-        {
-            get { return this.gravity; }
-            set
-            {
-                gravity = value;
-                connection.streamWrite(Commands.Player_setGravity);
-                connection.streamWrite(BitConverter.GetBytes(value));
-                connection.streamFlush();
-            }
-        }
-
-        public TimeSpan GameTime
-        {
-            get { return this.gametime; }
-            set
-            {
-                gametime = value;
-                connection.streamWrite(Commands.Player_setHeading);
-                connection.streamWrite(BitConverter.GetBytes(value.Seconds));
-                connection.streamFlush();
-            }
         }
     }
 }

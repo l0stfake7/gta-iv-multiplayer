@@ -9,28 +9,23 @@ namespace MIVClient
 {
     public partial class Client : Script
     {
-        public TcpClient client;
-        public string nick;
+        public static UpdateDataStruct currentData;
         public static Client instance;
-
-        public PlayerPedController pedController;
-        public NPCPedController npcPedController;
-        public PlayerVehicleController playerVehicleController;
-        public VehicleController vehicleController;
-        public ServerConnection serverConnection;
-        public KeyboardHandler keyboardHandler;
         public ChatController chatController;
+        public TcpClient client;
+        public ClientState currentState = ClientState.Initializing;
+        public KeyboardHandler keyboardHandler;
+        public string nick;
+        public NPCPedController npcPedController;
+        public PlayerPedController pedController;
         public PerFrameRenderer perFrameRenderer;
+        public PlayerVehicleController playerVehicleController;
+        public ServerConnection serverConnection;
+        public VehicleController vehicleController;
 
         private Queue<Action> actionQueue;
 
-        public void enqueueAction(Action action)
-        {
-            actionQueue.Enqueue(action);
-        }
-
-        public ClientState currentState = ClientState.Initializing;
-        private int currentCounter;
+        private Dictionary<int, GTA.Vector3> bindPoints;
 
         public Client()
         {
@@ -43,7 +38,6 @@ namespace MIVClient
             chatController = new ChatController(this);
             keyboardHandler = new KeyboardHandler(this);
             currentState = ClientState.Initializing;
-            currentCounter = 0;
             Interval = 80;
             this.Tick += new EventHandler(this.eventOnTick);
             currentState = ClientState.Disconnected;
@@ -61,32 +55,6 @@ namespace MIVClient
             perFrameRenderer = new PerFrameRenderer(this);
         }
 
-        private void Client_ScriptCommand(ParameterCollection Parameters)
-        {
-            if (Player.Character.isInVehicle())
-            {
-                System.IO.File.AppendAllText("saved.txt",
-                    "pos = " + Player.Character.CurrentVehicle.Position.X + "f, " +
-                    Player.Character.CurrentVehicle.Position.Y + "f, " +
-                    Player.Character.CurrentVehicle.Position.Z + "f; quaternion = " +
-                    Player.Character.CurrentVehicle.RotationQuaternion.X + "f, " +
-                    Player.Character.CurrentVehicle.RotationQuaternion.Y + "f, " +
-                    Player.Character.CurrentVehicle.RotationQuaternion.Z + "f, " +
-                    Player.Character.CurrentVehicle.RotationQuaternion.W + "f; model = " +
-                    Player.Character.CurrentVehicle.Model.GetHashCode() + "; //" +
-                    (Parameters.Count > 0 ? Parameters[0].ToString() : "") + "\r\n");
-            }
-            else
-            {
-                System.IO.File.AppendAllText("saved.txt",
-                    "pos = " + Player.Character.Position.X + "f, " +
-                    Player.Character.Position.Y + "f, " +
-                    Player.Character.Position.Z + "f; heading = " + Player.Character.Heading + "f; //" +
-                    (Parameters.Count > 0 ? Parameters[0].ToString() : "") + "\r\n");
-            }
-            log("Saved");
-        }
-
         public static Client getInstance()
         {
             return instance;
@@ -98,9 +66,9 @@ namespace MIVClient
             //GTA.Game.DisplayText(text);
         }
 
-        public Ped getPlayerPed()
+        public void enqueueAction(Action action)
         {
-            return Player.Character;
+            actionQueue.Enqueue(action);
         }
 
         public Player getPlayer()
@@ -108,7 +76,10 @@ namespace MIVClient
             return Player;
         }
 
-        private Dictionary<int, GTA.Vector3> bindPoints;
+        public Ped getPlayerPed()
+        {
+            return Player.Character;
+        }
 
         public void saveBindPoint(int id)
         {
@@ -123,14 +94,69 @@ namespace MIVClient
             if (bindPoints.ContainsKey(id)) getPlayerPed().Position = bindPoints[id];
         }
 
+        public void updateAllPlayers()
+        {
+            for (int i = 0; i < serverConnection.playersdata.Keys.Count; i++)
+            {
+                var elemKey = serverConnection.playersdata.Keys.ToArray()[i];
+                var elemValue = serverConnection.playersdata[elemKey];
+
+                if (elemValue.client_has_been_set) continue;
+                else elemValue.client_has_been_set = true;
+
+                //bool in_vehicle = elemValue.vehicle_id > 0;
+                var posnew = new Vector3(elemValue.pos_x, elemValue.pos_y, elemValue.pos_z - 1.0f);
+                StreamedPed ped = pedController.getById(elemKey, elemValue.nick, posnew);
+                try
+                {
+                    updateVehicle(elemValue, ped);
+                }
+                catch (Exception ex)
+                {
+                    log("Failed updating streamed vehicle data for player " + ex.Message);
+                }
+                try
+                {
+                    updatePed(elemValue, ped);
+                }
+                catch (Exception ex)
+                {
+                    log("Failed updating streamed ped data for player " + ex.Message);
+                }
+            }
+        }
+
+        private void Client_ScriptCommand(ParameterCollection Parameters)
+        {
+            if (Player.Character.isInVehicle())
+            {
+                System.IO.File.AppendAllText("saved.txt",
+                    "api.createVehicle(" + Player.Character.CurrentVehicle.Model.ToString() + ", new Vector3(" + Player.Character.CurrentVehicle.Position.X + "f, " +
+                    Player.Character.CurrentVehicle.Position.Y + "f, " +
+                    Player.Character.CurrentVehicle.Position.Z + "f), new Quaternion(" +
+                    Player.Character.CurrentVehicle.RotationQuaternion.X + "f, " +
+                    Player.Character.CurrentVehicle.RotationQuaternion.Y + "f, " +
+                    Player.Character.CurrentVehicle.RotationQuaternion.Z + "f, " +
+                    Player.Character.CurrentVehicle.RotationQuaternion.W + "f)); //" +
+                    (Parameters.Count > 0 ? String.Join(" ", Parameters.Cast<string>()) : "") + "\r\n");
+            }
+            else
+            {
+                System.IO.File.AppendAllText("saved.txt",
+                    "pos = " + Player.Character.Position.X + "f, " +
+                    Player.Character.Position.Y + "f, " +
+                    Player.Character.Position.Z + "f; heading = " + Player.Character.Heading + "f; //" +
+                    (Parameters.Count > 0 ? Parameters[0].ToString() : "") + "\r\n");
+            }
+            log("Saved");
+        }
+
         /*
          * Structure of packet is as follows
          * 0x00               0x01               0x05
          * [(ushort)COMMAND_ID] [(int)DATA_LENGTH] [(mixed)DATA]
          *
          */
-
-        public static UpdateDataStruct currentData;
 
         private void eventOnTick(object sender, EventArgs e)
         {
@@ -214,7 +240,7 @@ namespace MIVClient
                         data.vehicle_model = 0;
                         data.vehicle_health = 0;
                         // for passengers:)
-                        data.vehicle_id = Player.Character.isInVehicle() ? vehicleController.getByVehicle(Player.Character.CurrentVehicle).id  : 0;
+                        data.vehicle_id = Player.Character.isInVehicle() ? vehicleController.getByVehicle(Player.Character.CurrentVehicle).id : 0;
                         data.ped_health = Player.Character.Health;
                         data.speed = 0;
                         data.heading = Player.Character.Heading;
@@ -237,9 +263,11 @@ namespace MIVClient
                     data.vstate |= Game.isGameKeyPressed(GameKey.MoveRight) ? VehicleState.IsSterringRight : 0;
                     data.vstate |= (data.state & PlayerState.IsPassenger1) != 0 || (data.state & PlayerState.IsPassenger2) != 0 || (data.state & PlayerState.IsPassenger3) != 0
                         ? VehicleState.IsAsPassenger : 0;
-                    serverConnection.streamWrite(Commands.UpdateData);
-                    serverConnection.streamWrite(data);
-                    serverConnection.streamFlush();
+
+                    var bpf = new BinaryPacketFormatter(Commands.UpdateData);
+                    bpf.add(data);
+                    serverConnection.write(bpf.getBytes());
+
                     currentData = data;
                 }
                 catch (Exception ex)
@@ -260,48 +288,19 @@ namespace MIVClient
                 //log("sent data");
                 // process players
                 updateAllPlayers();
-                
+
+                serverConnection.flush();
+
             }
             if (currentState == ClientState.Connecting)
             {
-                serverConnection.streamWrite(Commands.Connect);
-                serverConnection.streamWrite(nick.Length);
-                serverConnection.streamWrite(nick);
-                serverConnection.streamFlush();
                 currentState = ClientState.Connected;
+
+                var bpf = new BinaryPacketFormatter(Commands.Connect);
+                bpf.add(nick);
+                serverConnection.write(bpf.getBytes());
+
                 chatController.writeChat("Connected");
-            }
-        }
-
-        public void updateAllPlayers()
-        {
-            for (int i = 0; i < serverConnection.playersdata.Keys.Count; i++)
-            {
-                var elemKey = serverConnection.playersdata.Keys.ToArray()[i];
-                var elemValue = serverConnection.playersdata[elemKey];
-
-                if (elemValue.client_has_been_set) continue;
-                else elemValue.client_has_been_set = true;
-
-                //bool in_vehicle = elemValue.vehicle_id > 0;
-                var posnew = new Vector3(elemValue.pos_x, elemValue.pos_y, elemValue.pos_z - 1.0f);
-                StreamedPed ped = pedController.getById(elemKey, elemValue.nick, posnew);
-                try
-                {
-                    updateVehicle(elemValue, ped);
-                }
-                catch (Exception ex)
-                {
-                    log("Failed updating streamed vehicle data for player " + ex.Message);
-                }
-                try
-                {
-                    updatePed(elemValue, ped);
-                }
-                catch (Exception ex)
-                {
-                    log("Failed updating streamed ped data for player " + ex.Message);
-                }
             }
         }
     }

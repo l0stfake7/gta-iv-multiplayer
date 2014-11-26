@@ -2,150 +2,161 @@
 using MIVSDK;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
 
 namespace MIVClient
 {
     public class ServerConnection
     {
-        private Client client;
-        private byte[] buffer;
         public Dictionary<byte, UpdateDataStruct> playersdata;
+
+        private const int BUFSIZE = 1024 * 100;
+        private byte[] buffer;
+        private Client client;
 
         public ServerConnection(Client client)
         {
+            internal_buffer = new List<byte>();
             this.client = client;
-            buffer = new byte[1024 * 1024];
+            buffer = new byte[BUFSIZE];
             playersdata = new Dictionary<byte, UpdateDataStruct>();
-            streamBegin();
+            client.client.SendBufferSize = BUFSIZE;
+            client.client.Client.ReceiveBufferSize = BUFSIZE;
+            client.client.Client.Blocking = true;
+            client.client.NoDelay = true;
+            client.client.Client.DontFragment = true;
+            client.client.Client.NoDelay = true;
+            client.client.Client.Blocking = true;
+            client.client.Client.ReceiveBufferSize = BUFSIZE;
+            client.client.Client.SendBufferSize = BUFSIZE;
             client.client.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
         }
 
+        private List<byte> internal_buffer;
+        public void write(byte[] bytes)
+        {
+            lock (internal_buffer)
+            {
+                internal_buffer.AddRange(bytes);
+            }
+        }
+        public void flush()
+        {
+            lock (internal_buffer)
+            {
+                var stream = client.client.GetStream();
+                stream.Write(internal_buffer.ToArray(), 0, internal_buffer.Count);
+                stream.Flush();
+                internal_buffer = new List<byte>();
+            }
+        }
+
+
         private void onReceive(IAsyncResult iar)
         {
-            try
+            lock (client)
             {
-                client.client.Client.EndReceive(iar);
-                if (iar.IsCompleted)
+                try
                 {
-                    if (buffer.Length > 0)
+                    client.client.Client.EndReceive(iar);
+                    var bpr = new BinaryPacketReader(buffer);
+                    while (bpr.canRead())
                     {
-                        switch ((MIVSDK.Commands)BitConverter.ToUInt16(buffer, 0))
+                        Commands command = bpr.readCommand();
+                        if (command == Commands.Invalid) break;
+                        switch (command)
                         {
-                            case MIVSDK.Commands.UpdateData:
+                            case Commands.UpdateData:
                                 {
-                                    byte playerid = buffer[2];
-                                    MIVSDK.UpdateDataStruct data = MIVSDK.UpdateDataStruct.unserialize(buffer, 3);
+                                    byte playerid = bpr.readByte();
+                                    MIVSDK.UpdateDataStruct data = bpr.readUpdateStruct();
                                     if (!playersdata.ContainsKey(playerid)) playersdata.Add(playerid, data);
                                     else playersdata[playerid] = data;
                                 }
                                 break;
 
-                            case MIVSDK.Commands.Chat_writeLine:
+                            case Commands.Chat_writeLine:
                                 {
-                                    var list = buffer.ToList();
-                                    int lineLength = BitConverter.ToInt32(buffer, 2);
-                                    string line = Encoding.UTF8.GetString(list.Skip(2 + 4).Take(lineLength).ToArray());
-                                    client.chatController.writeChat(line);
+                                    client.chatController.writeChat(bpr.readString());
                                 }
                                 break;
 
-                            case MIVSDK.Commands.Player_setPosition:
+                            case Commands.Player_setPosition:
                                 {
-                                    float x = BitConverter.ToSingle(buffer, 2);
-                                    float y = BitConverter.ToSingle(buffer, 6);
-                                    float z = BitConverter.ToSingle(buffer, 10);
+                                    Vector3 vec = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
+                                    client.chatController.writeChat("OasK");
                                     client.enqueueAction(new Action(delegate
                                     {
-                                        client.getPlayerPed().Position = new Vector3(x, y, z);
+                                        client.getPlayerPed().Position = vec;
                                     }));
                                 }
                                 break;
 
-                            case MIVSDK.Commands.Vehicle_create_multi:
+                            case Commands.Vehicle_create:
                                 {
-                                    // uint id, int model, float x y z, rx, ry, rz, rw, vx, vy, vz
-                                    int offset = 2;
-                                    int count = BitConverter.ToInt32(buffer, offset); offset += 4;
-                                    int outlen = 0;
-                                    for (int i = 0; i < count; i++)
-                                    {
-                                        uint id = BitConverter.ToUInt32(buffer, offset); offset += 4;
-                                        float x = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                        float y = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                        float z = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                        float rx = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                        float ry = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                        float rz = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                        float rw = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                        float vx = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                        float vy = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                        float vz = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                        string model = Serializers.unserialize_string(buffer, offset, out outlen); offset += outlen;
-                                        client.enqueueAction(new Action(delegate
-                                        {
-                                            client.vehicleController.create(id, model, new Vector3(x, y, z), new Quaternion(rx, ry, rz, rw), new Vector3(vx, vy, vz));
-                                        }));
-                                    }
-                                }
-                                break;
-                            case MIVSDK.Commands.NPC_create:
-                                {
-                                    // uint id, int model, float x y z, rx, ry, rz, rw, vx, vy, vz
-                                    int offset = 2;
-                                    int outlen = 0;
-                                    uint id = BitConverter.ToUInt32(buffer, offset); offset += 4;
-                                    float x = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                    float y = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                    float z = BitConverter.ToSingle(buffer, offset); offset += 4;
-                                    float heading = BitConverter.ToSingle(buffer, offset); offset += 4;
-
-                                    string modelname = Serializers.unserialize_string(buffer, offset, out outlen); offset += outlen;
-                                    string[] split = modelname.Split(';');
+                                    uint id = bpr.readUInt32();
+                                    Vector3 pos = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
+                                    Quaternion rot = new Quaternion(bpr.readSingle(), bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
+                                    Vector3 vel = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
+                                    string model = bpr.readString();
                                     client.enqueueAction(new Action(delegate
                                     {
-                                        client.npcPedController.getById(id, split[0], split[1], heading, new Vector3(x, y, z));
+                                        client.vehicleController.create(id, model, pos, rot, vel);
                                     }));
-
                                 }
                                 break;
-                            case MIVSDK.Commands.NPCDialog_show:
+
+                            case Commands.NPC_create:
                                 {
-                                    // uint id, int model, float x y z, rx, ry, rz, rw, vx, vy, vz
-                                    int offset = 2;
-                                    uint id = BitConverter.ToUInt32(buffer, offset); offset += 4;
-                                    string str = Serializers.unserialize_string(buffer, offset);
+                                    //int count = bpr.readInt32();
+                                    uint id = bpr.readUInt32();
+                                    Vector3 pos = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
+                                    float heading = bpr.readSingle();
+                                    string model = MIVSDK.ModelDictionary.getById(bpr.readUInt32());
+
+                                    string str = bpr.readString();
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.npcPedController.getById(id, model, str, heading, pos);
+                                    }));
+                                }
+                                break;
+
+                            case Commands.NPCDialog_show:
+                                {
+                                    uint id = bpr.readUInt32();
+                                    string captiontext = bpr.readString();
+                                    string texttext = bpr.readString();
+                                    string str = bpr.readString();
                                     string[] split = str.Split('\x01');
-                                    foreach (string s in split) Game.Console.Print(s);
                                     client.enqueueAction(new Action(delegate
                                     {
                                         GTA.Forms.Form form = new GTA.Forms.Form();
 
                                         GTA.Forms.Label caption = new GTA.Forms.Label();
                                         caption.Location = new System.Drawing.Point(10, 10);
-                                        caption.Text = split[0];
+                                        caption.Text = captiontext;
 
                                         GTA.Forms.Label text = new GTA.Forms.Label();
                                         text.Location = new System.Drawing.Point(10, 40);
-                                        text.Text = split[1];
+                                        text.Text = texttext;
 
                                         form.Controls.Add(caption);
                                         form.Controls.Add(text);
 
-                                        for (int i = 2; i < split.Length; i++)
+                                        for (int i = 0; i < split.Length; i++)
                                         {
                                             GTA.Forms.Button button = new GTA.Forms.Button();
-                                            button.Location = new System.Drawing.Point(10, 40 + i*20);
+                                            button.Location = new System.Drawing.Point(10, 40 + i * 20);
                                             button.Text = split[i];
 
                                             button.MouseDown += (s, o) =>
                                             {
-                                                streamWrite(Commands.NPCDialog_sendResponse);
-                                                streamWrite(BitConverter.GetBytes(id));
-                                                streamWrite(new byte[1] { (byte)(i - 2) });
-                                                streamFlush();
+                                                var bpf = new BinaryPacketFormatter(Commands.NPCDialog_sendResponse);
+                                                bpf.add(id);
+                                                bpf.add(new byte[1] { (byte)(i - 2) });
+                                                write(bpf.getBytes());
+
                                                 form.Close();
                                             };
 
@@ -153,75 +164,21 @@ namespace MIVClient
                                         }
                                         form.Show();
                                     }));
-
                                 }
                                 break;
                         }
                     }
+
+                    client.client.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
+                    //}
                 }
-                buffer = new byte[1024 * 1024];
-                client.client.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
+                catch (Exception e)
+                {
+                    Client.log("Failed receive with message " + e.Message + " " + e.StackTrace);
+                    client.currentState = ClientState.Disconnected;
+                    //throw e;
+                }
             }
-            catch (Exception e)
-            {
-                //client.log("Failed receive with message " + e.Message);
-                client.currentState = ClientState.Disconnected;
-                //throw e;
-            }
-        }
-
-        private byte[] appendBytes(byte[] byte1, byte[] byte2)
-        {
-            var list = byte1.ToList();
-            list.AddRange(byte2);
-            return list.ToArray();
-        }
-
-        private byte[] tempbuf;
-
-        public void streamBegin()
-        {
-            tempbuf = new byte[0];
-        }
-
-        public void streamFlush()
-        {
-            client.client.Client.Send(tempbuf, tempbuf.Length, SocketFlags.None);
-            streamBegin();
-        }
-
-        public void streamWrite(byte[] buffer)
-        {
-            tempbuf = appendBytes(tempbuf, buffer);
-        }
-
-        public void streamWrite(List<byte> buffer)
-        {
-            tempbuf = appendBytes(tempbuf, buffer.ToArray());
-        }
-
-        public void streamWrite(string buffer)
-        {
-            byte[] buf = Encoding.UTF8.GetBytes(buffer);
-            tempbuf = appendBytes(tempbuf, buf);
-        }
-
-        public void streamWrite(UpdateDataStruct buffer)
-        {
-            byte[] buf = buffer.serialize();
-            tempbuf = appendBytes(tempbuf, buf);
-        }
-
-        public void streamWrite(Commands command)
-        {
-            byte[] buf = BitConverter.GetBytes((ushort)command);
-            tempbuf = appendBytes(tempbuf, buf);
-        }
-
-        public void streamWrite(int integer)
-        {
-            byte[] buf = BitConverter.GetBytes(integer);
-            tempbuf = appendBytes(tempbuf, buf);
         }
     }
 }

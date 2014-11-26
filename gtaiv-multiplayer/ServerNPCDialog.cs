@@ -1,33 +1,17 @@
-﻿using System;
+﻿using MIVSDK;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MIVServer
 {
     public class ServerNPCDialog
     {
         public string caption;
-        public string text;
         public uint id;
         public List<string> responses;
+        public string text;
 
-        static Dictionary<uint, ServerNPCDialog> pool;
-
-        private uint findLowestFreeId()
-        {
-            for (uint i = 1; i < uint.MaxValue; i++)
-            {
-                if (!pool.ContainsKey(i)) return i;
-            }
-            throw new Exception("No free ids");
-        }
-
-
-        public delegate void onPlayerAnswerDialogDelegate(ServerPlayer player, byte choose);
-
-        public event onPlayerAnswerDialogDelegate onPlayerAnswerDialog;
+        private static Dictionary<uint, ServerNPCDialog> pool;
 
         public ServerNPCDialog(string caption, string text)
         {
@@ -36,12 +20,15 @@ namespace MIVServer
             this.text = text;
             this.id = findLowestFreeId();
             responses = new List<string>();
-
         }
+
+        public delegate void onPlayerAnswerDialogDelegate(ServerPlayer player, byte choose);
+
+        public event onPlayerAnswerDialogDelegate onPlayerAnswerDialog;
 
         public static void invokeResponse(ServerPlayer player, uint id, byte answer)
         {
-            if(pool.ContainsKey(id) && pool[id].onPlayerAnswerDialog != null) pool[id].onPlayerAnswerDialog.Invoke(player, answer);
+            if (pool.ContainsKey(id) && pool[id].onPlayerAnswerDialog != null) pool[id].onPlayerAnswerDialog.Invoke(player, answer);
         }
 
         public void addResponse(string text)
@@ -51,14 +38,21 @@ namespace MIVServer
 
         public void show(ServerPlayer player)
         {
-            lock (player.connection.queue)
-            {
-                player.connection.streamWrite(MIVSDK.Commands.NPCDialog_show);
-                player.connection.streamWrite(BitConverter.GetBytes(id));
-                player.connection.streamWrite(MIVSDK.Serializers.serialize(caption + "\x01" + text + "\x01" + String.Join("\x01", responses.ToArray())));
-                player.connection.streamFlush();
-            }
+            var bpf = new BinaryPacketFormatter(Commands.NPCDialog_show);
+            bpf.add(id);
+            bpf.add(caption);
+            bpf.add(text);
+            bpf.add(String.Join("\x01", responses.ToArray()));
+            player.connection.write(bpf.getBytes());
         }
 
+        private uint findLowestFreeId()
+        {
+            for (uint i = 1; i < uint.MaxValue; i++)
+            {
+                if (!pool.ContainsKey(i)) return i;
+            }
+            throw new Exception("No free ids");
+        }
     }
 }

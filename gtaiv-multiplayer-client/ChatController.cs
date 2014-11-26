@@ -1,28 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MIVSDK;
-using GTA;
-using System.Drawing;
+﻿using System.Collections.Generic;
 
 namespace MIVClient
 {
     public class ChatController
     {
-        Client client;
-
         public Queue<string> chatconsole;
+        public Queue<string> debugconsole;
         public string currentTypedText;
+
+        private Client client;
 
         public ChatController(Client client)
         {
             this.client = client;
             currentTypedText = "";
             chatconsole = new Queue<string>();
-            writeChat("Console loaded");
-            writeChat("OK");
+            debugconsole = new Queue<string>();
+            writeChat("Warning: This is alpha software.");
+            writeChat("MIV 0.1 - Press L to connect.");
         }
 
         public void writeChat(string text)
@@ -33,8 +28,13 @@ namespace MIVClient
                 chatconsole.Dequeue();
             }
         }
-        
-
-
+        public void writeDebug(string text)
+        {
+            debugconsole.Enqueue(text);
+            while (debugconsole.Count > 40)
+            {
+                debugconsole.Dequeue();
+            }
+        }
     }
 }

@@ -14,12 +14,6 @@
                 this.W = 0;
             }
 
-            public static Vector4 Zero
-            {
-                get { return new Vector4(); }
-                set { }
-            }
-
             public Vector4(float X, float Y, float Z, float W)
             {
                 this.X = X;
@@ -36,9 +30,10 @@
                 this.W = vec.W;
             }
 
-            public static bool operator ==(Vector4 v1, Vector4 v2)
+            public static Vector4 Zero
             {
-                return v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z && v1.W == v2.W;
+                get { return new Vector4(); }
+                set { }
             }
 
             public static bool operator !=(Vector4 v1, Vector4 v2)
@@ -56,6 +51,16 @@
                 ret.W += v2.W;
 
                 return ret;
+            }
+
+            public static bool operator ==(Vector4 v1, Vector4 v2)
+            {
+                return v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z && v1.W == v2.W;
+            }
+
+            public bool Equals(Vector4 v2)
+            {
+                return this.X == v2.X && this.Y == v2.Y && this.Z == v2.Z && this.W == v2.W;
             }
         }
     }

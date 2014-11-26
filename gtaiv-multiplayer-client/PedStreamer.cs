@@ -1,48 +1,16 @@
 ﻿using GTA;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 //using MIVSDK;
 
 namespace MIVClient
 {
-    public class StreamedPed
-    {
-        private PedStreamer streamer;
-        public Vector3 position, direction;
-        public float heading;
-        public bool streamedIn;
-        public Ped gameReference;
-        public PedAnimationManager animator;
-        public bool hasNetworkName;
-        public string model, networkname;
-        public Blip blip;
-
-        public StreamedPed(PedStreamer streamer, string model, string networkname, Vector3 position, float heading)
-        {
-            this.streamer = streamer;
-            this.position = position;
-            this.heading = heading;
-            this.networkname = networkname;
-            this.model = model;
-            direction = Vector3.Zero;
-            streamedIn = false;
-            hasNetworkName = false;
-            streamer.add(this);
-            animator = new PedAnimationManager(this);
-        }
-
-        public void delete()
-        {
-            streamer.delete(this);
-        }
-    }
-
     public class PedStreamer
     {
-        private Client client;
         public List<StreamedPed> peds;
+
+        private Client client;
 
         public PedStreamer(Client client)
         {
@@ -59,7 +27,6 @@ namespace MIVClient
         {
             peds.Remove(ped);
         }
-
 
         public void update()
         {
@@ -78,7 +45,7 @@ namespace MIVClient
                             ped.blip = Blip.AddBlip(ped.gameReference);
                             ped.blip.Color = BlipColor.LightOrange;
                             ped.blip.Display = BlipDisplay.MapOnly;
-                            ped.blip.Icon = BlipIcon.Misc_Objective;
+                            ped.blip.Icon = BlipIcon.Misc_Destination;
                             ped.blip.Name = "Player";
                             ped.streamedIn = true;
                             ped.gameReference.Heading = ped.heading;
@@ -87,12 +54,12 @@ namespace MIVClient
                         }
                         else
                         {
-                            if (ped.gameReference.Position.DistanceTo(ped.position) > 4.0f)
-                            {
-                                //ped.gameReference.Position = ped.position;
-                                //ped.gameReference.Heading = ped.heading;
-                                //ped.gameReference.Task.RunTo(ped.position, true);
-                            }
+                            //if (ped.gameReference.Position.DistanceTo(ped.position) > 4.0f)
+                            //{
+                            //ped.gameReference.Position = ped.position;
+                            //ped.gameReference.Heading = ped.heading;
+                            //ped.gameReference.Task.RunTo(ped.position, true);
+                            //}
                         }
                     }
                     else if (ped.streamedIn)
@@ -111,6 +78,39 @@ namespace MIVClient
             }/*
             var pedss = World.GetPeds(client.getPlayerPed().Position, 200.0f);
             foreach (Ped a in pedss) if (a.Exists() && a.isAlive && a != client.getPlayerPed() && peds.Count(ax => ax.gameReference != null && ax.gameReference == a) == 0) a.Delete();*/
+        }
+    }
+
+    public class StreamedPed
+    {
+        public PedAnimationManager animator;
+        public Blip blip;
+        public Ped gameReference;
+        public bool hasNetworkName;
+        public float heading;
+        public string model, networkname;
+        public Vector3 position, direction;
+        public bool streamedIn;
+
+        private PedStreamer streamer;
+
+        public StreamedPed(PedStreamer streamer, string model, string networkname, Vector3 position, float heading)
+        {
+            this.streamer = streamer;
+            this.position = position;
+            this.heading = heading;
+            this.networkname = networkname;
+            this.model = model;
+            direction = Vector3.Zero;
+            streamedIn = false;
+            hasNetworkName = false;
+            streamer.add(this);
+            animator = new PedAnimationManager(this);
+        }
+
+        public void delete()
+        {
+            streamer.delete(this);
         }
     }
 }

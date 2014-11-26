@@ -15,6 +15,15 @@ namespace MIVSDK
             return buffer.ToArray();
         }
 
+        public static byte[] serialize(Vector3 vec)
+        {
+            List<byte> output = new List<byte>();
+            output.AddRange(BitConverter.GetBytes(vec.X));
+            output.AddRange(BitConverter.GetBytes(vec.Y));
+            output.AddRange(BitConverter.GetBytes(vec.Z));
+            return output.ToArray();
+        }
+
         public static string unserialize_string(byte[] b, int o)
         {
             return Encoding.UTF8.GetString(b, o + 4, BitConverter.ToInt32(b, o));
@@ -25,15 +34,6 @@ namespace MIVSDK
             int count = BitConverter.ToInt32(b, o);
             length = count + 4;
             return Encoding.UTF8.GetString(b, o + 4, count);
-        }
-
-        public static byte[] serialize(Vector3 vec)
-        {
-            List<byte> output = new List<byte>();
-            output.AddRange(BitConverter.GetBytes(vec.X));
-            output.AddRange(BitConverter.GetBytes(vec.Y));
-            output.AddRange(BitConverter.GetBytes(vec.Z));
-            return output.ToArray();
         }
     }
 }

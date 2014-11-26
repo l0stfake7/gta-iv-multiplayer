@@ -1,28 +1,25 @@
-﻿using System;
+﻿using GTA;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA;
 
 namespace MIVClient
 {
     public class PlayerVehicleController
     {
-        Dictionary<uint, Vehicle> vehicles;
+        private Dictionary<uint, Vehicle> vehicles;
 
         public PlayerVehicleController()
         {
             vehicles = new Dictionary<uint, Vehicle>();
         }
 
-        private uint findLowestFreeId()
+        public void destroy(byte id)
         {
-            for (uint i = 0; i < uint.MaxValue; i++)
+            if (vehicles.ContainsKey(id))
             {
-                if (!vehicles.ContainsKey(i)) return i;
+                //  vehicles[id].Delete();
+                vehicles.Remove(id);
             }
-            throw new Exception("No free ids");
         }
 
         public Vehicle getById(byte id, int model, Vector3 position)
@@ -35,13 +32,13 @@ namespace MIVClient
             return vehicles[id];
         }
 
-        public void destroy(byte id)
+        private uint findLowestFreeId()
         {
-            if (vehicles.ContainsKey(id))
+            for (uint i = 0; i < uint.MaxValue; i++)
             {
-              //  vehicles[id].Delete();
-                vehicles.Remove(id);
+                if (!vehicles.ContainsKey(i)) return i;
             }
+            throw new Exception("No free ids");
         }
     }
 }

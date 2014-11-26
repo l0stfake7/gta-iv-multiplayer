@@ -13,12 +13,6 @@
                 this.Z = 0;
             }
 
-            public static Vector3 Zero
-            {
-                get { return new Vector3(); }
-                set { }
-            }
-
             public Vector3(float X, float Y, float Z)
             {
                 this.X = X;
@@ -33,16 +27,10 @@
                 this.Z = vec.Z;
             }
 
-            public float distanceTo(Vector3 vec)
+            public static Vector3 Zero
             {
-                return (this - vec).length;
-            }
-            public void normalize()
-            {
-                float len = length;
-                X /= len;
-                Y /= len;
-                Z /= len;
+                get { return new Vector3(); }
+                set { }
             }
 
             public float length
@@ -53,18 +41,32 @@
                 }
             }
 
-            public static bool operator ==(Vector3 v1, Vector3 v2)
+            public static Vector3 operator -(Vector3 v1, Vector3 v2)
             {
-                if ((object)v1 == null && (object)v2 == null) return true;
-                if ((object)v1 == null && (object)v2 != null) return false;
-                if ((object)v1 != null && (object)v2 == null) return false;
-                return v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z;
+                Vector3 ret = new Vector3(v1);
+
+                ret.X -= v2.X;
+                ret.Y -= v2.Y;
+                ret.Z -= v2.Z;
+
+                return ret;
             }
 
             public static bool operator !=(Vector3 v1, Vector3 v2)
             {
                 if ((object)v1 == null && (object)v2 == null) return false;
                 return (object)v1 == null || (object)v2 == null || v1.X != v2.X || v1.Y != v2.Y || v1.Z != v2.Z;
+            }
+
+            public static Vector3 operator *(Vector3 v1, float scalar)
+            {
+                Vector3 ret = new Vector3(v1);
+
+                ret.X *= scalar;
+                ret.Y *= scalar;
+                ret.Z *= scalar;
+
+                return ret;
             }
 
             public static Vector3 operator +(Vector3 v1, Vector3 v2)
@@ -77,25 +79,34 @@
 
                 return ret;
             }
-            public static Vector3 operator -(Vector3 v1, Vector3 v2)
+
+            public static bool operator ==(Vector3 v1, Vector3 v2)
             {
-                Vector3 ret = new Vector3(v1);
-
-                ret.X -= v2.X;
-                ret.Y -= v2.Y;
-                ret.Z -= v2.Z;
-
-                return ret;
+                if ((object)v1 == null && (object)v2 == null) return true;
+                if ((object)v1 == null && (object)v2 != null) return false;
+                if ((object)v1 != null && (object)v2 == null) return false;
+                return v1.X == v2.X && v1.Y == v2.Y && v1.Z == v2.Z;
             }
-            public static Vector3 operator *(Vector3 v1, float scalar)
+
+            public float distanceTo(Vector3 vec)
             {
-                Vector3 ret = new Vector3(v1);
+                return (this - vec).length;
+            }
 
-                ret.X *= scalar;
-                ret.Y *= scalar;
-                ret.Z *= scalar;
+            public bool Equals(Vector3 v2)
+            {
+                if ((object)this == null && (object)v2 == null) return true;
+                if ((object)this == null && (object)v2 != null) return false;
+                if ((object)this != null && (object)v2 == null) return false;
+                return this.X == v2.X && this.Y == v2.Y && this.Z == v2.Z;
+            }
 
-                return ret;
+            public void normalize()
+            {
+                float len = length;
+                X /= len;
+                Y /= len;
+                Z /= len;
             }
         }
     }

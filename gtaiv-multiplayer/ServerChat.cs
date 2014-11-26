@@ -16,15 +16,15 @@ namespace MIVServer
             broadcastQueue.Enqueue(line);
         }
 
+        public void clear()
+        {
+            broadcastQueue = new Queue<string>();
+        }
+
         public string dequeue()
         {
             if (broadcastQueue.Count == 0) return null;
             return broadcastQueue.Dequeue();
-        }
-
-        public void clear()
-        {
-            broadcastQueue = new Queue<string>();
         }
     }
 }

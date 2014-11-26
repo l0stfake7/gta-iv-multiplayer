@@ -9,13 +9,14 @@ namespace MIVServer
 {
     public class Server
     {
-        private TcpListener server;
-        public Dictionary<byte, ServerPlayer> playerpool;
         public static Server instance;
         public ServerApi api;
-        public ServerVehicleController vehicleController;
-        private GamemodeManager gamemodeManager;
         public ServerChat chat;
+        public Dictionary<byte, ServerPlayer> playerpool;
+        public ServerVehicleController vehicleController;
+
+        private GamemodeManager gamemodeManager;
+        private TcpListener server;
 
         public Server(int port)
         {
@@ -37,35 +38,6 @@ namespace MIVServer
             Console.WriteLine("Started server on port " + port.ToString());
         }
 
-        private void onBroadcastTimer(object sender, ElapsedEventArgs e)
-        {
-            foreach (ServerPlayer player in playerpool.Values)
-            {
-                player.connection.streamBroadcastQueue();
-                broadcastData(player);
-            }
-            string currentMessage;
-            while ((currentMessage = chat.dequeue()) != null)
-            {
-                foreach (ServerPlayer player in playerpool.Values)
-                {
-                    player.connection.streamWrite(Commands.Chat_writeLine);
-                    player.connection.streamWrite(currentMessage.Length);
-                    player.connection.streamWrite(currentMessage);
-                    player.connection.streamFlush();
-                }
-            }
-        }
-
-        private byte findLowestFreeId()
-        {
-            for (byte i = 0; i < byte.MaxValue; i++)
-            {
-                if (!playerpool.ContainsKey(i)) return i;
-            }
-            throw new Exception("No free ids");
-        }
-        
         public void broadcastData(ServerPlayer player)
         {
             if (player.data.client_has_been_set) return;
@@ -78,10 +50,10 @@ namespace MIVServer
                     {
                         if (single.Value.id != player.id)
                         {
-                            single.Value.connection.streamWrite(Commands.UpdateData);
-                            single.Value.connection.streamWrite(new byte[1] { (byte)player.id });
-                            single.Value.connection.streamWrite(player.data);
-                            single.Value.connection.streamFlush();
+                            var bpf = new BinaryPacketFormatter(Commands.UpdateData);
+                            bpf.add(new byte[1] { (byte)player.id });
+                            bpf.add(player.data);
+                            single.Value.connection.write(bpf.getBytes());
                             //Console.WriteLine("Streaming to player " + single.Value.nick);
                         }
                     }
@@ -90,47 +62,63 @@ namespace MIVServer
             catch (Exception e) { Console.WriteLine(e); }
         }
 
-        public void broadcastVehiclesToPlayer(ServerPlayer player)
-        {
-            player.connection.streamWrite(Commands.Vehicle_create_multi);
-            player.connection.streamWrite(BitConverter.GetBytes(vehicleController.vehicles.Count));
-            foreach (var pair in vehicleController.vehicles)
-            {
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.id));
-
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.X));
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.Y));
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.Z));
-
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.orientation.X));
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.orientation.Y));
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.orientation.Z));
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.orientation.W));
-
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.velocity.X));
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.velocity.Y));
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.velocity.Z));
-                player.connection.streamWrite(Serializers.serialize(pair.Value.model));
-                //Console.WriteLine("sent vehicle " + pair.Value.id);
-            }
-            player.connection.streamFlush();
-        }
-
         public void broadcastNPCsToPlayer(ServerPlayer player)
         {
             foreach (var pair in ServerNPC.NPCPool)
             {
-                player.connection.streamWrite(Commands.NPC_create);
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.id));
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.X));
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.Y));
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.position.Z));
-                player.connection.streamWrite(BitConverter.GetBytes(pair.Value.heading));
-                player.connection.streamWrite(Serializers.serialize(pair.Value.model + ";" + pair.Value.name));
-                player.connection.streamFlush();
+                var bpf = new BinaryPacketFormatter(Commands.NPC_create);
+                bpf.add(pair.Value.id);
+                bpf.add(pair.Value.position);
+                bpf.add(pair.Value.heading);
+                bpf.add(pair.Value.model);
+                bpf.add(pair.Value.name);
+                player.connection.write(bpf.getBytes());
             }
         }
-        
+
+        public void broadcastVehiclesToPlayer(ServerPlayer player)
+        {
+            foreach (var pair in vehicleController.vehicles)
+            {
+                var bpf = new BinaryPacketFormatter(Commands.Vehicle_create);
+                bpf.add(pair.Value.id);
+                bpf.add(pair.Value.position);
+                bpf.add(pair.Value.orientation);
+                bpf.add(pair.Value.velocity);
+                bpf.add(pair.Value.model);
+                player.connection.write(bpf.getBytes());
+            }
+        }
+
+        private byte findLowestFreeId()
+        {
+            for (byte i = 0; i < byte.MaxValue; i++)
+            {
+                if (!playerpool.ContainsKey(i)) return i;
+            }
+            throw new Exception("No free ids");
+        }
+
+        private void onBroadcastTimer(object sender, ElapsedEventArgs e)
+        {
+            string currentMessage;
+            while ((currentMessage = chat.dequeue()) != null)
+            {
+                foreach (ServerPlayer player in playerpool.Values)
+                {
+                    var bpf = new BinaryPacketFormatter(Commands.Chat_writeLine);
+                    bpf.add(currentMessage);
+                    player.connection.write(bpf.getBytes());
+                }
+            }
+
+            foreach (ServerPlayer player in playerpool.Values)
+            {
+                broadcastData(player);
+                player.connection.flush();
+            }
+        }
+
         private void onIncomingConnection(IAsyncResult iar)
         {
             Console.WriteLine("Connecting");
@@ -150,7 +138,10 @@ namespace MIVServer
                 playerpool.Add(player.id, player);
                 broadcastVehiclesToPlayer(player);
                 broadcastNPCsToPlayer(player);
+
                 api.invokeOnPlayerConnect(client.Client.RemoteEndPoint, player);
+
+                connection.flush();
             };
 
             connection.startReceiving();

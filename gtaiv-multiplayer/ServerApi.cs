@@ -1,6 +1,6 @@
-﻿using MIVSDK.Math;
+﻿using MIVSDK;
+using MIVSDK.Math;
 using System.Net;
-using MIVSDK;
 
 namespace MIVServer
 {
@@ -15,128 +15,148 @@ namespace MIVServer
 
         public delegate void onPlayerConnectDelegate(EndPoint address, ServerPlayer player);
 
+        public delegate void onPlayerDieDelegate(ServerPlayer player);
+
+        public delegate void onPlayerDisconnectDelegate(ServerPlayer player);
+
+        public delegate void onPlayerEnterVehicleDelegate(ServerPlayer player, ServerVehicle vehicle);
+
+        public delegate void onPlayerExitVehicleDelegate(ServerPlayer player, ServerVehicle vehicle);
+
+        public delegate void onPlayerKeyDownDelegate(ServerPlayer player, System.Windows.Forms.Keys key);
+
+        public delegate void onPlayerKeyUpDelegate(ServerPlayer player, System.Windows.Forms.Keys key);
+
+        public delegate void onPlayerPauseDelegate(ServerPlayer player);
+
+        public delegate void onPlayerResumeDelegate(ServerPlayer player);
+
+        public delegate void onPlayerSendTextDelegate(ServerPlayer player, string text);
+
+        public delegate void onPlayerSpawnDelegate(ServerPlayer player);
+
+        public delegate void onPlayerTakeDamageDelegate(ServerPlayer player, int before, int after, int delta);
+
+        public delegate void onPlayerUpdateDelegate(ServerPlayer player);
+
+        public delegate void onPlayerWriteConsoleDelegate(ServerPlayer player, string text);
+
         public event onPlayerConnectDelegate onPlayerConnect;
+
+        public event onPlayerDieDelegate onPlayerDie;
+
+        public event onPlayerDisconnectDelegate onPlayerDisconnect;
+
+        public event onPlayerEnterVehicleDelegate onPlayerEnterVehicle;
+
+        public event onPlayerExitVehicleDelegate onPlayerExitVehicle;
+
+        public event onPlayerKeyDownDelegate onPlayerKeyDown;
+
+        public event onPlayerKeyUpDelegate onPlayerKeyUp;
+
+        public event onPlayerPauseDelegate onPlayerPause;
+
+        public event onPlayerResumeDelegate onPlayerResume;
+
+        public event onPlayerSendTextDelegate onPlayerSendText;
+
+        public event onPlayerSpawnDelegate onPlayerSpawn;
+
+        public event onPlayerTakeDamageDelegate onPlayerTakeDamage;
+
+        public event onPlayerUpdateDelegate onPlayerUpdate;
+
+        public event onPlayerWriteConsoleDelegate onPlayerWriteConsole;
+
+        public ServerVehicleInfo createVehicle(string model, Vector3 position, Quaternion orientation)
+        {
+            return server.vehicleController.create(model, position, orientation);
+        }
+
+        public ServerVehicleInfo createVehicle(uint model, Vector3 position, Quaternion orientation)
+        {
+            return server.vehicleController.create(ModelDictionary.getById(model), position, orientation);
+        }
+
+        public ServerPlayer getAllPlayers(byte id)
+        {
+            return server.playerpool[id];
+        }
+
+        public ServerPlayer getPlayer(byte id)
+        {
+            return server.playerpool[id];
+        }
 
         public void invokeOnPlayerConnect(EndPoint address, ServerPlayer player)
         {
             if (onPlayerConnect != null) onPlayerConnect.Invoke(address, player);
         }
 
-        public delegate void onPlayerDisconnectDelegate(ServerPlayer player);
-
-        public event onPlayerDisconnectDelegate onPlayerDisconnect;
+        public void invokeOnPlayerDie(ServerPlayer player)
+        {
+            if (onPlayerDie != null) onPlayerDie.Invoke(player);
+        }
 
         public void invokeOnPlayerDisconnect(ServerPlayer player)
         {
             if (onPlayerDisconnect != null) onPlayerDisconnect.Invoke(player);
         }
 
-        public delegate void onPlayerUpdateDelegate(ServerPlayer player);
-
-        public event onPlayerUpdateDelegate onPlayerUpdate;
-
-        public void invokeOnPlayerUpdate(ServerPlayer player)
-        {
-            if (onPlayerUpdate != null) onPlayerUpdate.Invoke(player);
-        }
-
-        public delegate void onPlayerEnterVehicleDelegate(ServerPlayer player, ServerVehicle vehicle);
-
-        public event onPlayerEnterVehicleDelegate onPlayerEnterVehicle;
-
         public void invokeOnPlayerEnterVehicle(ServerPlayer player, ServerVehicle vehicle)
         {
             if (onPlayerEnterVehicle != null) onPlayerEnterVehicle.Invoke(player, vehicle);
         }
-
-        public delegate void onPlayerExitVehicleDelegate(ServerPlayer player, ServerVehicle vehicle);
-
-        public event onPlayerExitVehicleDelegate onPlayerExitVehicle;
 
         public void invokeOnPlayerExitVehicle(ServerPlayer player, ServerVehicle vehicle)
         {
             if (onPlayerExitVehicle != null) onPlayerExitVehicle.Invoke(player, vehicle);
         }
 
-        public delegate void onPlayerSendTextDelegate(ServerPlayer player, string text);
-
-        public event onPlayerSendTextDelegate onPlayerSendText;
-
-        public void invokeOnPlayerSendText(ServerPlayer player, string text)
+        public void invokeOnPlayerKeyDown(ServerPlayer player, System.Windows.Forms.Keys key)
         {
-            if (onPlayerSendText != null) onPlayerSendText.Invoke(player, text);
+            if (onPlayerKeyDown != null) onPlayerKeyDown.Invoke(player, key);
         }
 
-        public delegate void onPlayerWriteConsoleDelegate(ServerPlayer player, string text);
-
-        public event onPlayerWriteConsoleDelegate onPlayerWriteConsole;
-
-        public void invokeOnPlayerWriteConsole(ServerPlayer player, string text)
+        public void invokeOnPlayerKeyUp(ServerPlayer player, System.Windows.Forms.Keys key)
         {
-            if (onPlayerWriteConsole != null) onPlayerWriteConsole.Invoke(player, text);
+            if (onPlayerKeyUp != null) onPlayerKeyUp.Invoke(player, key);
         }
-
-        public delegate void onPlayerSpawnDelegate(ServerPlayer player);
-
-        public event onPlayerSpawnDelegate onPlayerSpawn;
-
-        public void invokeOnPlayerSpawn(ServerPlayer player)
-        {
-            if (onPlayerSpawn != null) onPlayerSpawn.Invoke(player);
-        }
-
-        public delegate void onPlayerDieDelegate(ServerPlayer player);
-
-        public event onPlayerDieDelegate onPlayerDie;
-
-        public void invokeOnPlayerDie(ServerPlayer player)
-        {
-            if (onPlayerDie != null) onPlayerDie.Invoke(player);
-        }
-
-        public delegate void onPlayerPauseDelegate(ServerPlayer player);
-
-        public event onPlayerPauseDelegate onPlayerPause;
 
         public void invokeOnPlayerPause(ServerPlayer player)
         {
             if (onPlayerPause != null) onPlayerPause.Invoke(player);
         }
 
-        public delegate void onPlayerResumeDelegate(ServerPlayer player);
-
-        public event onPlayerResumeDelegate onPlayerResume;
-
         public void invokeOnPlayerResume(ServerPlayer player)
         {
             if (onPlayerResume != null) onPlayerResume.Invoke(player);
         }
 
-        public delegate void onPlayerTakeDamageDelegate(ServerPlayer player, int before, int after, int delta);
+        public void invokeOnPlayerSendText(ServerPlayer player, string text)
+        {
+            if (onPlayerSendText != null) onPlayerSendText.Invoke(player, text);
+        }
 
-        public event onPlayerTakeDamageDelegate onPlayerTakeDamage;
+        public void invokeOnPlayerSpawn(ServerPlayer player)
+        {
+            if (onPlayerSpawn != null) onPlayerSpawn.Invoke(player);
+        }
 
         public void invokeOnPlayerTakeDamage(ServerPlayer player, int before, int after, int delta)
         {
             if (onPlayerTakeDamage != null) onPlayerTakeDamage.Invoke(player, before, after, delta);
         }
 
-        public delegate void onPlayerKeyDownDelegate(ServerPlayer player, System.Windows.Forms.Keys key);
-
-        public event onPlayerKeyDownDelegate onPlayerKeyDown;
-
-        public void invokeOnPlayerKeyDown(ServerPlayer player, System.Windows.Forms.Keys key)
+        public void invokeOnPlayerUpdate(ServerPlayer player)
         {
-            if (onPlayerKeyDown != null) onPlayerKeyDown.Invoke(player, key);
+            if (onPlayerUpdate != null) onPlayerUpdate.Invoke(player);
         }
 
-        public delegate void onPlayerKeyUpDelegate(ServerPlayer player, System.Windows.Forms.Keys key);
-
-        public event onPlayerKeyUpDelegate onPlayerKeyUp;
-
-        public void invokeOnPlayerKeyUp(ServerPlayer player, System.Windows.Forms.Keys key)
+        public void invokeOnPlayerWriteConsole(ServerPlayer player, string text)
         {
-            if (onPlayerKeyUp != null) onPlayerKeyUp.Invoke(player, key);
+            if (onPlayerWriteConsole != null) onPlayerWriteConsole.Invoke(player, text);
         }
 
         /// <summary>
@@ -145,29 +165,13 @@ namespace MIVServer
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-
-        public ServerPlayer getPlayer(byte id)
-        {
-            return server.playerpool[id];
-        }
-
-        public ServerPlayer getAllPlayers(byte id)
-        {
-            return server.playerpool[id];
-        }
-
-        public ServerVehicleInfo createVehicle(string model, Vector3 position, Quaternion orientation)
-        {
-            return server.vehicleController.create(model, position, orientation);
-        }
-
         public void writeChat(ServerPlayer player, string text)
         {
-            player.connection.streamWrite(Commands.Chat_writeLine);
-            player.connection.streamWrite(text.Length);
-            player.connection.streamWrite(text);
-            player.connection.streamFlush();
+            var bpf = new BinaryPacketFormatter(Commands.Chat_writeLine);
+            bpf.add(text);
+            player.connection.write(bpf.getBytes());
         }
+
         public void writeChat(string text)
         {
             server.chat.addLine(text);

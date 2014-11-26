@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace MIVSDK
 {
     public class INIReader
     {
-        Dictionary<string, string> dict;
+        private Dictionary<string, string> dict;
+
         public INIReader(string[] inilines)
         {
-            dict = new Dictionary<string,string>();
+            dict = new Dictionary<string, string>();
             foreach (string line in inilines)
             {
                 if (line.StartsWith("#")) continue;
@@ -20,17 +17,19 @@ namespace MIVSDK
             }
         }
 
-        public string getString(string key)
+        public float getFloat(string key)
         {
-            return dict[key];
+            return float.Parse(getString(key));
         }
+
         public int getInt(string key)
         {
             return int.Parse(getString(key));
         }
-        public float getFloat(string key)
+
+        public string getString(string key)
         {
-            return float.Parse(getString(key));
+            return dict[key];
         }
     }
 }
