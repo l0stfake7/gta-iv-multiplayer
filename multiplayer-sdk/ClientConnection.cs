@@ -3,6 +3,7 @@ using System;
 using System.Net.Sockets;
 using System.Data;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MIVServer
 {
@@ -55,6 +56,7 @@ namespace MIVServer
             lock (connection)
             {
                 var stream = connection.GetStream();
+                internal_buffer.InsertRange(0, BitConverter.GetBytes((int)(internal_buffer.Count + 4)));
                 stream.Write(internal_buffer.ToArray(), 0, internal_buffer.Count);
                 stream.Flush();
                 internal_buffer = new List<byte>();
@@ -102,7 +104,28 @@ namespace MIVServer
                         case Commands.Chat_sendMessage:
                             {
                                 string text = bpr.readString();
-                                Server.instance.api.invokeOnPlayerSendText(player, text);
+                                if (text.StartsWith("/"))
+                                {
+                                    List<string> split = text.Split(' ').ToList();
+                                    Server.instance.api.invokeOnPlayerSendCommand(player, split.First().Substring(1), split.Skip(1).ToArray());
+
+                                }
+                                else
+                                {
+                                    Server.instance.api.invokeOnPlayerSendText(player, text);
+                                }
+                            }
+                            break;
+
+                        case Commands.Player_damage:
+                            {
+                                if (player != null)
+                                {
+                                    byte playerid = bpr.readByte();
+                                    var bpf = new BinaryPacketFormatter(Commands.Player_setHealth);
+                                    bpf.add(Server.instance.playerpool[playerid].data.ped_health - 10);
+                                    Server.instance.playerpool[playerid].connection.write(bpf.getBytes());
+                                }
                             }
                             break;
 

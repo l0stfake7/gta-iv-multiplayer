@@ -86,6 +86,14 @@ namespace MIVSDK
             bytes.AddRange(BitConverter.GetBytes(data.vel_y));
             bytes.AddRange(BitConverter.GetBytes(data.vel_z));
 
+            bytes.AddRange(BitConverter.GetBytes(data.acc_x));
+            bytes.AddRange(BitConverter.GetBytes(data.acc_y));
+            bytes.AddRange(BitConverter.GetBytes(data.acc_z));
+
+            bytes.AddRange(BitConverter.GetBytes(data.acc_rx));
+            bytes.AddRange(BitConverter.GetBytes(data.acc_ry));
+            bytes.AddRange(BitConverter.GetBytes(data.acc_rz));
+
             bytes.AddRange(BitConverter.GetBytes(data.speed));
             bytes.AddRange(BitConverter.GetBytes(data.heading));
 

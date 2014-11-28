@@ -41,6 +41,8 @@ namespace MIVServer
 
         public delegate void onPlayerWriteConsoleDelegate(ServerPlayer player, string text);
 
+        public delegate void onPlayerSendCommandDelegate(ServerPlayer player, string command, string[] param);
+
         public event onPlayerConnectDelegate onPlayerConnect;
 
         public event onPlayerDieDelegate onPlayerDie;
@@ -68,6 +70,8 @@ namespace MIVServer
         public event onPlayerUpdateDelegate onPlayerUpdate;
 
         public event onPlayerWriteConsoleDelegate onPlayerWriteConsole;
+
+        public event onPlayerSendCommandDelegate onPlayerSendCommand;
 
         public ServerVehicleInfo createVehicle(string model, Vector3 position, Quaternion orientation)
         {
@@ -157,6 +161,10 @@ namespace MIVServer
         public void invokeOnPlayerWriteConsole(ServerPlayer player, string text)
         {
             if (onPlayerWriteConsole != null) onPlayerWriteConsole.Invoke(player, text);
+        }
+        public void invokeOnPlayerSendCommand(ServerPlayer player, string command, string[] param)
+        {
+            if (onPlayerSendCommand != null) onPlayerSendCommand.Invoke(player, command, param);
         }
 
         /// <summary>

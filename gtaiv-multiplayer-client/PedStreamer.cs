@@ -50,6 +50,13 @@ namespace MIVClient
                             ped.streamedIn = true;
                             ped.gameReference.Heading = ped.heading;
                             ped.gameReference.GiveFakeNetworkName(ped.networkname, System.Drawing.Color.White);
+                            ped.gameReference.Invincible = true;
+                            Weapon weapon = Weapon.Rifle_M4;
+                            ped.gameReference.Weapons.AssaultRifle_M4.Ammo = 999;
+                            ped.gameReference.Weapons.AssaultRifle_M4.AmmoInClip = 999;
+                            ped.gameReference.Weapons.Select(weapon);
+                            ped.gameReference.SenseRange = 0;
+                            ped.gameReference.Task.GuardCurrentPosition();
                             //ped.gameReference.Task.LookAt(playerPos, 9999);
                         }
                         else

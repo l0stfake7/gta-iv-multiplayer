@@ -22,6 +22,8 @@ namespace MIVClient
         public PlayerVehicleController playerVehicleController;
         public ServerConnection serverConnection;
         public VehicleController vehicleController;
+        public TeleportCameraController teleportCameraController;
+        private byte internalCounter;
 
         private Queue<Action> actionQueue;
 
@@ -29,8 +31,10 @@ namespace MIVClient
 
         public Client()
         {
+            internalCounter = 0;
             actionQueue = new Queue<Action>();
             instance = this;
+            teleportCameraController = new TeleportCameraController(this);
             pedController = new PlayerPedController();
             vehicleController = new VehicleController();
             npcPedController = new NPCPedController();
@@ -109,7 +113,7 @@ namespace MIVClient
                 StreamedPed ped = pedController.getById(elemKey, elemValue.nick, posnew);
                 try
                 {
-                    updateVehicle(elemValue, ped);
+                    updateVehicle(elemKey, elemValue, ped);
                 }
                 catch (Exception ex)
                 {
@@ -117,7 +121,7 @@ namespace MIVClient
                 }
                 try
                 {
-                    updatePed(elemValue, ped);
+                    updatePed(elemKey, elemValue, ped);
                 }
                 catch (Exception ex)
                 {
@@ -171,22 +175,18 @@ namespace MIVClient
             {
                 log("Failed executing action queue with message " + ex.Message);
             }
-            try
-            {
-                Player.Character.Health = Player.Character.Health > 100 ? 100 : Player.Character.Health + 8;
-                Player.Character.Invincible = true;
-            }
-            catch (Exception ex)
-            {
-                log("Failed setting player health " + ex.Message);
-            }
             if (currentState == ClientState.Connected)
             {
+                if (currentData == null) currentData = UpdateDataStruct.Zero;
                 try
                 {
                     Player.WantedLevel = 0;
                     UpdateDataStruct data = new UpdateDataStruct();
                     data.nick = nick;
+                    if (Player.Character.isDead)
+                    {
+                        
+                    }
                     //log("my X is " + data.pos_x.ToString());
                     if (Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.Driver) == Player.Character)
                     {
@@ -200,11 +200,20 @@ namespace MIVClient
                         data.vel_y = vel.Y;
                         data.vel_z = vel.Z;
 
+                        data.acc_x = data.vel_x - currentData.vel_x;
+                        data.acc_y = data.vel_y - currentData.vel_y;
+                        data.acc_z = data.vel_z - currentData.vel_z;
+
                         Quaternion quat = Player.Character.CurrentVehicle.RotationQuaternion;
                         data.rot_x = quat.X;
                         data.rot_y = quat.Y;
                         data.rot_z = quat.Z;
                         data.rot_a = quat.W;
+
+                        var lastrotvect = new Quaternion(currentData.rot_x, currentData.rot_y, currentData.rot_z, currentData.rot_a).ToRotation();
+                        data.acc_rx = quat.ToRotation().X - lastrotvect.X;
+                        data.acc_ry = quat.ToRotation().Y - lastrotvect.Y;
+                        data.acc_rz = quat.ToRotation().Z - lastrotvect.Z;
 
                         data.vehicle_model = Player.Character.CurrentVehicle.Model.Hash;
                         data.vehicle_health = Player.Character.CurrentVehicle.Health;
@@ -269,11 +278,15 @@ namespace MIVClient
                     serverConnection.write(bpf.getBytes());
 
                     currentData = data;
+                    updateAllPlayers();
+                    serverConnection.flush();
+
                 }
                 catch (Exception ex)
                 {
                     log("Failed sending new player data with message " + ex.Message);
                 }
+
                 try
                 {
                     vehicleController.streamer.update();
@@ -287,10 +300,21 @@ namespace MIVClient
                 //writeChat("Wrote");
                 //log("sent data");
                 // process players
-                updateAllPlayers();
+                //internalCounter++;
+                //if (internalCounter > 3) internalCounter = 0;
 
-                serverConnection.flush();
-
+            }
+            else
+            {
+                try
+                {
+                    Player.Character.Health = Player.Character.Health > 100 ? 100 : Player.Character.Health + 8;
+                    Player.Character.Invincible = true;
+                }
+                catch (Exception ex)
+                {
+                    log("Failed setting player health " + ex.Message);
+                }
             }
             if (currentState == ClientState.Connecting)
             {
@@ -302,6 +326,10 @@ namespace MIVClient
 
                 chatController.writeChat("Connected");
             }
+
+
+            teleportCameraController.onUpdate();
+
         }
     }
 }

@@ -43,7 +43,7 @@ namespace MIVClient
             yoffset = 100;
             for (int i = 0; i < client.chatController.debugconsole.Count; i++)
             {
-                e.Graphics.DrawText(client.chatController.debugconsole.ToArray()[i], (int)Math.Round(Game.Resolution.Width * 0.7), yoffset, font);
+                e.Graphics.DrawText(client.chatController.debugconsole.ToArray()[i], new RectangleF(0, yoffset, Game.Resolution.Width, 40), TextAlignment.Right, font);
                 yoffset += 18;
             }
 
@@ -77,6 +77,10 @@ namespace MIVClient
                     cstr.Append('|');
                     e.Graphics.DrawText(cstr.ToString(), 25, 15 + 30 * 8 + 20, font);
                 }
+            }
+            if (client.teleportCameraController != null)
+            {
+                client.teleportCameraController.drawCross(e.Graphics);
             }
         }
     }

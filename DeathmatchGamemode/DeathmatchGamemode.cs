@@ -28,6 +28,7 @@ namespace DeathmatchGamemode
             Console.WriteLine("*****************************");
             api.onPlayerConnect += api_onPlayerConnect;
             api.onPlayerSendText += api_onPlayerSendText;
+            api.onPlayerSendCommand += api_onPlayerSendCommand;
             api.createVehicle("SUPERGT", new Vector3(2365.749f, 604.4031f, 30.812778f), new Quaternion(0.0003340448f, -0.000308407f, -0.005634441f, 0.999984f));//1
             api.createVehicle("SABREGT", new Vector3(2365.749f, 604.4031f, 30.812778f), new Quaternion(-5.144991E-05f, 0.0004049888f, 0.7113973f, -0.7027899f));//2
             api.createVehicle("INFERNUS", new Vector3(2384.331f, 183.4532f, 15.231522f), new Quaternion(5.031423E-05f, -1.052421E-05f, -0.2579773f, 0.966151f));//3
@@ -102,6 +103,31 @@ namespace DeathmatchGamemode
             };
 
             api.onPlayerKeyDown += api_onPlayerKeyDown;
+        }
+
+        void api_onPlayerSendCommand(ServerPlayer player, string command, string[] param)
+        {
+            if (command == "tpto")
+            {
+                if(param.Length != 1 || !Char.IsNumber(param[0], 0)){
+                    api.writeChat(player, "Usage: /tpto player_id");
+                    return;
+                }
+                byte id = 0;
+                bool result = byte.TryParse(param[0], out id);
+                if (result)
+                {
+                    player.Position = api.getPlayer(id).Position;
+                }
+                return;
+            }
+            if (command == "help")
+            {
+                Console.WriteLine("abc");
+                api.writeChat(player, "Tu bedzie pomoc");
+                api.writeChat(player, "Serio");
+                return;
+            }
         }
 
         private void api_onPlayerConnect(System.Net.EndPoint address, ServerPlayer player)

@@ -71,6 +71,7 @@
     <Compile Include="NPCPedController.cs" />
     <Compile Include="Positioners.cs" />
     <Compile Include="ServerConnection.cs" />
+    <Compile Include="TeleportCameraController.cs" />
     <Compile Include="VehicleController.cs" />
     <Compile Include="PlayerVehicleController.cs" />
     <Compile Include="PlayerPedController.cs" />

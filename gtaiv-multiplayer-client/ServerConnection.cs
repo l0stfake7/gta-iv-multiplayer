@@ -45,6 +45,7 @@ namespace MIVClient
             lock (internal_buffer)
             {
                 var stream = client.client.GetStream();
+                internal_buffer.InsertRange(0, BitConverter.GetBytes((int)(internal_buffer.Count + 4)));
                 stream.Write(internal_buffer.ToArray(), 0, internal_buffer.Count);
                 stream.Flush();
                 internal_buffer = new List<byte>();
@@ -72,6 +73,12 @@ namespace MIVClient
                                     MIVSDK.UpdateDataStruct data = bpr.readUpdateStruct();
                                     if (!playersdata.ContainsKey(playerid)) playersdata.Add(playerid, data);
                                     else playersdata[playerid] = data;
+                                }
+                                break;
+
+                            case Commands.Player_setHealth:
+                                {
+                                    client.getPlayerPed().Health = bpr.readInt32();
                                 }
                                 break;
 
@@ -175,7 +182,7 @@ namespace MIVClient
                 catch (Exception e)
                 {
                     Client.log("Failed receive with message " + e.Message + " " + e.StackTrace);
-                    client.currentState = ClientState.Disconnected;
+                    //client.currentState = ClientState.Disconnected;
                     //throw e;
                 }
             }

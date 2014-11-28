@@ -33,6 +33,8 @@
         Player_setGravity,
         Player_setWeather,
         Player_setGameTime,
+        Player_setHealth,
+        Player_damage,
 
         Vehicle_setPosition,
         Vehicle_create,
@@ -90,7 +92,7 @@
     {
         public bool client_has_been_set;
         public string nick;
-        public float pos_x, pos_y, pos_z, rot_x, rot_y, rot_z, rot_a, vel_x, vel_y, vel_z, speed, heading;
+        public float pos_x, pos_y, pos_z, rot_x, rot_y, rot_z, rot_a, vel_x, vel_y, vel_z, acc_x, acc_y, acc_z, acc_rx, acc_ry, acc_rz, speed, heading;
         public PlayerState state;
         public long timestamp;
         public uint vehicle_id;
@@ -119,6 +121,12 @@
                     vel_x = 0,
                     vel_y = 0,
                     vel_z = 0,
+                    acc_x = 0,
+                    acc_y = 0,
+                    acc_z = 0,
+                    acc_rx = 0,
+                    acc_ry = 0,
+                    acc_rz = 0,
                     state = PlayerState.None,
                     vstate = VehicleState.None,
                     nick = "",

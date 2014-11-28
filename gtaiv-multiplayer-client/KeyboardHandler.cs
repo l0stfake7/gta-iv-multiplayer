@@ -91,20 +91,49 @@ namespace MIVClient
                 if (e.Key == (System.Windows.Forms.Keys)id && e.Control) client.teleportToBindPoint(id - (int)System.Windows.Forms.Keys.D0);
             }
 
-            if (e.Key == System.Windows.Forms.Keys.Add)
+            if (client.teleportCameraController.inCameraMode)
             {
-                gamescale *= 1.3f;
-                Game.TimeScale = gamescale;
+
+                if (e.Key == System.Windows.Forms.Keys.Add)
+                {
+                    client.teleportCameraController.zoomIn = true;
+                }
+                if (e.Key == System.Windows.Forms.Keys.Subtract)
+                {
+                    client.teleportCameraController.zoomOut = true;
+                }
+                if (e.Key == System.Windows.Forms.Keys.Left)
+                {
+                    client.teleportCameraController.direction = TeleportCameraController.MoveDirection.Left;
+                }
+                if (e.Key == System.Windows.Forms.Keys.Right)
+                {
+                    client.teleportCameraController.direction = TeleportCameraController.MoveDirection.Right;
+                }
+                if (e.Key == System.Windows.Forms.Keys.Up)
+                {
+                    client.teleportCameraController.direction = TeleportCameraController.MoveDirection.Up;
+                }
+                if (e.Key == System.Windows.Forms.Keys.Down)
+                {
+                    client.teleportCameraController.direction = TeleportCameraController.MoveDirection.Down;
+                }
+                if (e.Key == System.Windows.Forms.Keys.Enter)
+                {
+                    client.getPlayer().TeleportTo(client.teleportCameraController.currentPosition.X, client.teleportCameraController.currentPosition.Y);
+                    client.teleportCameraController.inCameraMode = false;
+                }
+                if (e.Key == System.Windows.Forms.Keys.Q)
+                {
+                    client.teleportCameraController.inCameraMode = false;
+                }
             }
-            if (e.Key == System.Windows.Forms.Keys.Subtract)
+            else
             {
-                gamescale *= 0.7f;
-                Game.TimeScale = gamescale;
-            }
-            if (e.Key == System.Windows.Forms.Keys.Multiply)
-            {
-                gamescale = 1.0f;
-                Game.TimeScale = gamescale;
+                if (e.Key == System.Windows.Forms.Keys.Multiply)
+                {
+                    client.teleportCameraController.inCameraMode = true;
+                }
             }
 
             if (e.Key == System.Windows.Forms.Keys.Insert)
@@ -166,7 +195,6 @@ namespace MIVClient
 
             if (client.currentState == ClientState.Connected)
             {
-                client.chatController.writeDebug("keydown");
                 var bpf = new BinaryPacketFormatter(Commands.Keys_down);
                 bpf.add((int)e.Key);
                 client.serverConnection.write(bpf.getBytes());
@@ -181,10 +209,27 @@ namespace MIVClient
             if (lastKeyUp != null && lastKeyUp == (int)e.Key) return;
             if (client.currentState == ClientState.Connected)
             {
-                client.chatController.writeDebug("keyup");
                 var bpf = new BinaryPacketFormatter(Commands.Keys_up);
                 bpf.add((int)e.Key);
                 client.serverConnection.write(bpf.getBytes());
+            }
+
+
+            if (client.teleportCameraController.inCameraMode)
+            {
+                if (e.Key == System.Windows.Forms.Keys.Add)
+                {
+                    client.teleportCameraController.zoomIn = false;
+                }
+                if (e.Key == System.Windows.Forms.Keys.Subtract)
+                {
+                    client.teleportCameraController.zoomOut = false;
+                }
+                if (e.Key == System.Windows.Forms.Keys.Left || e.Key == System.Windows.Forms.Keys.Right
+                    || e.Key == System.Windows.Forms.Keys.Up || e.Key == System.Windows.Forms.Keys.Down)
+                {
+                    client.teleportCameraController.direction = TeleportCameraController.MoveDirection.None;
+                }
             }
             lastKeyUp = (int)e.Key;
             lastKeyDown = 0;

@@ -65,10 +65,6 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\gtaiv-multiplayer\MIVServer.csproj">
-      <Project>{e2279b36-f782-4b62-964a-a80c0ce40d3e}</Project>
-      <Name>MIVServer</Name>
-    </ProjectReference>
     <ProjectReference Include="..\multiplayer-sdk\MIVSDK.csproj">
       <Project>{7c8c7046-1230-4a8f-952b-b2770f2971fe}</Project>
       <Name>MIVSDK</Name>

@@ -5,18 +5,18 @@ namespace MIVSDK
     public class BinaryPacketReader
     {
         private byte[] buffer;
-        private int position;
+        private int position, length;
 
-        public BinaryPacketReader(byte[] buffer, int offset = 0)
+        public BinaryPacketReader(byte[] buffer)
         {
             this.buffer = buffer;
-            position = offset;
             position = 0;
+            length = readInt32();
         }
 
         public bool canRead()
         {
-            return position < buffer.Length;
+            return position < length;
         }
 
         public Byte readByte()
@@ -116,6 +116,14 @@ namespace MIVSDK
             output.vel_x = readSingle();
             output.vel_y = readSingle();
             output.vel_z = readSingle();
+
+            output.acc_x = readSingle();
+            output.acc_y = readSingle();
+            output.acc_z = readSingle();
+
+            output.acc_rx = readSingle();
+            output.acc_ry = readSingle();
+            output.acc_rz = readSingle();
 
             output.speed = readSingle();
             output.heading = readSingle();

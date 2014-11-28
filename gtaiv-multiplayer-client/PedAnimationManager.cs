@@ -11,12 +11,14 @@ namespace MIVClient
         AimWalk,
         Walk,
         Run,
-        Ragdoll
+        Ragdoll,
+        Shoot
     }
 
     public class PedAnimationManager
     {
         private static AnimationSet animset;
+        private static AnimationSet animset2;
         private PedAnimations currentAnimation;
         private StreamedPed ped;
 
@@ -25,7 +27,7 @@ namespace MIVClient
             this.ped = ped;
             currentAnimation = PedAnimations.StandStill;
             animset = new AnimationSet("move_m@casual");
-            //animset2 = new AnimationSet("gun@ak47");
+            animset2 = new AnimationSet("gun@ak47");
         }
 
         public void playAnimation(PedAnimations anim)
@@ -47,13 +49,16 @@ namespace MIVClient
                         ped.gameReference.Task.AimAt(ped.gameReference.Position + ped.direction, 9999);
                         break;
 
-                    //  case PedAnimations.Couch: ped.gameReference.Animation.Play(animset2, "unholster_crouch", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
-                    //      break;
+                    case PedAnimations.Couch: ped.gameReference.Animation.Play(animset2, "unholster_crouch", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
+                        break;
+                    case PedAnimations.Shoot:
+                        ped.gameReference.Task.ShootAt(Client.instance.getPlayerPed(), ShootMode.Continuous, 9992);
+                        break;
 
                     case PedAnimations.Ragdoll: ped.gameReference.ForceRagdoll(1, false);
                         break;
 
-                    case PedAnimations.Walk: ped.gameReference.Animation.Play(animset, "walk", 1.0f, AnimationFlags.Unknown05);
+                    case PedAnimations.Walk: ped.gameReference.Animation.Play(animset, "walk", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
                         break;
 
                     case PedAnimations.StandStill: ped.gameReference.Animation.Play(animset, "idle", 1.0f);
