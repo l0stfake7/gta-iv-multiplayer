@@ -24,6 +24,7 @@ namespace MIVClient
         public VehicleController vehicleController;
         public TeleportCameraController teleportCameraController;
         private byte internalCounter;
+        public bool isCurrentlyDead;
 
         private Queue<Action> actionQueue;
 
@@ -31,6 +32,7 @@ namespace MIVClient
 
         public Client()
         {
+            isCurrentlyDead = false;
             internalCounter = 0;
             actionQueue = new Queue<Action>();
             instance = this;
@@ -57,6 +59,30 @@ namespace MIVClient
                 }
             });
             perFrameRenderer = new PerFrameRenderer(this);
+            MouseDown += Client_MouseDown;
+            MouseUp += Client_MouseUp;
+        }
+
+        public void finishSpawn()
+        {
+            Game.FadeScreenIn(2000);
+            Player.CanControlCharacter = true;
+        }
+
+        void Client_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                Game.TimeScale = 1.0f;
+            }
+        }
+
+        void Client_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                Game.TimeScale = 0.1f;
+            }
         }
 
         public static Client getInstance()
@@ -185,7 +211,7 @@ namespace MIVClient
                     data.nick = nick;
                     if (Player.Character.isDead)
                     {
-                        
+
                     }
                     //log("my X is " + data.pos_x.ToString());
                     if (Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.Driver) == Player.Character)
@@ -270,12 +296,28 @@ namespace MIVClient
                     data.vstate |= Game.isGameKeyPressed(GameKey.MoveBackward) ? VehicleState.IsBraking : 0;
                     data.vstate |= Game.isGameKeyPressed(GameKey.MoveLeft) ? VehicleState.IsSterringLeft : 0;
                     data.vstate |= Game.isGameKeyPressed(GameKey.MoveRight) ? VehicleState.IsSterringRight : 0;
+                    data.vstate |= Player.Character.isGettingIntoAVehicle ? VehicleState.IsEnteringVehicle : 0;
                     data.vstate |= (data.state & PlayerState.IsPassenger1) != 0 || (data.state & PlayerState.IsPassenger2) != 0 || (data.state & PlayerState.IsPassenger3) != 0
                         ? VehicleState.IsAsPassenger : 0;
 
                     var bpf = new BinaryPacketFormatter(Commands.UpdateData);
                     bpf.add(data);
                     serverConnection.write(bpf.getBytes());
+
+                    if (Player.Character.Health == 0 || Player.Character.isDead || !Player.Character.isAlive)
+                    {
+                        Player.Character.Die();
+                        isCurrentlyDead = true;
+                    }
+
+                    if (isCurrentlyDead && !Player.Character.isDead && Player.Character.isAlive && Player.Character.Health > 0)
+                    {
+                        Game.FadeScreenOut(200);
+                        isCurrentlyDead = false;
+
+                        var bpf2 = new BinaryPacketFormatter(Commands.InternalClient_requestSpawn);
+                        serverConnection.write(bpf2.getBytes());
+                    }
 
                     currentData = data;
                     updateAllPlayers();
@@ -309,7 +351,7 @@ namespace MIVClient
                 try
                 {
                     Player.Character.Health = Player.Character.Health > 100 ? 100 : Player.Character.Health + 8;
-                    Player.Character.Invincible = true;
+                    //Player.Character.Invincible = true;
                 }
                 catch (Exception ex)
                 {
@@ -324,11 +366,15 @@ namespace MIVClient
                 bpf.add(nick);
                 serverConnection.write(bpf.getBytes());
 
+                Player.Model = new Model("F_Y_HOOKER_01");
+                Player.NeverGetsTired = true;
+
                 chatController.writeChat("Connected");
             }
 
 
             teleportCameraController.onUpdate();
+
 
         }
     }

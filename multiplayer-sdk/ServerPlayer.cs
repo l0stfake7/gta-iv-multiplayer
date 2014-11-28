@@ -30,8 +30,8 @@ namespace MIVServer
             set
             {
                 gametime = value;
-                var bpf = new BinaryPacketFormatter(Commands.Player_setHeading);
-                bpf.add(value.Seconds);
+                var bpf = new BinaryPacketFormatter(Commands.Player_setGameTime);
+                bpf.add(value.Ticks);
                 connection.write(bpf.getBytes());
             }
         }

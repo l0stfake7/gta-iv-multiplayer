@@ -38,7 +38,7 @@ namespace MIVClient
 
         public void updatePed(byte id, UpdateDataStruct data, StreamedPed ped)
         {
-            var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z - 1.0f);
+            var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z - 0.3f);
             ped.position = posnew;
             ped.heading = data.heading;
             ped.direction = new Vector3(data.rot_x, data.rot_y, data.rot_z);
@@ -51,18 +51,21 @@ namespace MIVClient
                 }
                 if (data.nick != null && data.nick.Length > 0 && !ped.hasNetworkName)
                 {
-                    ped.gameReference.GiveFakeNetworkName(data.nick, System.Drawing.Color.Red);
-                    ped.hasNetworkName = true;
+                    //ped.hasNetworkName = true;
                 }
 
                 float delta = posnew.DistanceTo(ped.gameReference.Position);
                 Vector3 vdelta = posnew - ped.gameReference.Position;
                 //ped.gameReference.Weapons.MP5.Ammo = 999;
 
-                if (ped.gameReference.HasBeenDamagedBy(Client.instance.getPlayerPed()))
+                int healthDelta = data.ped_health - ped.gameReference.Health;
+                ped.gameReference.Health = data.ped_health;
+
+                if (healthDelta > 20 && healthDelta < 100)
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Player_damage);
                     bpf.add(new byte[1] { id });
+                    Client.instance.chatController.writeChat("damaged " + healthDelta) ;
                     Client.instance.serverConnection.write(bpf.getBytes());
                 }
 
@@ -72,15 +75,19 @@ namespace MIVClient
                 if ((data.state & PlayerState.IsShooting) != 0)
                 {
                     ped.animator.playAnimation(PedAnimations.Shoot);
-                }
+                } else 
                 if ((data.state & PlayerState.IsAiming) != 0)
                 {
                     ped.animator.playAnimation(PedAnimations.Aim);
-                }
+                } else 
                 if ((data.state & PlayerState.IsRagdoll) != 0)
                 {
                     ped.animator.playAnimation(PedAnimations.Ragdoll);
-                }
+                } else 
+                if ((data.vstate & VehicleState.IsEnteringVehicle) != 0)
+                {
+                    ped.animator.playAnimation(PedAnimations.EnterClosestVehicle);
+                } else
                 if ((data.state & PlayerState.IsCrouching) != 0)
                 {
                     ped.animator.playAnimation(PedAnimations.Couch);
@@ -111,7 +118,7 @@ namespace MIVClient
         {
             if (data.vehicle_id > 0)
             {
-                var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z - 1.0f);
+                var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z + 1.0f);
                 StreamedVehicle veh = vehicleController.getById(data.vehicle_id);
                 if (veh != null)
                 {

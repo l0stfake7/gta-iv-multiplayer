@@ -213,8 +213,7 @@ namespace MIVClient
                 bpf.add((int)e.Key);
                 client.serverConnection.write(bpf.getBytes());
             }
-
-
+            
             if (client.teleportCameraController.inCameraMode)
             {
                 if (e.Key == System.Windows.Forms.Keys.Add)

@@ -1,6 +1,7 @@
 ﻿using MIVSDK;
 using MIVSDK.Math;
 using System.Net;
+using System.Collections.Generic;
 
 namespace MIVServer
 {
@@ -83,14 +84,14 @@ namespace MIVServer
             return server.vehicleController.create(ModelDictionary.getById(model), position, orientation);
         }
 
-        public ServerPlayer getAllPlayers(byte id)
+        public List<ServerPlayer> getAllPlayers(byte id)
         {
-            return server.playerpool[id];
+            return server.playerpool;
         }
 
         public ServerPlayer getPlayer(byte id)
         {
-            return server.playerpool[id];
+            return server.getPlayerById(id);
         }
 
         public void invokeOnPlayerConnect(EndPoint address, ServerPlayer player)

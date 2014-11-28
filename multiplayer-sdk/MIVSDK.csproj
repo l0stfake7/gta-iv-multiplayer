@@ -64,6 +64,7 @@
     <Compile Include="ClientConnection.cs" />
     <Compile Include="Gamemode.cs" />
     <Compile Include="GamemodeManager.cs" />
+    <Compile Include="HTTPServer.cs" />
     <Compile Include="INIReader.cs" />
     <Compile Include="ModelDictionary.cs" />
     <Compile Include="Quaternion.cs" />

@@ -12,7 +12,8 @@ namespace MIVClient
         Walk,
         Run,
         Ragdoll,
-        Shoot
+        Shoot,
+        EnterClosestVehicle
     }
 
     public class PedAnimationManager
@@ -52,7 +53,12 @@ namespace MIVClient
                     case PedAnimations.Couch: ped.gameReference.Animation.Play(animset2, "unholster_crouch", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
                         break;
                     case PedAnimations.Shoot:
-                        ped.gameReference.Task.ShootAt(Client.instance.getPlayerPed(), ShootMode.Continuous, 9992);
+                        //ped.gameReference.Task.ShootAt(Client.instance.getPlayerPed(), ShootMode.Continuous, 9992);
+                        ped.gameReference.ShootAt(ped.gameReference.Position + ped.gameReference.Direction);
+                        break;
+                    case PedAnimations.EnterClosestVehicle:
+                        //ped.gameReference.Task.ShootAt(Client.instance.getPlayerPed(), ShootMode.Continuous, 9992);
+                        ped.gameReference.Task.EnterVehicle(World.GetClosestVehicle(ped.gameReference.Position, 10.0f), VehicleSeat.Driver);
                         break;
 
                     case PedAnimations.Ragdoll: ped.gameReference.ForceRagdoll(1, false);

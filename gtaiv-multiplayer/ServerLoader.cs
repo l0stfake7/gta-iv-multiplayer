@@ -10,7 +10,7 @@ namespace MIVServer
     {
         public static void Main(string[] args)
         {
-            var server = new Server(9999);
+            var server = new Server();
             while (Console.ReadLine() != "c") ;
         }
     }

@@ -76,9 +76,43 @@ namespace MIVClient
                                 }
                                 break;
 
+
+                            case Commands.Player_setGravity:
+                                {
+                                    var g = bpr.readSingle();
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.getPlayerPed().GravityMultiplier = g;
+                                    }));
+                                }
+                                break;
+                            case Commands.Player_setHeading:
+                                {
+                                    var g = bpr.readSingle();
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.getPlayerPed().Heading = g;
+                                    }));
+                                }
+                                break;
+                            case Commands.Player_setGameTime:
+                                {
+                                    var g = bpr.readInt64();
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        World.CurrentDayTime = new TimeSpan(g);
+                                    }));
+                                }
+                                break;
+
                             case Commands.Player_setHealth:
                                 {
-                                    client.getPlayerPed().Health = bpr.readInt32();
+                                    int h = bpr.readInt32();
+                                    client.chatController.writeChat("setting healtcz " + h.ToString());
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.getPlayerPed().Health = h;
+                                    }));
                                 }
                                 break;
 
@@ -95,6 +129,24 @@ namespace MIVClient
                                     client.enqueueAction(new Action(delegate
                                     {
                                         client.getPlayerPed().Position = vec;
+                                    }));
+                                }
+                                break;
+                            case Commands.Player_setVelocity:
+                                {
+                                    Vector3 vec = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.getPlayerPed().Velocity = vec;
+                                    }));
+                                }
+                                break;
+
+                            case Commands.InternalClient_finishSpawn:
+                                {
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.finishSpawn();
                                     }));
                                 }
                                 break;
@@ -182,7 +234,8 @@ namespace MIVClient
                 catch (Exception e)
                 {
                     Client.log("Failed receive with message " + e.Message + " " + e.StackTrace);
-                    //client.currentState = ClientState.Disconnected;
+                    client.chatController.writeChat("Failed receive with message " + e.Message + " " + e.StackTrace);
+                    client.currentState = ClientState.Disconnected;
                     //throw e;
                 }
             }

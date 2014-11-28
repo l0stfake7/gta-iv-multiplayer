@@ -41,7 +41,7 @@ namespace MIVClient
                     {
                         if (!ped.streamedIn || ped.gameReference == null || !ped.gameReference.Exists())
                         {
-                            ped.gameReference = World.CreatePed(ped.model, ped.position, RelationshipGroup.Player);
+                            ped.gameReference = World.CreatePed(ped.model, ped.position, RelationshipGroup.NetworkPlayer_01);
                             ped.blip = Blip.AddBlip(ped.gameReference);
                             ped.blip.Color = BlipColor.LightOrange;
                             ped.blip.Display = BlipDisplay.MapOnly;
@@ -49,8 +49,10 @@ namespace MIVClient
                             ped.blip.Name = "Player";
                             ped.streamedIn = true;
                             ped.gameReference.Heading = ped.heading;
-                            ped.gameReference.GiveFakeNetworkName(ped.networkname, System.Drawing.Color.White);
-                            ped.gameReference.Invincible = true;
+                            //ped.gameReference.GiveFakeNetworkName(ped.networkname, System.Drawing.Color.White);
+                            var rand = new System.Random();
+                            ped.gameReference.GiveFakeNetworkName(ped.networkname, System.Drawing.Color.FromArgb(255, rand.Next(70, 255), rand.Next(70, 255), rand.Next(70, 255)));
+                            //ped.gameReference.Invincible = true;
                             Weapon weapon = Weapon.Rifle_M4;
                             ped.gameReference.Weapons.AssaultRifle_M4.Ammo = 999;
                             ped.gameReference.Weapons.AssaultRifle_M4.AmmoInClip = 999;
@@ -98,6 +100,7 @@ namespace MIVClient
         public string model, networkname;
         public Vector3 position, direction;
         public bool streamedIn;
+        public int last_game_health;
 
         private PedStreamer streamer;
 

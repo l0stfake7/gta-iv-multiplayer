@@ -13,8 +13,8 @@ namespace DeathmatchGamemode
         private Vector4[] spawns = new Vector4[]
         {
             new Vector4(-229.4026f, 261.9114f, 14.862f, 359.3771f),
-            new Vector4(-242.1259f, 277.121f, 14.78422f, 203.8875f),
-            new Vector4(-219.1516f, 277.0148f, 14.79722f, 196.8374f)
+            //new Vector4(-242.1259f, 277.121f, 14.78422f, 203.8875f),
+            //new Vector4(-219.1516f, 277.0148f, 14.79722f, 196.8374f)
             /*new Vector4(2344.3f, 120.6696f, 5.812847f, 45.75858f),
             new Vector4(2257.409f, 96.68719f, 5.812839f, 356.7675f),
             new Vector4(2235.377f, 136.2301f, 5.902038f, 346.8188f)*/
@@ -27,8 +27,10 @@ namespace DeathmatchGamemode
             Console.WriteLine("*  MultiIV Test Deathmatch  *");
             Console.WriteLine("*****************************");
             api.onPlayerConnect += api_onPlayerConnect;
+            api.onPlayerDisconnect += api_onPlayerDisconnect;
             api.onPlayerSendText += api_onPlayerSendText;
             api.onPlayerSendCommand += api_onPlayerSendCommand;
+            api.onPlayerSpawn += api_onPlayerSpawn;
             api.createVehicle("SUPERGT", new Vector3(2365.749f, 604.4031f, 30.812778f), new Quaternion(0.0003340448f, -0.000308407f, -0.005634441f, 0.999984f));//1
             api.createVehicle("SABREGT", new Vector3(2365.749f, 604.4031f, 30.812778f), new Quaternion(-5.144991E-05f, 0.0004049888f, 0.7113973f, -0.7027899f));//2
             api.createVehicle("INFERNUS", new Vector3(2384.331f, 183.4532f, 15.231522f), new Quaternion(5.031423E-05f, -1.052421E-05f, -0.2579773f, 0.966151f));//3
@@ -91,25 +93,43 @@ namespace DeathmatchGamemode
             api.createVehicle("ANNIHILATOR", new Vector3(-48.01921f, 256.5985f, 14.4919f), new Quaternion(-0.0002179013f, -0.0001522939f, 0.7066892f, 0.7075241f)); //anihilator
             api.createVehicle("ANNIHILATOR", new Vector3(-50.16575f, 268.3227f, 14.49202f), new Quaternion(-7.295316E-05f, -0.0004549232f, 0.7083731f, -0.7058381f)); //anihilators
 
-            dialog = new ServerNPCDialog("Witaj", "czego .chcesz?");
+            dialog = new ServerNPCDialog("Helo", "what?");
 
-            dialog.addResponse("niczego nubie");
+            dialog.addResponse("nuthin");
 
-            npc = new ServerNPC("Dupek", MIVSDK.ModelDictionary.getByName("F_Y_BANK_01"), new Vector3(2191.345f, 615.6419f, 5.629018f), 1.0f, dialog);
+            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getByName("F_Y_BANK_01"), new Vector3(-242.1259f, 277.121f, 14.78422f), 1.0f, dialog);
+
+            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getByName("F_Y_STRIPPERC01"), new Vector3(-219.1516f, 277.0148f, 14.79722f), 1.0f, dialog);
+
+            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getByName("F_Y_DOCTOR_01"), new Vector3(-219.1516f, 271.0148f, 14.79722f), 1.0f, dialog);
+
 
             dialog.onPlayerAnswerDialog += (player, key) =>
             {
-                Server.instance.api.writeChat(player, "ok dobra no spierdalaj");
+                Server.instance.api.writeChat(player, "ok i say then sir");
             };
 
             api.onPlayerKeyDown += api_onPlayerKeyDown;
+        }
+
+        void api_onPlayerSpawn(ServerPlayer player)
+        {
+            int random = new Random().Next(spawns.Length);
+            player.Position = new Vector3(spawns[random].X, spawns[random].Y, spawns[random].Z);
+            player.Heading = spawns[random].W;
+        }
+
+        void api_onPlayerDisconnect(ServerPlayer player)
+        {
+            api.writeChat("Player " + player.nick + " disconnected");
         }
 
         void api_onPlayerSendCommand(ServerPlayer player, string command, string[] param)
         {
             if (command == "tpto")
             {
-                if(param.Length != 1 || !Char.IsNumber(param[0], 0)){
+                if (param.Length != 1 || !Char.IsNumber(param[0], 0))
+                {
                     api.writeChat(player, "Usage: /tpto player_id");
                     return;
                 }
@@ -124,18 +144,16 @@ namespace DeathmatchGamemode
             if (command == "help")
             {
                 Console.WriteLine("abc");
-                api.writeChat(player, "Tu bedzie pomoc");
-                api.writeChat(player, "Serio");
+                api.writeChat(player, "help");
+                api.writeChat(player, "help2");
                 return;
             }
         }
 
         private void api_onPlayerConnect(System.Net.EndPoint address, ServerPlayer player)
         {
-            int random = new Random().Next(spawns.Length);
-            player.Position = new Vector3(spawns[random].X, spawns[random].Y, spawns[random].Z);
-            player.Heading = spawns[random].W;
-            api.writeChat(player, "Witaj " + player.nick);
+            api.writeChat("Player " + player.nick + " connected");
+            api.writeChat(player, "Hello " + player.nick);
         }
 
         private void api_onPlayerKeyDown(ServerPlayer player, System.Windows.Forms.Keys key)

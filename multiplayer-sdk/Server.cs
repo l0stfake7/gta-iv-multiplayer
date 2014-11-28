@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Linq;
 using System.Net.Sockets;
 using System.Timers;
 
@@ -12,30 +13,35 @@ namespace MIVServer
         public static Server instance;
         public ServerApi api;
         public ServerChat chat;
-        public Dictionary<byte, ServerPlayer> playerpool;
+        public List<ServerPlayer> playerpool;
         public ServerVehicleController vehicleController;
 
         private GamemodeManager gamemodeManager;
         private TcpListener server;
+        public INIReader config;
+        private HTTPServer http_server;
 
-        public Server(int port)
+        public Server()
         {
+            config = new INIReader(System.IO.File.ReadAllLines("config.ini"));
             chat = new ServerChat();
             instance = this;
             vehicleController = new ServerVehicleController();
             api = new ServerApi(this);
             gamemodeManager = new GamemodeManager(api);
-            gamemodeManager.loadFromFile("DeathmatchGamemode.dll");
-            server = new TcpListener(IPAddress.Any, port);
+            gamemodeManager.loadFromFile(config.getString("gamemode"));
+            server = new TcpListener(IPAddress.Any, config.getInt("game_port"));
             server.Start();
             server.BeginAcceptTcpClient(onIncomingConnection, null);
-            playerpool = new Dictionary<byte, ServerPlayer>();
+            playerpool = new List<ServerPlayer>();
             Timer timer = new Timer();
             timer.Elapsed += onBroadcastTimer;
-            timer.Interval = 80;
+            timer.Interval = config.getInt("broadcast_interval");
             timer.Enabled = true;
             timer.Start();
-            Console.WriteLine("Started server on port " + port.ToString());
+            http_server = new HTTPServer();
+            Console.WriteLine("Started game server on port " + config.getInt("game_port").ToString());
+            Console.WriteLine("Started http server on port " + config.getInt("http_port").ToString());
         }
 
         public void broadcastData(ServerPlayer player)
@@ -48,12 +54,12 @@ namespace MIVServer
                 {
                     foreach (var single in playerpool)
                     {
-                        if (single.Value.id != player.id)
+                        if (single.id != player.id)
                         {
                             var bpf = new BinaryPacketFormatter(Commands.UpdateData);
                             bpf.add(new byte[1] { (byte)player.id });
                             bpf.add(player.data);
-                            single.Value.connection.write(bpf.getBytes());
+                            single.connection.write(bpf.getBytes());
                             //Console.WriteLine("Streaming to player " + single.Value.nick);
                         }
                     }
@@ -94,7 +100,7 @@ namespace MIVServer
         {
             for (byte i = 0; i < byte.MaxValue; i++)
             {
-                if (!playerpool.ContainsKey(i)) return i;
+                if (playerpool.Count(a => a.id == i) == 0) return i;
             }
             throw new Exception("No free ids");
         }
@@ -104,7 +110,7 @@ namespace MIVServer
             string currentMessage;
             while ((currentMessage = chat.dequeue()) != null)
             {
-                foreach (ServerPlayer player in playerpool.Values)
+                foreach (ServerPlayer player in playerpool)
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Chat_writeLine);
                     bpf.add(currentMessage);
@@ -112,11 +118,16 @@ namespace MIVServer
                 }
             }
 
-            foreach (ServerPlayer player in playerpool.Values)
+            for(int i=0;i<playerpool.Count;i++)
             {
-                broadcastData(player);
-                player.connection.flush();
+                broadcastData(playerpool[i]);
+                playerpool[i].connection.flush();
             }
+        }
+
+        public ServerPlayer getPlayerById(byte id)
+        {
+            return playerpool.First(a => a.id == id);
         }
 
         private void onIncomingConnection(IAsyncResult iar)
@@ -130,16 +141,23 @@ namespace MIVServer
 
             connection.onConnect += delegate(string nick)
             {
+                if (playerpool.Count >= config.getInt("max_players"))
+                {
+                    Console.WriteLine("Connection from " + nick + " rejected due to player limit");
+                    client.Close();
+                    return;
+                }
                 Console.WriteLine("Connect from " + nick);
                 ServerPlayer player = new ServerPlayer(nick, connection);
                 connection.player = player;
                 player.id = findLowestFreeId();
                 player.nick = nick;
-                playerpool.Add(player.id, player);
+                playerpool.Add(player);
                 broadcastVehiclesToPlayer(player);
                 broadcastNPCsToPlayer(player);
 
                 api.invokeOnPlayerConnect(client.Client.RemoteEndPoint, player);
+                api.invokeOnPlayerSpawn(player);
 
                 connection.flush();
             };

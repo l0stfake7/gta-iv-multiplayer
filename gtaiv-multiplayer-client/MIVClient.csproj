@@ -50,7 +50,7 @@
   <ItemGroup>
     <Reference Include="ScriptHookDotNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Desktop\ScriptHookDotNet.dll</HintPath>
+      <HintPath>..\..\scripthookdotnet_src\bin\ScriptHookDotNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

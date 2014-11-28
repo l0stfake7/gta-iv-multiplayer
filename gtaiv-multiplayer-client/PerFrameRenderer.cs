@@ -29,6 +29,8 @@ namespace MIVClient
             GC.SuppressFinalize(this);
         }
 
+        public static float test_x, test_y, test_z;
+
         private void Client_PerFrameDrawing(object sender, GraphicsEventArgs e)
         {
             e.Graphics.Scaling = FontScaling.Pixel;
@@ -62,7 +64,12 @@ namespace MIVClient
                 debugtext.Append((Client.currentData.state & MIVSDK.PlayerState.IsShooting) != 0 ? "1" : "0");
                 e.Graphics.DrawText(debugtext.ToString(), 15, Game.Resolution.Height - 100, font);
             }
+            if (test_x != null)
+            {
+                //var testpos = e.Graphics.TransformFromWorldToScreen(new Vector3(-229.4026f, 261.9114f, 14.862f));
+                e.Graphics.DrawText("TEST MATRIX", test_x * Game.Resolution.Width, test_y * Game.Resolution.Height, font);
 
+            }
             if (client.keyboardHandler.inKeyboardTypingMode)
             {
                 int cpos = client.keyboardHandler.cursorpos;

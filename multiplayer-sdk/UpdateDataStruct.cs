@@ -56,10 +56,16 @@
         NPC_destroy,
         NPC_update,
         NPC_walkTo,
+        NPC_runTo,
+        NPC_followPlayer,
+        NPC_shootAt,
         NPC_setPosition,
         NPC_enterVehicle,
         NPC_leaveVehicle,
         NPC_playAnimation,
+
+        InternalClient_requestSpawn,
+        InternalClient_finishSpawn,
 
         Keys_down,
         Keys_up,
@@ -86,6 +92,7 @@
         IsSterringLeft = 4,
         IsSterringRight = 8,
         IsAsPassenger = 16,
+        IsEnteringVehicle = 32,
     }
 
     public class UpdateDataStruct
