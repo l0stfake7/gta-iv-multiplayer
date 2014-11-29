@@ -10,10 +10,17 @@ namespace MIVClient
     {
         public List<StreamedPed> peds;
 
+        private Font nickfont;
+        private System.Drawing.Color nickcolor, healthcolor, chatcolor;
+
         private Client client;
 
         public PedStreamer(Client client)
         {
+            nickfont = new Font("Consolas", 24, FontScaling.Pixel);
+            nickcolor = System.Drawing.Color.LightYellow;
+            healthcolor = System.Drawing.Color.FromArgb(190, 255, 33, 33);
+            chatcolor = System.Drawing.Color.White;
             this.client = client;
             peds = new List<StreamedPed>();
         }
@@ -26,6 +33,32 @@ namespace MIVClient
         public void delete(StreamedPed ped)
         {
             peds.Remove(ped);
+        }
+
+
+        public void updateGfx()
+        {
+            foreach (StreamedPed ped in this.peds)
+            {
+                try
+                {
+                    if (ped.streamedIn && ped.gameReference.Exists())
+                    {
+                        var projected = (Vector2)World.WorldToScreenProject(ped.gameReference.Position);
+
+                        var rect = new System.Drawing.RectangleF(projected.X - 30, projected.Y - 50, 60, 30);
+                        ped.nickDraw.textbox = rect;
+
+                        var rect2 = new System.Drawing.RectangleF(projected.X - 30, projected.Y - 30, 60, 10);
+                        ped.healthDraw.box = rect2;
+
+                        var rect3 = new System.Drawing.RectangleF(projected.X - 30, projected.Y - 10, 60, 30);
+                        ped.chatDraw.textbox = rect3;
+                    }
+                }
+                catch
+                { }
+            }
         }
 
         public void update()
@@ -49,9 +82,20 @@ namespace MIVClient
                             ped.blip.Name = "Player";
                             ped.streamedIn = true;
                             ped.gameReference.Heading = ped.heading;
+                            var projected = (Vector2)World.WorldToScreenProject(ped.position);
+
+                            var rect = new System.Drawing.RectangleF(projected.X - 30, projected.Y - 50, 60, 30);
+                            ped.nickDraw = new ClientTextView(rect, TextAlignment.Center, ped.networkname, nickfont, nickcolor);
+
+                            var rect2 = new System.Drawing.RectangleF(projected.X - 30, projected.Y - 30, 60, 10);
+                            ped.healthDraw = new ClientRectangleView(rect2, healthcolor);
+
+                            var rect3 = new System.Drawing.RectangleF(projected.X - 30, projected.Y - 10, 60, 30);
+                            ped.chatDraw = new ClientTextView(rect3, TextAlignment.Center, "", nickfont, chatcolor);
+
                             //ped.gameReference.GiveFakeNetworkName(ped.networkname, System.Drawing.Color.White);
                             var rand = new System.Random();
-                            ped.gameReference.GiveFakeNetworkName(ped.networkname, System.Drawing.Color.FromArgb(255, rand.Next(70, 255), rand.Next(70, 255), rand.Next(70, 255)));
+                            //ped.gameReference.GiveFakeNetworkName(ped.networkname, System.Drawing.Color.FromArgb(255, rand.Next(70, 255), rand.Next(70, 255), rand.Next(70, 255)));
                             //ped.gameReference.Invincible = true;
                             Weapon weapon = Weapon.Rifle_M4;
                             ped.gameReference.Weapons.AssaultRifle_M4.Ammo = 999;
@@ -63,17 +107,15 @@ namespace MIVClient
                         }
                         else
                         {
-                            //if (ped.gameReference.Position.DistanceTo(ped.position) > 4.0f)
-                            //{
-                            //ped.gameReference.Position = ped.position;
-                            //ped.gameReference.Heading = ped.heading;
-                            //ped.gameReference.Task.RunTo(ped.position, true);
-                            //}
+                           
                         }
                     }
                     else if (ped.streamedIn)
                     {
                         ped.blip.Delete();
+                        ped.nickDraw.destroy();
+                        ped.healthDraw.destroy();
+                        ped.chatDraw.destroy();
                         ped.gameReference.Delete();
                         ped.gameReference = null;
                         ped.hasNetworkName = false;
@@ -101,6 +143,28 @@ namespace MIVClient
         public Vector3 position, direction;
         public bool streamedIn;
         public int last_game_health;
+        public ClientTextView nickDraw;
+        public ClientRectangleView healthDraw;
+        public ClientTextView chatDraw;
+        private string currentChatMessage;
+        private DateTime lastChatTime;
+
+        public string CurrentChatMessage
+        {
+            get
+            {
+                if ((DateTime.Now - lastChatTime).Seconds > 5)
+                {
+                    currentChatMessage = "";
+                }
+                return currentChatMessage;
+            }
+            set
+            {
+                lastChatTime = DateTime.Now;
+                currentChatMessage = value;
+            }
+        }
 
         private PedStreamer streamer;
 

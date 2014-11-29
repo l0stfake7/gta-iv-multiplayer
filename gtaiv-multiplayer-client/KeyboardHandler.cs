@@ -140,7 +140,7 @@ namespace MIVClient
             {
                 if (client.getPlayerPed().isInVehicle())
                 {
-                    client.getPlayerPed().CurrentVehicle.Velocity *= 2.0f;
+                    client.getPlayerPed().CurrentVehicle.ApplyForceRelative(client.getPlayerPed().CurrentVehicle.Velocity);
                 }
                 else
                 {

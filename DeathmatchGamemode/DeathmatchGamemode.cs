@@ -97,11 +97,11 @@ namespace DeathmatchGamemode
 
             dialog.addResponse("nuthin");
 
-            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getByName("F_Y_BANK_01"), new Vector3(-242.1259f, 277.121f, 14.78422f), 1.0f, dialog);
+            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getPedModelByName("F_Y_BANK_01"), new Vector3(-242.1259f, 277.121f, 14.78422f), 1.0f, dialog);
 
-            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getByName("F_Y_STRIPPERC01"), new Vector3(-219.1516f, 277.0148f, 14.79722f), 1.0f, dialog);
+            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getPedModelByName("F_Y_STRIPPERC01"), new Vector3(-219.1516f, 277.0148f, 14.79722f), 1.0f, dialog);
 
-            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getByName("F_Y_DOCTOR_01"), new Vector3(-219.1516f, 271.0148f, 14.79722f), 1.0f, dialog);
+            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getPedModelByName("F_Y_DOCTOR_01"), new Vector3(-219.1516f, 271.0148f, 14.79722f), 1.0f, dialog);
 
 
             dialog.onPlayerAnswerDialog += (player, key) =>
@@ -146,6 +146,14 @@ namespace DeathmatchGamemode
                 Console.WriteLine("abc");
                 api.writeChat(player, "help");
                 api.writeChat(player, "help2");
+                return;
+            }
+            if (command == "cam")
+            {
+                player.requester.getCameraPosition((vec) =>
+                {
+                    api.writeChat(vec.X.ToString() + " " + vec.Y.ToString() + " " + vec.Z.ToString());
+                });
                 return;
             }
         }

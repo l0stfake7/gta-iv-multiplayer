@@ -81,7 +81,7 @@ namespace MIVServer
 
         public ServerVehicleInfo createVehicle(uint model, Vector3 position, Quaternion orientation)
         {
-            return server.vehicleController.create(ModelDictionary.getById(model), position, orientation);
+            return server.vehicleController.create(ModelDictionary.getVehicleById(model), position, orientation);
         }
 
         public List<ServerPlayer> getAllPlayers(byte id)

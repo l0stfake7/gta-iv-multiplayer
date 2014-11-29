@@ -1,4 +1,5 @@
 ﻿using GTA;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace MIVClient
@@ -22,6 +23,12 @@ namespace MIVClient
                 peds[id].delete();
                 peds.Remove(id);
             }
+        }
+
+        public byte getPlayerIdByPed(Ped ped)
+        {
+            var elem = peds.Where(a => a.Value.streamedIn && a.Value.gameReference.Exists() && a.Value.gameReference == ped);
+            return elem == null || elem.Count() == 0 ? (byte)255 : elem.First().Key;
         }
 
         public StreamedPed getById(byte id, string nick, Vector3 position)

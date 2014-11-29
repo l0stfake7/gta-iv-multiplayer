@@ -150,6 +150,48 @@ namespace MIVClient
                                     }));
                                 }
                                 break;
+                            case Commands.Request_getSelectedPlayer:
+                                {
+                                    uint requestid = bpr.readUInt32();
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var peds = World.GetPeds(client.getPlayerPed().Position, 80.0f);
+                                        Ped selectedPed = null;
+                                        foreach (var ped in peds)
+                                        {
+                                            var projected = (Vector2)World.WorldToScreenProject(ped.Position);
+                                            if (Math.Abs((projected - new Vector2(Game.Resolution.Width / 2, Game.Resolution.Height / 2)).Length()) < 30.0)
+                                            {
+                                                selectedPed = ped;
+                                                break;
+                                            }
+                                        }
+                                        var bpf = new BinaryPacketFormatter(Commands.Request_getSelectedPlayer);
+                                        bpf.add(requestid);
+                                        if (selectedPed != null)
+                                        {
+                                            bpf.add(new byte[1] { client.pedController.getPlayerIdByPed(selectedPed) });
+                                        }
+                                        else
+                                        {
+                                            bpf.add(new byte[1] { 255 });
+                                        }
+                                        client.serverConnection.write(bpf.getBytes());
+                                    }));
+                                }
+                                break;
+                            case Commands.Request_getCameraPosition:
+                                {
+                                    uint requestid = bpr.readUInt32();
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var bpf = new BinaryPacketFormatter(Commands.Request_getCameraPosition);
+                                        bpf.add(requestid);
+                                        bpf.add(new MIVSDK.Math.Vector3(Game.CurrentCamera.Position.X, Game.CurrentCamera.Position.Y, Game.CurrentCamera.Position.Z));
+                                        client.serverConnection.write(bpf.getBytes());
+                                    }));
+                                }
+                                break;
 
                             case Commands.Vehicle_create:
                                 {
@@ -171,7 +213,7 @@ namespace MIVClient
                                     uint id = bpr.readUInt32();
                                     Vector3 pos = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
                                     float heading = bpr.readSingle();
-                                    string model = MIVSDK.ModelDictionary.getById(bpr.readUInt32());
+                                    string model = MIVSDK.ModelDictionary.getPedModelById(bpr.readUInt32());
 
                                     string str = bpr.readString();
                                     client.enqueueAction(new Action(delegate

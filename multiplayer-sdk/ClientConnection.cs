@@ -65,16 +65,14 @@ namespace MIVServer
                 }
                 catch
                 {
-                    var pl = new ServerPlayer(player.nick, player.connection)
+                    if (player != null)
                     {
-                        id = player.id,
-                        nick = player.nick
-                    };
-                    Server.instance.api.invokeOnPlayerDisconnect(pl);
-                    
-                    player.data = null;
-                    Server.instance.playerpool.Remove(player);
-                    player = null;
+                        Server.instance.api.invokeOnPlayerDisconnect(player);
+
+                        player.data = null;
+                        Server.instance.playerpool.Remove(player);
+                        player = null;
+                    }
                 }
             }
         }
@@ -124,6 +122,26 @@ namespace MIVServer
                                     Server.instance.api.invokeOnPlayerSpawn(player);
                                     var bpf = new BinaryPacketFormatter(Commands.InternalClient_finishSpawn);
                                     player.connection.write(bpf.getBytes());
+                                }
+                            }
+                            break;
+                        case Commands.Request_getSelectedPlayer:
+                            {
+                                if (player != null)
+                                {
+                                    uint requestid = bpr.readUInt32();
+                                    byte playerid = bpr.readByte();
+                                    Request.dispatch(requestid, playerid);
+                                }
+                            }
+                            break;
+                        case Commands.Request_getCameraPosition:
+                            {
+                                if (player != null)
+                                {
+                                    uint requestid = bpr.readUInt32();
+                                    var vect = bpr.readVector3();
+                                    Request.dispatch(requestid, vect);
                                 }
                             }
                             break;

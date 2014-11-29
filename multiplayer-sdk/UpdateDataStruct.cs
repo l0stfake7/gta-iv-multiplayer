@@ -64,8 +64,19 @@
         NPC_leaveVehicle,
         NPC_playAnimation,
 
+        Camera_setPosition,
+        Camera_lookAt,
+        Camera_sstDirection,
+        Camera_setOrientation,
+        Camera_setFOV,
+        Camera_reset,
+        Camera_moveSmooth,
+
         InternalClient_requestSpawn,
         InternalClient_finishSpawn,
+
+        Request_getSelectedPlayer,
+        Request_getCameraPosition,
 
         Keys_down,
         Keys_up,

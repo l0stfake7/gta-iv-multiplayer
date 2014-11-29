@@ -75,6 +75,7 @@
     <Compile Include="ServerNPC.cs" />
     <Compile Include="ServerNPCDialog.cs" />
     <Compile Include="ServerPlayer.cs" />
+    <Compile Include="ServerRequester.cs" />
     <Compile Include="ServerVehicle.cs" />
     <Compile Include="ServerVehicleController.cs" />
     <Compile Include="TextView.cs" />

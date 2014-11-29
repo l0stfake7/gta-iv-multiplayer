@@ -67,7 +67,7 @@ namespace MIVClient
             if (test_x != null)
             {
                 //var testpos = e.Graphics.TransformFromWorldToScreen(new Vector3(-229.4026f, 261.9114f, 14.862f));
-                e.Graphics.DrawText("TEST MATRIX", test_x * Game.Resolution.Width, test_y * Game.Resolution.Height, font);
+                e.Graphics.DrawText("O", test_x, test_y, font);
 
             }
             if (client.keyboardHandler.inKeyboardTypingMode)
@@ -89,6 +89,9 @@ namespace MIVClient
             {
                 client.teleportCameraController.drawCross(e.Graphics);
             }
+            ClientTextView.renderAll(e.Graphics);
+            ClientRectangleView.renderAll(e.Graphics);
+            ClientLineView.renderAll(e.Graphics);
         }
     }
 }

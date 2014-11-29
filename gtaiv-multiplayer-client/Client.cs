@@ -45,6 +45,9 @@ namespace MIVClient
             keyboardHandler = new KeyboardHandler(this);
             currentState = ClientState.Initializing;
             Interval = 80;
+            GTA.Timer gfxupdate = new Timer(1);
+            gfxupdate.Tick += gfxupdate_Tick;
+            gfxupdate.Start();
             this.Tick += new EventHandler(this.eventOnTick);
             currentState = ClientState.Disconnected;
             System.IO.File.WriteAllText("multiv-log.txt", "");
@@ -63,6 +66,21 @@ namespace MIVClient
             MouseUp += Client_MouseUp;
         }
 
+        void gfxupdate_Tick(object sender, EventArgs e)
+        {
+            if (pedController != null && pedController.streamer != null) pedController.streamer.updateGfx();
+            if (npcPedController != null && npcPedController.streamer != null) npcPedController.streamer.updateGfx();
+            /*var test = (Vector2)World.WorldToScreenProject(new Vector3(-229.4026f, 261.9114f, 14.862f));
+            if (test.X < 0) test.X = 0;
+            if (test.Y < 0) test.Y = 0;
+            if (test.X > Game.Resolution.Width) test.X = Game.Resolution.Width;
+            if (test.Y > Game.Resolution.Height) test.Y = Game.Resolution.Height;
+            //            chatController.writeChat(test.X + " " + test.Y);
+
+            PerFrameRenderer.test_x = test.X;
+            PerFrameRenderer.test_y = test.Y;*/
+        }
+
         public void finishSpawn()
         {
             Game.FadeScreenIn(2000);
@@ -73,7 +91,8 @@ namespace MIVClient
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                Game.TimeScale = 1.0f;
+                //Game.TimeScale = 1.0f;
+                Game.Mouse.Enabled = false;
             }
         }
 
@@ -81,7 +100,41 @@ namespace MIVClient
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                Game.TimeScale = 0.1f;
+                //Game.TimeScale = 0.1f;
+                Game.Mouse.Enabled = true;
+            }
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                var vehicles = World.GetVehicles(Player.Character.Position, 80.0f);
+                var peds = World.GetPeds(Player.Character.Position, 80.0f);
+                Ped selectedPed = null;
+                Vehicle selectecVehicle = null;
+                foreach (var ped in peds)
+                {
+                    var projected = (Vector2)World.WorldToScreenProject(ped.Position);
+                    if (Math.Abs((projected - new Vector2(e.PixelLocation.X, e.PixelLocation.Y)).Length()) < 30.0)
+                    {
+                        selectedPed = ped;
+                        break;
+                    }
+                }
+                foreach (var vehicle in vehicles)
+                {
+                    var projected = (Vector2)World.WorldToScreenProject(vehicle.Position);
+                    if (Math.Abs((projected - new Vector2(e.PixelLocation.X, e.PixelLocation.Y)).Length()) < 30.0)
+                    {
+                        selectecVehicle = vehicle;
+                        break;
+                    }
+                }
+                if (selectedPed != null)
+                {
+                    selectedPed.ApplyForce(new Vector3(0, 0, 11.0f));
+                }
+                else if(selectecVehicle != null)
+                {
+                    selectecVehicle.ApplyForce(new Vector3(0, 0, 11.0f));
+                }
             }
         }
 
@@ -371,6 +424,7 @@ namespace MIVClient
 
                 chatController.writeChat("Connected");
             }
+
 
 
             teleportCameraController.onUpdate();

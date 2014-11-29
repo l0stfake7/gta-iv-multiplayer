@@ -65,6 +65,8 @@
   <ItemGroup>
     <Compile Include="ChatController.cs" />
     <Compile Include="Client.cs" />
+    <Compile Include="ClientLineView.cs" />
+    <Compile Include="ClientRectangleView.cs" />
     <Compile Include="KeyboardHandler.cs" />
     <Compile Include="PedAnimationManager.cs" />
     <Compile Include="PerFrameRenderer.cs" />
@@ -72,6 +74,7 @@
     <Compile Include="Positioners.cs" />
     <Compile Include="ServerConnection.cs" />
     <Compile Include="TeleportCameraController.cs" />
+    <Compile Include="ClientTextView.cs" />
     <Compile Include="VehicleController.cs" />
     <Compile Include="PlayerVehicleController.cs" />
     <Compile Include="PlayerPedController.cs" />

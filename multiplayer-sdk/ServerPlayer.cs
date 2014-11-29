@@ -8,6 +8,7 @@ namespace MIVServer
     {
         public ClientConnection connection;
         public UpdateDataStruct data;
+        public ServerRequester requester;
         public byte id;
         public string nick;
 
@@ -18,6 +19,7 @@ namespace MIVServer
         {
             this.nick = nick;
             this.connection = connection;
+            requester = new ServerRequester(this);
             data = UpdateDataStruct.Zero;
         }
 
