@@ -12,15 +12,15 @@ namespace MIVClient
         public List<StreamedPed> peds;
 
         private Font nickfont;
-        private System.Drawing.Color nickcolor, healthcolor, chatcolor;
+        private System.Drawing.Color nickcolor, chatcolor;
 
         private Client client;
 
         public PedStreamer(Client client)
         {
-            nickfont = new Font("Consolas", 24, FontScaling.Pixel);
+            nickfont = new Font("Segoe UI", 24, FontScaling.Pixel, false, false);
+            nickfont.Effect = FontEffect.None;
             nickcolor = System.Drawing.Color.LightYellow;
-            healthcolor = System.Drawing.Color.FromArgb(190, 255, 33, 33);
             chatcolor = System.Drawing.Color.White;
             this.client = client;
             peds = new List<StreamedPed>();
@@ -58,8 +58,13 @@ namespace MIVClient
                     {
                         var projected = (Vector2)World.WorldToScreenProject(ped.gameReference.Position);
                         var peddelta = ped.gameReference.Position - client.getPlayerPed().Position;
+                        float distance = peddelta.Length();
+                        //float distance_from_centerscreen = (projected - new Vector2(Game.Resolution.Width, Game.Resolution.Height)).Length();
+                        int alpha = (int)Math.Round((255.0f * (distance / -80.0f + 1.0f)));
+                        if (alpha > 255) alpha = 255;
+                        if (alpha < 0) alpha = 0;
                         if (projected.X < -120 || projected.X > Game.Resolution.Width || projected.Y < -50 || projected.Y > Game.Resolution.Height || 
-                            (peddelta + Game.CurrentCamera.Direction).Length() < peddelta.Length())
+                            (peddelta + Game.CurrentCamera.Direction).Length() < distance)
                         {
                             ped.nickDraw.destroy();
                             ped.healthDraw.destroy();
@@ -73,22 +78,26 @@ namespace MIVClient
                         else
                         {
                             var rect = new System.Drawing.RectangleF(projected.X - 100, projected.Y - 50, 200, 30);
-                            var rect2 = new System.Drawing.RectangleF(projected.X - 52, projected.Y - 32, 164.0f, 22);
-                            var rect22 = new System.Drawing.RectangleF(projected.X - 50, projected.Y - 30, 160.0f * (ped.gameReference.Health < 0 ? 0 : ped.gameReference.Health / 100.0f), 20);
+                            var rect2 = new System.Drawing.RectangleF(projected.X - 37, projected.Y - 22, 37*2, 11);
+                            var rect22 = new System.Drawing.RectangleF(projected.X - 35, projected.Y - 20, (35.0f*2.0f) * (ped.last_game_health < 0 ? 0 : ped.last_game_health / 100.0f), 7);
                             var rect3 = new System.Drawing.RectangleF(projected.X - 30, projected.Y - 10, 60, 30);
                             if (ped.nickDraw == null)
                             {
-                                ped.nickDraw = new ClientTextView(rect, TextAlignment.Center, ped.networkname, nickfont, nickcolor);
-                                ped.healthDraw = new ClientRectangleView(rect2, System.Drawing.Color.FromArgb(150, 0, 0, 0));
-                                ped.healthDraw2 = new ClientRectangleView(rect22, healthcolor);
-                                ped.chatDraw = new ClientTextView(rect3, TextAlignment.Center, "", nickfont, chatcolor);
+                                ped.nickDraw = new ClientTextView(rect, TextAlignment.Center, ped.networkname, nickfont, System.Drawing.Color.FromArgb(alpha, 255, 255, 255));
+                                ped.healthDraw = new ClientRectangleView(rect2, System.Drawing.Color.FromArgb(alpha, 0, 0, 0));
+                                ped.healthDraw2 = new ClientRectangleView(rect22, System.Drawing.Color.FromArgb(alpha, 80, 80, 255));
+                                ped.chatDraw = new ClientTextView(rect3, TextAlignment.Center, "", nickfont, System.Drawing.Color.FromArgb(alpha, 255, 255, 255));
                             }
                             else
                             {
                                 ped.nickDraw.textbox = rect;
+                                ped.nickDraw.color = System.Drawing.Color.FromArgb(alpha, 255, 255, 255);
                                 ped.healthDraw.box = rect2;
+                                ped.healthDraw.color = System.Drawing.Color.FromArgb(alpha, 0, 0, 0);
                                 ped.healthDraw2.box = rect22;
+                                ped.healthDraw2.color = System.Drawing.Color.FromArgb(alpha, 80, 80, 255);
                                 ped.chatDraw.textbox = rect3;
+                                ped.chatDraw.color = System.Drawing.Color.FromArgb(alpha, 255, 255, 255);
                             }
 
                         }
@@ -145,7 +154,19 @@ namespace MIVClient
                         }
                         else
                         {
-
+                            if (ped.last_game_health > 0 && (ped.gameReference.isDead || !ped.gameReference.isAlive || ped.gameReference.Health == 0))
+                            {
+                                ped.blip.Delete();
+                                ped.nickDraw.destroy();
+                                ped.healthDraw.destroy();
+                                ped.healthDraw2.destroy();
+                                ped.chatDraw.destroy();
+                                ped.nickDraw = null;
+                                ped.gameReference.Delete();
+                                ped.gameReference = null;
+                                ped.hasNetworkName = false;
+                                ped.streamedIn = false;
+                            }
                         }
                     }
                     else if (ped.streamedIn)
@@ -155,6 +176,7 @@ namespace MIVClient
                         ped.healthDraw.destroy();
                         ped.healthDraw2.destroy();
                         ped.chatDraw.destroy();
+                        ped.nickDraw = null;
                         ped.gameReference.Delete();
                         ped.gameReference = null;
                         ped.hasNetworkName = false;
@@ -163,7 +185,7 @@ namespace MIVClient
                 }
                 catch (Exception e)
                 {
-                    client.chatController.writeChat("PEDSTREAMER: " + e.Message);
+                    //client.chatController.writeChat("PEDSTREAMER: " + e.Message);
                 }
             }
         }

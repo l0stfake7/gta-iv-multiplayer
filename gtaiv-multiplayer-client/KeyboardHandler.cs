@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Collections.Generic;
 
 namespace MIVClient
 {
@@ -21,9 +22,13 @@ namespace MIVClient
             this.client = client;
             keyboardUS = new KeyboardLayoutUS();
             inKeyboardTypingMode = false;
+            commandHistory = new List<string>();
             client.KeyDown += new GTA.KeyEventHandler(this.eventOnKeyDown);
             client.KeyUp += new GTA.KeyEventHandler(this.eventOnKeyUp);
         }
+
+        List<string> commandHistory;
+        int historyIndex = 0;
 
         private void eventOnKeyDown(object sender, GTA.KeyEventArgs e)
         {
@@ -32,6 +37,7 @@ namespace MIVClient
             {
                 inKeyboardTypingMode = true;
                 cursorpos = 0;
+                historyIndex = 0;
                 client.getPlayer().CanControlCharacter = false;
             }
             else if (inKeyboardTypingMode)
@@ -40,6 +46,11 @@ namespace MIVClient
                 {
                     if (client.chatController.currentTypedText.Length > 0)
                     {
+                        commandHistory.Add(client.chatController.currentTypedText);
+                        if (commandHistory.Count > 100)
+                        {
+                            commandHistory = commandHistory.Skip(commandHistory.Count - 100).ToList();
+                        }
                         var bpf = new BinaryPacketFormatter(Commands.Chat_sendMessage);
                         bpf.add(client.chatController.currentTypedText);
                         client.serverConnection.write(bpf.getBytes());
@@ -58,6 +69,18 @@ namespace MIVClient
                 else if (e.Key == System.Windows.Forms.Keys.Left)
                 {
                     cursorpos = cursorpos > 0 ? cursorpos - 1 : cursorpos;
+                }
+                else if (e.Key == System.Windows.Forms.Keys.Down)
+                {
+                    historyIndex--;
+                    if (historyIndex < 0) historyIndex = 0;
+                    client.chatController.currentTypedText = "";
+                }
+                else if (e.Key == System.Windows.Forms.Keys.Up)
+                {
+                    historyIndex++;
+                    if (historyIndex > commandHistory.Count) historyIndex = commandHistory.Count;
+                    client.chatController.currentTypedText = commandHistory[commandHistory.Count - historyIndex];
                 }
                 else if (e.Key == System.Windows.Forms.Keys.Right)
                 {
@@ -83,12 +106,6 @@ namespace MIVClient
                     cursorpos += newstr.Length;
                 }
                 return;
-            }
-
-            foreach (int id in Enumerable.Range((int)System.Windows.Forms.Keys.D0, (int)System.Windows.Forms.Keys.D9))
-            {
-                if (e.Key == (System.Windows.Forms.Keys)id && e.Alt) client.saveBindPoint(id - (int)System.Windows.Forms.Keys.D0);
-                if (e.Key == (System.Windows.Forms.Keys)id && e.Control) client.teleportToBindPoint(id - (int)System.Windows.Forms.Keys.D0);
             }
 
             if (client.teleportCameraController.inCameraMode)
@@ -136,17 +153,6 @@ namespace MIVClient
                 }
             }
 
-            if (e.Key == System.Windows.Forms.Keys.Insert)
-            {
-                if (client.getPlayerPed().isInVehicle())
-                {
-                    client.getPlayerPed().CurrentVehicle.ApplyForceRelative(client.getPlayerPed().CurrentVehicle.Velocity);
-                }
-                else
-                {
-                    client.getPlayerPed().Velocity *= 2.0f;
-                }
-            }
             if (e.Key == System.Windows.Forms.Keys.G)
             {
                 Vehicle veh = World.GetClosestVehicle(client.getPlayerPed().Position, 20.0f);
@@ -157,7 +163,7 @@ namespace MIVClient
                 }
             }
 
-            if (e.Key == System.Windows.Forms.Keys.L)
+            if (e.Key == System.Windows.Forms.Keys.L && client.currentState == ClientState.Disconnected)
             {
                 try
                 {

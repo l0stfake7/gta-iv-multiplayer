@@ -108,7 +108,7 @@ namespace MIVClient
                             case Commands.Player_setHealth:
                                 {
                                     int h = bpr.readInt32();
-                                    client.chatController.writeChat("setting healtcz " + h.ToString());
+                                    //client.chatController.writeChat("setting healtcz " + h.ToString());
                                     client.enqueueAction(new Action(delegate
                                     {
                                         client.getPlayerPed().Health = h;
@@ -125,7 +125,7 @@ namespace MIVClient
                             case Commands.Player_setPosition:
                                 {
                                     Vector3 vec = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
-                                    client.chatController.writeChat("OasK");
+                                    //client.chatController.writeChat("OasK");
                                     client.enqueueAction(new Action(delegate
                                     {
                                         client.getPlayerPed().Position = vec;
@@ -277,6 +277,7 @@ namespace MIVClient
                 {
                     Client.log("Failed receive with message " + e.Message + " " + e.StackTrace);
                     client.chatController.writeChat("Failed receive with message " + e.Message + " " + e.StackTrace);
+                    client.chatController.writeChat("Disconnected abnormally from server");
                     client.currentState = ClientState.Disconnected;
                     //throw e;
                 }

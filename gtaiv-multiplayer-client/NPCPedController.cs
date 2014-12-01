@@ -24,13 +24,27 @@ namespace MIVClient
             }
         }
 
+        public void update()
+        {
+            foreach (var ped in peds.Values)
+            {
+                if (ped.streamedIn && ped.gameReference != null && ped.gameReference.Exists())
+                {
+                    ped.animator.playAnimation(PedAnimations.RunTo, ped.position);
+                }
+            }
+        }
+
         public StreamedPed getById(uint id, string model, string name, float heading, Vector3 position)
         {
             if (!peds.ContainsKey(id))
             {
                 //if (peds.ContainsKey(id)) peds.Remove(id);
-                peds.Add(id, new StreamedPed(streamer, model, name, position, heading));
+                var ped = new StreamedPed(streamer, model, name, position, heading);
+                peds.Add(id, ped);
+                ped.last_game_health = 100; // invicible :)
                 Client.log("Created npc instance");
+
             }
             return peds[id];
         }

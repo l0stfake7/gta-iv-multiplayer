@@ -29,7 +29,7 @@ namespace MIVServer
             vehicleController = new ServerVehicleController();
             api = new ServerApi(this);
             gamemodeManager = new GamemodeManager(api);
-            gamemodeManager.loadFromFile(config.getString("gamemode"));
+            gamemodeManager.loadFromFile("gamemodes/" + config.getString("gamemode"));
             server = new TcpListener(IPAddress.Any, config.getInt("game_port"));
             server.Start();
             server.BeginAcceptTcpClient(onIncomingConnection, null);

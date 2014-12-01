@@ -10,7 +10,9 @@ namespace MIVClient
         Aim,
         AimWalk,
         Walk,
+        WalkTo,
         Run,
+        RunTo,
         Ragdoll,
         Shoot,
         EnterClosestVehicle
@@ -31,7 +33,7 @@ namespace MIVClient
             animset2 = new AnimationSet("gun@ak47");
         }
 
-        public void playAnimation(PedAnimations anim)
+        public void playAnimation(PedAnimations anim, params object[] param)
         {
             if (!ped.streamedIn || ped.gameReference == null || !ped.gameReference.Exists())
             {
@@ -48,6 +50,10 @@ namespace MIVClient
                     case PedAnimations.Aim:
                         //ped.gameReference.Animation.Play(animset, "holster_2_aim", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
                         ped.gameReference.Task.AimAt(ped.gameReference.Position + ped.direction, 9999);
+                        break;
+                    case PedAnimations.RunTo:
+                        //ped.gameReference.Animation.Play(animset, "holster_2_aim", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
+                        ped.gameReference.Task.RunTo((Vector3)param[0]);
                         break;
 
                     case PedAnimations.Couch: ped.gameReference.Animation.Play(animset2, "unholster_crouch", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);

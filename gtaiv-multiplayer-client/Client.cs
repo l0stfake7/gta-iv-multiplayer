@@ -83,10 +83,12 @@ namespace MIVClient
             vehicleStreamer.updateSlow();
             pedStreamer.updateSlow();
 
+            npcPedController.update();
+
             GTA.World.UnlockAllIslands();
             GTA.World.LockDayTime();
 
-            GTA.Light l = new Light(System.Drawing.Color.Red, 5.0f, 10.0f, getPlayerPed().Position);
+            //GTA.Light l = new Light(System.Drawing.Color.Red, 5.0f, 10.0f, getPlayerPed().Position);
             Game.WantedMultiplier = 0.0f;
         }
 
@@ -96,36 +98,6 @@ namespace MIVClient
 
         void onMouseMove(float x, float y)
         {
-            /*var vehicles = World.GetVehicles(Player.Character.Position, 80.0f);
-            var peds = World.GetPeds(Player.Character.Position, 80.0f);
-            Ped selectedPed = null;
-            Vehicle selectecVehicle = null;
-            foreach (var ped in peds)
-            {
-                var projected = (Vector2)World.WorldToScreenProject(ped.Position);
-                if (Math.Abs((projected - new Vector2(x, y)).Length()) < 30.0)
-                {
-                    selectedPed = ped;
-                    break;
-                }
-            }
-            foreach (var vehicle in vehicles)
-            {
-                var projected = (Vector2)World.WorldToScreenProject(vehicle.Position);
-                if (Math.Abs((projected - new Vector2(x, y)).Length()) < 30.0)
-                {
-                    selectecVehicle = vehicle;
-                    break;
-                }
-            }
-            if (selectedPed != null)
-            {
-                selectedPed.Die();
-            }
-            else if (selectecVehicle != null)
-            {
-                selectecVehicle.Explode();
-            }*/
         }
 
         void gfxupdate_Tick(object sender, EventArgs e)
@@ -133,42 +105,10 @@ namespace MIVClient
             pedStreamer.updateGfx();
             vehicleStreamer.updateGfx();
             teleportCameraController.onUpdate();
-            /*if (lastmousex != Game.Mouse.PositionPixel.X || lastmousey != Game.Mouse.PositionPixel.Y)
+            if (currentState == ClientState.Connected)
             {
-                onMouseMove(Game.Mouse.PositionPixel.X, Game.Mouse.PositionPixel.Y);
+                updateAllPlayers();
             }
-            lastmousex = Game.Mouse.PositionPixel.X;
-            lastmousey = Game.Mouse.PositionPixel.Y;
-            var angleaim = Player.Character.GetBonePosition(Bone.LeftHand) - (Player.Character.GetBonePosition(Bone.Spine3) + new Vector3(0, 0, 0.2f));
-            if (Game.isGameKeyPressed(GameKey.Aim))
-            {
-                cam.Position = Player.Character.GetBonePosition(Bone.Head) + new Vector3(0, 0, -0.0f) + (Player.Character.Direction * 0.2f);
-                cam.Direction = angleaim;
-                cam.Roll = 0;
-                Player.Character.Visible = true;
-            }
-            else
-            {
-                cam.Position = Player.Character.GetBonePosition(Bone.Head) + (Player.Character.isInVehicle() ? Player.Character.Direction * Player.Character.CurrentVehicle.Velocity.Length() * 0.03f : new Vector3(0, 0, -0.0f) + (Player.Character.Direction * 0.1f));
-                cam.Direction = Player.Character.Direction;
-                var tmp = Player.Character.GetBonePosition(Bone.Root) - Player.Character.GetBonePosition(Bone.Head);
-                cam.Roll = (float)(57.32484076 * Math.Asin(Math.Abs(tmp.X) / tmp.Length())) * (tmp.X < 0 ? -1 : 1);
-                Player.Character.Visible = false;
-                Player.SetComponentVisibility(PedComponent.Head, false);
-                Player.SetComponentVisibility(PedComponent.UpperBody, true);
-            }*/
-            //cam.Rotation = Player.Character.GetBonePosition(Bone.Spine3) - Player.Character.GetBonePosition(Bone.Head);
-
-            //cam.
-            /*var test = (Vector2)World.WorldToScreenProject(new Vector3(-229.4026f, 261.9114f, 14.862f));
-            if (test.X < 0) test.X = 0;
-            if (test.Y < 0) test.Y = 0;
-            if (test.X > Game.Resolution.Width) test.X = Game.Resolution.Width;
-            if (test.Y > Game.Resolution.Height) test.Y = Game.Resolution.Height;
-            //            chatController.writeChat(test.X + " " + test.Y);
-
-            PerFrameRenderer.test_x = test.X;
-            PerFrameRenderer.test_y = test.Y;*/
         }
 
         public void finishSpawn()
@@ -188,44 +128,7 @@ namespace MIVClient
 
         void Client_MouseDown(object sender, MouseEventArgs e)
         {
-             if (e.Button == System.Windows.Forms.MouseButtons.Right)
-             {
-                 //Game.TimeScale = 0.1f;
-                 //Game.Mouse.Enabled = true;
-             }
-             /*if (e.Button == System.Windows.Forms.MouseButtons.Left)
-             {
-                 var vehicles = World.GetVehicles(Player.Character.Position, 80.0f);
-                 var peds = World.GetPeds(Player.Character.Position, 80.0f);
-                 Ped selectedPed = null;
-                 Vehicle selectecVehicle = null;
-                 foreach (var ped in peds)
-                 {
-                     var projected = (Vector2)World.WorldToScreenProject(ped.Position);
-                     if (Math.Abs((projected - new Vector2(e.PixelLocation.X, e.PixelLocation.Y)).Length()) < 30.0)
-                     {
-                         selectedPed = ped;
-                         break;
-                     }
-                 }
-                 foreach (var vehicle in vehicles)
-                 {
-                     var projected = (Vector2)World.WorldToScreenProject(vehicle.Position);
-                     if (Math.Abs((projected - new Vector2(e.PixelLocation.X, e.PixelLocation.Y)).Length()) < 30.0)
-                     {
-                         selectecVehicle = vehicle;
-                         break;
-                     }
-                 }
-                 if (selectedPed != null)
-                 {
-                     selectedPed.ApplyForce(new Vector3(0, 0, 11.0f));
-                 }
-                 else if(selectecVehicle != null)
-                 {
-                     selectecVehicle.ApplyForce(new Vector3(0, 0, 11.0f));
-                 }
-             }*/
+             // maybe pass an event
         }
 
         public static Client getInstance()
@@ -324,13 +227,6 @@ namespace MIVClient
             log("Saved");
         }
 
-        /*
-         * Structure of packet is as follows
-         * 0x00               0x01               0x05
-         * [(ushort)COMMAND_ID] [(int)DATA_LENGTH] [(mixed)DATA]
-         *
-         */
-
         private void eventOnTick(object sender, EventArgs e)
         {
             try
@@ -365,9 +261,9 @@ namespace MIVClient
                         data.pos_z = pos.Z;
 
                         Vector3 vel = Player.Character.CurrentVehicle.Velocity;
-                        data.vel_x = vel.X;
-                        data.vel_y = vel.Y;
-                        data.vel_z = vel.Z;
+                        data.vel_x = currentData.pos_x - data.pos_x;
+                        data.vel_y = currentData.pos_y - data.pos_y;
+                        data.vel_z = currentData.pos_z - data.pos_z;
 
                         data.acc_x = data.vel_x - currentData.vel_x;
                         data.acc_y = data.vel_y - currentData.vel_y;
@@ -463,7 +359,6 @@ namespace MIVClient
                     }
 
                     currentData = data;
-                    updateAllPlayers();
                     serverConnection.flush();
 
                 }
@@ -481,25 +376,8 @@ namespace MIVClient
                 {
                     log("Failed updating streamers with message " + ex.Message);
                 }
-                //writeChat("Wrote");
-                //log("sent data");
-                // process players
-                //internalCounter++;
-                //if (internalCounter > 3) internalCounter = 0;
+            }
 
-            }
-            else
-            {
-                try
-                {
-                    Player.Character.Health = Player.Character.Health > 100 ? 100 : Player.Character.Health + 8;
-                    //Player.Character.Invincible = true;
-                }
-                catch (Exception ex)
-                {
-                    log("Failed setting player health " + ex.Message);
-                }
-            }
             if (currentState == ClientState.Connecting)
             {
                 currentState = ClientState.Connected;
@@ -511,15 +389,8 @@ namespace MIVClient
                 Player.Model = new Model("F_Y_HOOKER_01");
                 Player.NeverGetsTired = true;
 
-                chatController.writeChat("Connected");
+                //chatController.writeChat("Connected");
             }
-
-
-
-
-
-            //chatController.writeChat(tmp.ToString());
-
         }
     }
 }

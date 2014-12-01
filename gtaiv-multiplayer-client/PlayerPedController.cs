@@ -36,7 +36,9 @@ namespace MIVClient
             if (!peds.ContainsKey(id))
             {
                 //if (peds.ContainsKey(id)) peds.Remove(id);
-                peds.Add(id, new StreamedPed(streamer, "F_Y_HOOKER_01", nick, position, 0.0f));
+                var ped = new StreamedPed(streamer, "F_Y_HOOKER_01", nick, position, 0.0f);
+                peds.Add(id, ped);
+                ped.last_game_health = 100;
                 Client.log("Created ped instance");
             }
             return peds[id];

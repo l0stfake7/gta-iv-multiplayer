@@ -60,12 +60,13 @@ namespace MIVClient
 
                 int healthDelta = data.ped_health - ped.gameReference.Health;
                 ped.gameReference.Health = data.ped_health;
+                ped.last_game_health = data.ped_health;
 
                 if (healthDelta > 20 && healthDelta < 100)
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Player_damage);
                     bpf.add(new byte[1] { id });
-                    Client.instance.chatController.writeChat("damaged " + healthDelta) ;
+                    //Client.instance.chatController.writeChat("damaged " + healthDelta) ;
                     Client.instance.serverConnection.write(bpf.getBytes());
                 }
 
@@ -151,8 +152,7 @@ namespace MIVClient
                         veh.orientation = new Quaternion(data.rot_x, data.rot_y, data.rot_z, data.rot_a);
                         veh.gameReference.Position = posnew;
                         veh.gameReference.RotationQuaternion = veh.orientation;
-                        veh.gameReference.Velocity = new Vector3(data.vel_x, data.vel_y, data.vel_z);
-                        veh.gameReference.ApplyForce(new Vector3(data.acc_x, data.acc_y, data.acc_z), new Vector3(data.acc_rx, data.acc_ry, data.acc_rz));
+                        veh.gameReference.ApplyForce(new Vector3(data.vel_x, data.vel_y, data.vel_z), new Vector3(data.acc_rx, data.acc_ry, data.acc_rz));
                         if (veh.gameReference.Velocity.Length() > 2.0f)
                         {
                             ped.gameReference.Task.DrivePointRoute(veh.gameReference, 999.0f, posnew + veh.gameReference.Velocity);
