@@ -180,6 +180,8 @@ namespace MIVClient
                     World.CurrentDayTime = new TimeSpan(12, 00, 00);
                     World.PedDensity = 0;
                     World.CarDensity = 0;
+                   // AlternateHook.call(AlternateHook.OtherCommands.TERMINATE_ALL_SCRIPTS_FOR_NETWORK_GAME);
+                    AlternateHook.call(AlternateHook.OtherCommands.CLEAR_AREA, 0.0f, 0.0f, 0.0f, 4000.0f, true);
                     client.currentState = ClientState.Connecting;
                 }
                 catch
@@ -199,10 +201,10 @@ namespace MIVClient
                 bpf.add((int)e.Key);
                 client.serverConnection.write(bpf.getBytes());
             }
+
             lastKeyDown = (int)e.Key;
             lastKeyUp = 0;
         }
-
         int? lastKeyUp, lastKeyDown;
         private void eventOnKeyUp(object sender, GTA.KeyEventArgs e)
         {

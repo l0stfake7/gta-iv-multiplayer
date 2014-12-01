@@ -63,6 +63,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlternateHook.cs" />
     <Compile Include="ChatController.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="ClientLineView.cs" />

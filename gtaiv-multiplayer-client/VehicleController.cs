@@ -9,10 +9,10 @@ namespace MIVClient
         public VehicleStreamer streamer;
         public Dictionary<uint, StreamedVehicle> vehicles;
 
-        public VehicleController()
+        public VehicleController(VehicleStreamer streamer)
         {
             vehicles = new Dictionary<uint, StreamedVehicle>();
-            streamer = new VehicleStreamer(Client.getInstance());
+            this.streamer = streamer;
         }
 
         public StreamedVehicle create(uint vid, string model, Vector3 position, Quaternion orientation, Vector3 velocity)

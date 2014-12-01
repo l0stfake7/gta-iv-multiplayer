@@ -9,10 +9,10 @@ namespace MIVClient
 
         private Dictionary<uint, StreamedPed> peds;
 
-        public NPCPedController()
+        public NPCPedController(PedStreamer streamer)
         {
             peds = new Dictionary<uint, StreamedPed>();
-            streamer = new PedStreamer(Client.getInstance());
+            this.streamer = streamer;
         }
 
         public void destroy(uint id)

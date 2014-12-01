@@ -10,10 +10,10 @@ namespace MIVClient
 
         private Dictionary<byte, StreamedPed> peds;
 
-        public PlayerPedController()
+        public PlayerPedController(PedStreamer streamer)
         {
             peds = new Dictionary<byte, StreamedPed>();
-            streamer = new PedStreamer(Client.getInstance());
+            this.streamer = streamer;
         }
 
         public void destroy(byte id)

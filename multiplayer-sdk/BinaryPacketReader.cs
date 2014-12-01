@@ -32,6 +32,7 @@ namespace MIVSDK
         }
 
         public Double readDouble()
+
         {
             var data = BitConverter.ToDouble(buffer, position);
             position += sizeof(Double);

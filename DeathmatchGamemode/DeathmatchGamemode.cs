@@ -156,6 +156,10 @@ namespace DeathmatchGamemode
                 });
                 return;
             }
+            if (command == "tep")
+            {
+                player.Position = new Vector3(2468.039f, 147.9008f, 5.838196f);
+            }
         }
 
         private void api_onPlayerConnect(System.Net.EndPoint address, ServerPlayer player)

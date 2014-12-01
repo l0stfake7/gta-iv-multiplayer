@@ -46,6 +46,25 @@ namespace MIVClient
             this.client = client;
             vehicles = new List<StreamedVehicle>();
         }
+        public void updateGfx()
+        {
+
+        }
+
+        public void updateSlow()
+        {
+            foreach (Vehicle v in World.GetAllVehicles())
+            {
+                if (v.Exists() && vehicles.Count(a => a.gameReference != null && a.gameReference == v) == 0)
+                {
+                    v.NoLongerNeeded();
+                    v.Position += new Vector3(0, 0, -20);
+                    //v.Delete();
+                }
+            }
+            World.CarDensity = 0.0f;
+            
+        }
 
         public void add(StreamedVehicle vehicle)
         {
@@ -104,7 +123,6 @@ namespace MIVClient
             }
             //var peds = World.GetPeds(client.getPlayerPed().Position, 200.0f);
             //foreach (Ped a in peds) if (a.Exists() && a.isAlive && a != client.getPlayerPed()) a.Delete();
-            foreach (Vehicle v in World.GetAllVehicles()) if (v.Exists() && vehicles.Count(a => a.gameReference != null && a.gameReference == v) == 0) v.Delete();
         }
     }
 }

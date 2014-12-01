@@ -26,6 +26,9 @@ namespace MIVClient
         private byte internalCounter;
         public bool isCurrentlyDead;
 
+        public PedStreamer pedStreamer;
+        public VehicleStreamer vehicleStreamer;
+
         private Queue<Action> actionQueue;
 
         private Dictionary<int, GTA.Vector3> bindPoints;
@@ -37,17 +40,26 @@ namespace MIVClient
             actionQueue = new Queue<Action>();
             instance = this;
             teleportCameraController = new TeleportCameraController(this);
-            pedController = new PlayerPedController();
-            vehicleController = new VehicleController();
-            npcPedController = new NPCPedController();
+
+            pedStreamer = new PedStreamer(this);
+            vehicleStreamer = new VehicleStreamer(this);
+
+            pedController = new PlayerPedController(pedStreamer);
+            npcPedController = new NPCPedController(pedStreamer);
+            vehicleController = new VehicleController(vehicleStreamer);
             playerVehicleController = new PlayerVehicleController();
             chatController = new ChatController(this);
             keyboardHandler = new KeyboardHandler(this);
             currentState = ClientState.Initializing;
             Interval = 80;
+            //cam = new Camera();
+            //cam.Activate();
             GTA.Timer gfxupdate = new Timer(1);
             gfxupdate.Tick += gfxupdate_Tick;
             gfxupdate.Start();
+            GTA.Timer slow_update = new Timer(600);
+            slow_update.Tick += slow_update_Tick;
+            slow_update.Start();
             this.Tick += new EventHandler(this.eventOnTick);
             currentState = ClientState.Disconnected;
             System.IO.File.WriteAllText("multiv-log.txt", "");
@@ -66,10 +78,88 @@ namespace MIVClient
             MouseUp += Client_MouseUp;
         }
 
+        void slow_update_Tick(object sender, EventArgs e)
+        {
+            vehicleStreamer.updateSlow();
+            pedStreamer.updateSlow();
+
+            GTA.World.UnlockAllIslands();
+            GTA.World.LockDayTime();
+
+            GTA.Light l = new Light(System.Drawing.Color.Red, 5.0f, 10.0f, getPlayerPed().Position);
+            Game.WantedMultiplier = 0.0f;
+        }
+
+        Camera cam;
+
+        float lastmousex = 0, lastmousey = 0;
+
+        void onMouseMove(float x, float y)
+        {
+            /*var vehicles = World.GetVehicles(Player.Character.Position, 80.0f);
+            var peds = World.GetPeds(Player.Character.Position, 80.0f);
+            Ped selectedPed = null;
+            Vehicle selectecVehicle = null;
+            foreach (var ped in peds)
+            {
+                var projected = (Vector2)World.WorldToScreenProject(ped.Position);
+                if (Math.Abs((projected - new Vector2(x, y)).Length()) < 30.0)
+                {
+                    selectedPed = ped;
+                    break;
+                }
+            }
+            foreach (var vehicle in vehicles)
+            {
+                var projected = (Vector2)World.WorldToScreenProject(vehicle.Position);
+                if (Math.Abs((projected - new Vector2(x, y)).Length()) < 30.0)
+                {
+                    selectecVehicle = vehicle;
+                    break;
+                }
+            }
+            if (selectedPed != null)
+            {
+                selectedPed.Die();
+            }
+            else if (selectecVehicle != null)
+            {
+                selectecVehicle.Explode();
+            }*/
+        }
+
         void gfxupdate_Tick(object sender, EventArgs e)
         {
-            if (pedController != null && pedController.streamer != null) pedController.streamer.updateGfx();
-            if (npcPedController != null && npcPedController.streamer != null) npcPedController.streamer.updateGfx();
+            pedStreamer.updateGfx();
+            vehicleStreamer.updateGfx();
+            teleportCameraController.onUpdate();
+            /*if (lastmousex != Game.Mouse.PositionPixel.X || lastmousey != Game.Mouse.PositionPixel.Y)
+            {
+                onMouseMove(Game.Mouse.PositionPixel.X, Game.Mouse.PositionPixel.Y);
+            }
+            lastmousex = Game.Mouse.PositionPixel.X;
+            lastmousey = Game.Mouse.PositionPixel.Y;
+            var angleaim = Player.Character.GetBonePosition(Bone.LeftHand) - (Player.Character.GetBonePosition(Bone.Spine3) + new Vector3(0, 0, 0.2f));
+            if (Game.isGameKeyPressed(GameKey.Aim))
+            {
+                cam.Position = Player.Character.GetBonePosition(Bone.Head) + new Vector3(0, 0, -0.0f) + (Player.Character.Direction * 0.2f);
+                cam.Direction = angleaim;
+                cam.Roll = 0;
+                Player.Character.Visible = true;
+            }
+            else
+            {
+                cam.Position = Player.Character.GetBonePosition(Bone.Head) + (Player.Character.isInVehicle() ? Player.Character.Direction * Player.Character.CurrentVehicle.Velocity.Length() * 0.03f : new Vector3(0, 0, -0.0f) + (Player.Character.Direction * 0.1f));
+                cam.Direction = Player.Character.Direction;
+                var tmp = Player.Character.GetBonePosition(Bone.Root) - Player.Character.GetBonePosition(Bone.Head);
+                cam.Roll = (float)(57.32484076 * Math.Asin(Math.Abs(tmp.X) / tmp.Length())) * (tmp.X < 0 ? -1 : 1);
+                Player.Character.Visible = false;
+                Player.SetComponentVisibility(PedComponent.Head, false);
+                Player.SetComponentVisibility(PedComponent.UpperBody, true);
+            }*/
+            //cam.Rotation = Player.Character.GetBonePosition(Bone.Spine3) - Player.Character.GetBonePosition(Bone.Head);
+
+            //cam.
             /*var test = (Vector2)World.WorldToScreenProject(new Vector3(-229.4026f, 261.9114f, 14.862f));
             if (test.X < 0) test.X = 0;
             if (test.Y < 0) test.Y = 0;
@@ -92,50 +182,50 @@ namespace MIVClient
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
                 //Game.TimeScale = 1.0f;
-                Game.Mouse.Enabled = false;
+                //Game.Mouse.Enabled = false;
             }
         }
 
         void Client_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == System.Windows.Forms.MouseButtons.Right)
-            {
-                //Game.TimeScale = 0.1f;
-                Game.Mouse.Enabled = true;
-            }
-            if (e.Button == System.Windows.Forms.MouseButtons.Left)
-            {
-                var vehicles = World.GetVehicles(Player.Character.Position, 80.0f);
-                var peds = World.GetPeds(Player.Character.Position, 80.0f);
-                Ped selectedPed = null;
-                Vehicle selectecVehicle = null;
-                foreach (var ped in peds)
-                {
-                    var projected = (Vector2)World.WorldToScreenProject(ped.Position);
-                    if (Math.Abs((projected - new Vector2(e.PixelLocation.X, e.PixelLocation.Y)).Length()) < 30.0)
-                    {
-                        selectedPed = ped;
-                        break;
-                    }
-                }
-                foreach (var vehicle in vehicles)
-                {
-                    var projected = (Vector2)World.WorldToScreenProject(vehicle.Position);
-                    if (Math.Abs((projected - new Vector2(e.PixelLocation.X, e.PixelLocation.Y)).Length()) < 30.0)
-                    {
-                        selectecVehicle = vehicle;
-                        break;
-                    }
-                }
-                if (selectedPed != null)
-                {
-                    selectedPed.ApplyForce(new Vector3(0, 0, 11.0f));
-                }
-                else if(selectecVehicle != null)
-                {
-                    selectecVehicle.ApplyForce(new Vector3(0, 0, 11.0f));
-                }
-            }
+             if (e.Button == System.Windows.Forms.MouseButtons.Right)
+             {
+                 //Game.TimeScale = 0.1f;
+                 //Game.Mouse.Enabled = true;
+             }
+             /*if (e.Button == System.Windows.Forms.MouseButtons.Left)
+             {
+                 var vehicles = World.GetVehicles(Player.Character.Position, 80.0f);
+                 var peds = World.GetPeds(Player.Character.Position, 80.0f);
+                 Ped selectedPed = null;
+                 Vehicle selectecVehicle = null;
+                 foreach (var ped in peds)
+                 {
+                     var projected = (Vector2)World.WorldToScreenProject(ped.Position);
+                     if (Math.Abs((projected - new Vector2(e.PixelLocation.X, e.PixelLocation.Y)).Length()) < 30.0)
+                     {
+                         selectedPed = ped;
+                         break;
+                     }
+                 }
+                 foreach (var vehicle in vehicles)
+                 {
+                     var projected = (Vector2)World.WorldToScreenProject(vehicle.Position);
+                     if (Math.Abs((projected - new Vector2(e.PixelLocation.X, e.PixelLocation.Y)).Length()) < 30.0)
+                     {
+                         selectecVehicle = vehicle;
+                         break;
+                     }
+                 }
+                 if (selectedPed != null)
+                 {
+                     selectedPed.ApplyForce(new Vector3(0, 0, 11.0f));
+                 }
+                 else if(selectecVehicle != null)
+                 {
+                     selectecVehicle.ApplyForce(new Vector3(0, 0, 11.0f));
+                 }
+             }*/
         }
 
         public static Client getInstance()
@@ -384,9 +474,8 @@ namespace MIVClient
 
                 try
                 {
-                    vehicleController.streamer.update();
-                    pedController.streamer.update();
-                    npcPedController.streamer.update();
+                    pedStreamer.update();
+                    vehicleStreamer.update();
                 }
                 catch (Exception ex)
                 {
@@ -427,8 +516,9 @@ namespace MIVClient
 
 
 
-            teleportCameraController.onUpdate();
 
+
+            //chatController.writeChat(tmp.ToString());
 
         }
     }

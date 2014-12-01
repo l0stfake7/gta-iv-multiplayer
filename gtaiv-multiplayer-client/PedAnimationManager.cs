@@ -53,8 +53,9 @@ namespace MIVClient
                     case PedAnimations.Couch: ped.gameReference.Animation.Play(animset2, "unholster_crouch", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
                         break;
                     case PedAnimations.Shoot:
-                        //ped.gameReference.Task.ShootAt(Client.instance.getPlayerPed(), ShootMode.Continuous, 9992);
-                        ped.gameReference.ShootAt(ped.gameReference.Position + ped.gameReference.Direction);
+                        ped.gameReference.Accuracy = 0;
+                        ped.gameReference.Task.ShootAt(Client.instance.getPlayerPed(), ShootMode.Continuous, 9992);
+                        //ped.gameReference.ShootAt(ped.gameReference.Position + ped.gameReference.Direction);
                         break;
                     case PedAnimations.EnterClosestVehicle:
                         //ped.gameReference.Task.ShootAt(Client.instance.getPlayerPed(), ShootMode.Continuous, 9992);

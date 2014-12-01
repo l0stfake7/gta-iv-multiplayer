@@ -38,7 +38,7 @@ namespace MIVClient
 
         public void updatePed(byte id, UpdateDataStruct data, StreamedPed ped)
         {
-            var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z - 0.3f);
+            var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z - 1.0f);
             ped.position = posnew;
             ped.heading = data.heading;
             ped.direction = new Vector3(data.rot_x, data.rot_y, data.rot_z);
