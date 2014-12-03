@@ -76,6 +76,11 @@ namespace MIVClient
             perFrameRenderer = new PerFrameRenderer(this);
             MouseDown += Client_MouseDown;
             MouseUp += Client_MouseUp;
+
+            /*
+             SET_HIDE_WEAPON_ICON
+             * HIDE_HUD_AND_RADAR_THIS_FRAME
+             */
         }
 
         void slow_update_Tick(object sender, EventArgs e)
@@ -87,6 +92,7 @@ namespace MIVClient
 
             GTA.World.UnlockAllIslands();
             GTA.World.LockDayTime();
+            Player.WantedLevel = 0;
 
             //GTA.Light l = new Light(System.Drawing.Color.Red, 5.0f, 10.0f, getPlayerPed().Position);
             Game.WantedMultiplier = 0.0f;
@@ -102,11 +108,14 @@ namespace MIVClient
 
         void gfxupdate_Tick(object sender, EventArgs e)
         {
-            pedStreamer.updateGfx();
-            vehicleStreamer.updateGfx();
-            teleportCameraController.onUpdate();
+            //AlternateHook.call(AlternateHook.OtherCommands.HIDE_HUD_AND_RADAR_THIS_FRAME, 1);
+            //AlternateHook.call(AlternateHook.OtherCommands.HIDE_HELP_TEXT_THIS_FRAME, 1);
             if (currentState == ClientState.Connected)
             {
+                pedStreamer.updateGfx();
+                vehicleStreamer.updateGfx();
+                teleportCameraController.onUpdate();
+
                 updateAllPlayers();
             }
         }
@@ -121,14 +130,12 @@ namespace MIVClient
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                //Game.TimeScale = 1.0f;
-                //Game.Mouse.Enabled = false;
             }
         }
 
         void Client_MouseDown(object sender, MouseEventArgs e)
         {
-             // maybe pass an event
+            // maybe pass an event
         }
 
         public static Client getInstance()
@@ -245,14 +252,8 @@ namespace MIVClient
                 if (currentData == null) currentData = UpdateDataStruct.Zero;
                 try
                 {
-                    Player.WantedLevel = 0;
                     UpdateDataStruct data = new UpdateDataStruct();
                     data.nick = nick;
-                    if (Player.Character.isDead)
-                    {
-
-                    }
-                    //log("my X is " + data.pos_x.ToString());
                     if (Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.Driver) == Player.Character)
                     {
                         Vector3 pos = Player.Character.CurrentVehicle.Position;
@@ -260,10 +261,19 @@ namespace MIVClient
                         data.pos_y = pos.Y;
                         data.pos_z = pos.Z;
 
-                        Vector3 vel = Player.Character.CurrentVehicle.Velocity;
-                        data.vel_x = currentData.pos_x - data.pos_x;
-                        data.vel_y = currentData.pos_y - data.pos_y;
-                        data.vel_z = currentData.pos_z - data.pos_z;
+                        if (currentData.pos_x > 0.1f)
+                        {
+                            data.vel_x = currentData.pos_x - pos.X;
+                            data.vel_y = currentData.pos_y - pos.Y;
+                            data.vel_z = currentData.pos_z - pos.Z;
+                        }
+                        else
+                        {
+                            Vector3 vel2 = Player.Character.CurrentVehicle.Velocity;
+                            data.vel_x = vel2.X;
+                            data.vel_y = vel2.Y;
+                            data.vel_z = vel2.Z;
+                        }
 
                         data.acc_x = data.vel_x - currentData.vel_x;
                         data.acc_y = data.vel_y - currentData.vel_y;

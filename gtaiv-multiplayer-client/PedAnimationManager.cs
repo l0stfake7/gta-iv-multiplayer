@@ -1,4 +1,5 @@
 ﻿using GTA;
+using System;
 
 namespace MIVClient
 {
@@ -24,6 +25,8 @@ namespace MIVClient
         private static AnimationSet animset2;
         private PedAnimations currentAnimation;
         private StreamedPed ped;
+        private object[] lastParams;
+        private DateTime lastAnimationStarted;
 
         public PedAnimationManager(StreamedPed ped)
         {
@@ -31,16 +34,55 @@ namespace MIVClient
             currentAnimation = PedAnimations.StandStill;
             animset = new AnimationSet("move_m@casual");
             animset2 = new AnimationSet("gun@ak47");
+            lastRunToCoord = Vector3.Zero;
+            lastWalkToCoord = Vector3.Zero;
+            lastAnimationStarted = DateTime.Now;
+        }
+
+        Vector3 lastRunToCoord, lastWalkToCoord;
+
+        public void refreshAnimation()
+        {
+            playAnimation(currentAnimation, lastParams);
+        }
+        public void refreshAnimationForce()
+        {
+            currentAnimation = PedAnimations.NotStreamed;
+            //playAnimation(currentAnimation, lastParams);
         }
 
         public void playAnimation(PedAnimations anim, params object[] param)
         {
+            lastParams = param;
             if (!ped.streamedIn || ped.gameReference == null || !ped.gameReference.Exists())
             {
                 currentAnimation = PedAnimations.NotStreamed;
+                return;
             }
-            if (currentAnimation != anim)
+            if (currentAnimation != anim || (DateTime.Now - lastAnimationStarted).Seconds > 4)
             {
+                lastAnimationStarted = DateTime.Now;
+                currentAnimation = anim;
+                if (anim == PedAnimations.RunTo && ped.gameReference.Position.DistanceTo((Vector3)param[0]) > 2.0f)
+                {
+                    if ((lastRunToCoord).DistanceTo((Vector3)param[0]) > 1.0f)
+                    {
+                        //ped.gameReference.Animation.Play(animset, "holster_2_aim", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
+                        ped.gameReference.Task.RunTo((Vector3)param[0]);
+                        lastRunToCoord = (Vector3)param[0];
+                    }
+                    return;
+                }
+                if (anim == PedAnimations.WalkTo && ped.gameReference.Position.DistanceTo((Vector3)param[0]) > 2.0f)
+                {
+                    if ((lastWalkToCoord).DistanceTo((Vector3)param[0]) > 1.0f)
+                    {
+                        //ped.gameReference.Animation.Play(animset, "holster_2_aim", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
+                        ped.gameReference.Task.GoTo((Vector3)param[0]);
+                        lastWalkToCoord = (Vector3)param[0];
+                    } 
+                    return;
+                }
                 ped.gameReference.Task.ClearAllImmediately();
                 switch (anim)
                 {
@@ -51,10 +93,7 @@ namespace MIVClient
                         //ped.gameReference.Animation.Play(animset, "holster_2_aim", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
                         ped.gameReference.Task.AimAt(ped.gameReference.Position + ped.direction, 9999);
                         break;
-                    case PedAnimations.RunTo:
-                        //ped.gameReference.Animation.Play(animset, "holster_2_aim", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
-                        ped.gameReference.Task.RunTo((Vector3)param[0]);
-                        break;
+
 
                     case PedAnimations.Couch: ped.gameReference.Animation.Play(animset2, "unholster_crouch", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
                         break;
@@ -77,7 +116,6 @@ namespace MIVClient
                     case PedAnimations.StandStill: ped.gameReference.Animation.Play(animset, "idle", 1.0f);
                         break;
                 }
-                currentAnimation = anim;
             }
         }
     }

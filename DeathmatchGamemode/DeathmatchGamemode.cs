@@ -49,7 +49,7 @@ namespace DeathmatchGamemode
             api.createVehicle("TRASH", new Vector3(2231.183f, 736.4599f, 15.459599f), new Quaternion(-0.003429666f, -0.002095187f, 0.9954517f, 0.09518221f));//16
             api.createVehicle("ANNIHILATOR", new Vector3(2323.937f, 794.5594f, 15.998639f), new Quaternion(-0.001141903f, 0.002282516f, -0.2242321f, 0.9745324f));//17
             api.createVehicle("TRASH", new Vector3(2257.443f, 721.6019f, 15.438978f), new Quaternion(0.0003481103f, -0.003353917f, 0.8838975f, -0.4676686f));//18
-            api.createVehicle("INFERNUS", new Vector3(2464.762f, 589.6474f, 15.437915f), new Quaternion(-0.001692423f, -0.002709477f, 0.9179366f, -0.3967145f));//10
+            var infernus = api.createVehicle("INFERNUS", new Vector3(2464.762f, 589.6474f, 15.437915f), new Quaternion(-0.001692423f, -0.002709477f, 0.9179366f, -0.3967145f));//10
             api.createVehicle("TRASH", new Vector3(2604.48f, 414.0821f, 5.438591f), new Quaternion(-0.002986294f, -0.002253091f, 0.9838318f, -0.1790559f));//20
             api.createVehicle("COMET", new Vector3(-222.2813f, 308.7827f, 14.25351f), new Quaternion(0.005902957f, -0.0244328f, 0.1292002f, 0.9912999f));
             api.createVehicle("TURISMO", new Vector3(-215.838f, 232.841f, 14.49461f), new Quaternion(0.04665223f, -0.001668674f, 0.9988528f, -0.01066844f)); //turismo
@@ -93,21 +93,23 @@ namespace DeathmatchGamemode
             api.createVehicle("ANNIHILATOR", new Vector3(-48.01921f, 256.5985f, 14.4919f), new Quaternion(-0.0002179013f, -0.0001522939f, 0.7066892f, 0.7075241f)); //anihilator
             api.createVehicle("ANNIHILATOR", new Vector3(-50.16575f, 268.3227f, 14.49202f), new Quaternion(-7.295316E-05f, -0.0004549232f, 0.7083731f, -0.7058381f)); //anihilators
 
-            dialog = new ServerNPCDialog("Helo", "what?");
+            var npc1 = new ServerNPC("Babens", MIVSDK.ModelDictionary.getPedModelByName("F_Y_BANK_01"), new Vector3(-242.1259f, 277.121f, 14.78422f), 1.0f);
 
-            dialog.addResponse("nuthin");
+            var npc2 = new ServerNPC("Krupka Mateush", MIVSDK.ModelDictionary.getPedModelByName("F_Y_STRIPPERC01"), new Vector3(-219.1516f, 277.0148f, 14.79722f), 1.0f);
 
-            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getPedModelByName("F_Y_BANK_01"), new Vector3(-242.1259f, 277.121f, 14.78422f), 1.0f, dialog);
+            npc2.EnterVehicle(infernus);
 
-            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getPedModelByName("F_Y_STRIPPERC01"), new Vector3(-219.1516f, 277.0148f, 14.79722f), 1.0f, dialog);
+            var npc3 = new ServerNPC("Janek Bobok", MIVSDK.ModelDictionary.getPedModelByName("F_Y_DOCTOR_01"), new Vector3(-219.1516f, 271.0148f, 14.79722f), 1.0f);
 
-            npc = new ServerNPC("Idiot", MIVSDK.ModelDictionary.getPedModelByName("F_Y_DOCTOR_01"), new Vector3(-219.1516f, 271.0148f, 14.79722f), 1.0f, dialog);
-
-
-            dialog.onPlayerAnswerDialog += (player, key) =>
+            setTimer(2000, delegate
             {
-                Server.instance.api.writeChat(player, "ok i say then sir");
-            };
+                Random random = new Random();
+                npc1.WalkTo(npc1.Position + new Vector3(random.Next(-200, 200), random.Next(-200, 200), random.Next(-200, 200)));
+                var player = api.getPlayer(0);
+                if (player != null) npc2.DriveTo(player.Position);
+                if (player != null) npc3.RunTo(player.Position);
+                Console.WriteLine("A");
+            });
 
             api.onPlayerKeyDown += api_onPlayerKeyDown;
         }
@@ -172,10 +174,6 @@ namespace DeathmatchGamemode
         {
             if (key == System.Windows.Forms.Keys.O)
             {
-                if (npc.position.distanceTo(player.Position) < 5.0f)
-                {
-                    dialog.show(player);
-                }
             }
         }
 

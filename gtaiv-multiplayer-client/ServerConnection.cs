@@ -222,6 +222,182 @@ namespace MIVClient
                                     }));
                                 }
                                 break;
+                            case Commands.NPC_update:
+                                {
+                                    //int count = bpr.readInt32();
+                                    uint id = bpr.readUInt32();
+                                    Vector3 pos = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
+                                    float heading = bpr.readSingle();
+                                    string model = MIVSDK.ModelDictionary.getPedModelById(bpr.readUInt32());
+
+                                    string str = bpr.readString();
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var ped = client.npcPedController.getById(id);
+                                        ped.position = pos;
+                                        ped.heading = heading;
+                                        ped.model = model;
+                                        ped.networkname = str;
+                                    }));
+                                }
+                                break;
+                            case Commands.NPC_setPosition:
+                                {
+                                    uint id = bpr.readUInt32();
+
+                                    Vector3 pos = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
+
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var ped = client.npcPedController.getById(id);
+                                        ped.position = pos;
+                                        if (ped.streamedIn && ped.gameReference != null && ped.gameReference.Exists())
+                                        {
+                                            ped.gameReference.Position = pos;
+                                        }
+                                    }));
+                                }
+                                break;
+                            case Commands.NPC_setHeading:
+                                {
+                                    uint id = bpr.readUInt32();
+
+                                    float heading = bpr.readSingle();
+
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var ped = client.npcPedController.getById(id);
+                                        ped.heading = heading;
+                                        if (ped.streamedIn && ped.gameReference != null && ped.gameReference.Exists())
+                                        {
+                                            ped.gameReference.Heading = heading;
+                                        }
+                                    }));
+                                }
+                                break;
+                            case Commands.NPC_runTo:
+                                {
+                                    uint id = bpr.readUInt32();
+
+                                    Vector3 pos = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
+
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var ped = client.npcPedController.getById(id);
+                                        ped.position = pos;
+                                        if (ped.streamedIn && ped.gameReference != null && ped.gameReference.Exists())
+                                        {
+                                            ped.animator.refreshAnimationForce();
+                                            ped.animator.playAnimation(PedAnimations.RunTo, pos);
+                                        }
+                                    }));
+                                }
+                                break;
+                            case Commands.NPC_walkTo:
+                                {
+                                    uint id = bpr.readUInt32();
+
+                                    Vector3 pos = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
+
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var ped = client.npcPedController.getById(id);
+                                        ped.position = pos;
+                                        if (ped.streamedIn && ped.gameReference != null && ped.gameReference.Exists())
+                                        {
+                                            ped.animator.refreshAnimationForce();
+                                            ped.animator.playAnimation(PedAnimations.WalkTo, pos);
+                                        }
+                                    }));
+                                }
+                                break;
+                            case Commands.NPC_enterVehicle:
+                                {
+                                    uint id = bpr.readUInt32();
+
+                                    uint vid = bpr.readUInt32();
+
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var ped = client.npcPedController.getById(id);
+                                        ped.vehicle_id = vid;
+                                        var veh = client.vehicleController.getById(vid);
+                                        if (ped.streamedIn && ped.gameReference != null && ped.gameReference.Exists() &&
+                                            veh.streamedIn && veh.gameReference != null && veh.gameReference.Exists())
+                                        {
+                                            ped.gameReference.WarpIntoVehicle(veh.gameReference, VehicleSeat.Driver);
+                                        }
+                                    }));
+                                }
+                                break;
+                            case Commands.NPC_driveTo:
+                                {
+                                    uint id = bpr.readUInt32();
+
+                                    Vector3 pos = new Vector3(bpr.readSingle(), bpr.readSingle(), bpr.readSingle());
+
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var ped = client.npcPedController.getById(id);
+                                        if (ped.vehicle_id > 0)
+                                        {
+                                            var veh = client.vehicleController.getById(ped.vehicle_id);
+                                            if (ped.streamedIn && ped.gameReference != null && ped.gameReference.Exists() &&
+                                                veh.streamedIn && veh.gameReference != null && veh.gameReference.Exists())
+                                            {
+                                                ped.gameReference.Task.DriveTo(veh.gameReference, pos, 999.0f, false, true);
+                                            }
+                                        }
+                                    }));
+                                }
+                                break;
+                            case Commands.NPC_leaveVehicle:
+                                {
+                                    uint id = bpr.readUInt32();
+
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var ped = client.npcPedController.getById(id);
+                                        ped.vehicle_id = 0;
+                                        if (ped.streamedIn && ped.gameReference != null && ped.gameReference.Exists())
+                                        {
+                                            ped.gameReference.LeaveVehicle();
+                                        }
+                                    }));
+                                }
+                                break;
+                            case Commands.NPC_setModel:
+                                {
+                                    uint id = bpr.readUInt32();
+                                    string model = MIVSDK.ModelDictionary.getPedModelById(bpr.readUInt32());
+
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var ped = client.npcPedController.getById(id);
+                                        ped.model = model;
+                                        if (ped.streamedIn && ped.gameReference != null && ped.gameReference.Exists())
+                                        {
+                                            ped.gameReference.Delete();
+                                        }
+                                    }));
+                                }
+                                break;
+                            case Commands.NPC_setImmortal:
+                                {
+                                    uint id = bpr.readUInt32();
+                                    byte option = bpr.readByte();
+
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var ped = client.npcPedController.getById(id);
+                                        ped.immortal = option == 1;
+                                        if (ped.streamedIn && ped.gameReference != null && ped.gameReference.Exists())
+                                        {
+                                            ped.gameReference.Invincible = option == 1;
+                                        }
+                                    }));
+                                }
+                                break;
 
                             case Commands.NPCDialog_show:
                                 {

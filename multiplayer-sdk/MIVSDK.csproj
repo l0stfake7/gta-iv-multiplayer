@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlternateHookRequest.cs" />
     <Compile Include="BinaryPacketFormatter.cs" />
     <Compile Include="BinaryPacketReader.cs" />
     <Compile Include="ClientConnection.cs" />

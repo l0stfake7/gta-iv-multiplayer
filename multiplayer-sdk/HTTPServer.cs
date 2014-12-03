@@ -43,10 +43,16 @@ namespace MIVServer
             if (result.Success && result.Groups.Count == 4)
             {
                 string command = result.Groups[3].Value;
+                string headers = "HTTP/1.1 200 OK\r\n" +
+                "Content-Type: text/plain\r\n" +
+                "Accept-Ranges: bytes\r\n" +
+                "Vary: Accept-Encoding\r\n";
                 if (command == "get_server_data")
                 {
-                    return "{name:\"" + Server.instance.config.getString("server_name") + "\",max_players:" + Server.instance.config.getString("max_players") + ",players:" +
-                        Server.instance.playerpool.Count + "}";
+                    string response = "name=" + Server.instance.config.getString("server_name") + "\nmax_players=" + Server.instance.config.getString("max_players") + "\ngame_port=" + Server.instance.config.getString("game_port") +  "\nplayers=" +
+                        Server.instance.playerpool.Count;
+
+                    return headers + "Content-Length: " + response.Length + "\r\n\r\n" + response + "\r\n\r\n";
                 }
             }
             return null;

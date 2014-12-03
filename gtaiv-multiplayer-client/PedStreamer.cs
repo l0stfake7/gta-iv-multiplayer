@@ -11,7 +11,7 @@ namespace MIVClient
     {
         public List<StreamedPed> peds;
 
-        private Font nickfont;
+        private GTA.Font nickfont, fa_font;
         private System.Drawing.Color nickcolor, chatcolor;
 
         private Client client;
@@ -22,6 +22,7 @@ namespace MIVClient
             nickfont.Effect = FontEffect.None;
             nickcolor = System.Drawing.Color.LightYellow;
             chatcolor = System.Drawing.Color.White;
+            fa_font = new Font("FotntAwesome", 24, FontScaling.Pixel, false, false);
             this.client = client;
             peds = new List<StreamedPed>();
         }
@@ -64,7 +65,7 @@ namespace MIVClient
                         if (alpha > 255) alpha = 255;
                         if (alpha < 0) alpha = 0;
                         if (projected.X < -120 || projected.X > Game.Resolution.Width || projected.Y < -50 || projected.Y > Game.Resolution.Height || 
-                            (peddelta + Game.CurrentCamera.Direction).Length() < distance)
+                            (peddelta + Game.CurrentCamera.Direction).Length() < distance || !Game.CurrentCamera.isSphereVisible(ped.gameReference.Position, 3.0f))
                         {
                             ped.nickDraw.destroy();
                             ped.healthDraw.destroy();
@@ -79,8 +80,9 @@ namespace MIVClient
                         {
                             var rect = new System.Drawing.RectangleF(projected.X - 100, projected.Y - 50, 200, 30);
                             var rect2 = new System.Drawing.RectangleF(projected.X - 37, projected.Y - 22, 37*2, 11);
-                            var rect22 = new System.Drawing.RectangleF(projected.X - 35, projected.Y - 20, (35.0f*2.0f) * (ped.last_game_health < 0 ? 0 : ped.last_game_health / 100.0f), 7);
+                            var rect22 = new System.Drawing.RectangleF(projected.X - 35, projected.Y - 20, (35.0f * 2.0f) * (ped.last_game_health < 0 ? 0 : ped.last_game_health / 100.0f), 7);
                             var rect3 = new System.Drawing.RectangleF(projected.X - 30, projected.Y - 10, 60, 30);
+                            var chaticonframe = new System.Drawing.RectangleF(projected.X - 30, projected.Y - 80, 60, 30);
                             if (ped.nickDraw == null)
                             {
                                 ped.nickDraw = new ClientTextView(rect, TextAlignment.Center, ped.networkname, nickfont, System.Drawing.Color.FromArgb(alpha, 255, 255, 255));
@@ -161,6 +163,7 @@ namespace MIVClient
                                 ped.healthDraw.destroy();
                                 ped.healthDraw2.destroy();
                                 ped.chatDraw.destroy();
+                                ped.iconDraw.destroy();
                                 ped.nickDraw = null;
                                 ped.gameReference.Delete();
                                 ped.gameReference = null;
@@ -176,6 +179,7 @@ namespace MIVClient
                         ped.healthDraw.destroy();
                         ped.healthDraw2.destroy();
                         ped.chatDraw.destroy();
+                        ped.iconDraw.destroy();
                         ped.nickDraw = null;
                         ped.gameReference.Delete();
                         ped.gameReference = null;
@@ -200,9 +204,10 @@ namespace MIVClient
         public float heading;
         public string model, networkname;
         public Vector3 position, direction;
-        public bool streamedIn;
+        public bool streamedIn, immortal;
         public int last_game_health;
-        public ClientTextView nickDraw;
+        public uint vehicle_id;
+        public ClientTextView nickDraw, iconDraw;
         public ClientRectangleView healthDraw, healthDraw2;
         public ClientTextView chatDraw;
         private string currentChatMessage;
@@ -238,6 +243,7 @@ namespace MIVClient
             streamedIn = false;
             hasNetworkName = false;
             streamer.add(this);
+            vehicle_id = 0;
             animator = new PedAnimationManager(this);
         }
 

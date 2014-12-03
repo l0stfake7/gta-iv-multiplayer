@@ -39,9 +39,22 @@ namespace MIVServer
             timer.Interval = config.getInt("broadcast_interval");
             timer.Enabled = true;
             timer.Start();
+            Timer timer_slow = new Timer();
+            timer_slow.Elapsed += timer_slow_Elapsed;
+            timer_slow.Interval = config.getInt("slow_interval");
+            timer_slow.Enabled = true;
+            timer_slow.Start();
             http_server = new HTTPServer();
             Console.WriteLine("Started game server on port " + config.getInt("game_port").ToString());
             Console.WriteLine("Started http server on port " + config.getInt("http_port").ToString());
+        }
+
+        void timer_slow_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            for (int i = 0; i < playerpool.Count; i++)
+            {
+                updateNPCsToPlayer(playerpool[i]);
+            }
         }
 
         public void broadcastData(ServerPlayer player)
@@ -74,10 +87,23 @@ namespace MIVServer
             {
                 var bpf = new BinaryPacketFormatter(Commands.NPC_create);
                 bpf.add(pair.Value.id);
-                bpf.add(pair.Value.position);
-                bpf.add(pair.Value.heading);
-                bpf.add(pair.Value.model);
-                bpf.add(pair.Value.name);
+                bpf.add(pair.Value.Position);
+                bpf.add(pair.Value.Heading);
+                bpf.add(pair.Value.Model);
+                bpf.add(pair.Value.Name);
+                player.connection.write(bpf.getBytes());
+            }
+        }
+        public void updateNPCsToPlayer(ServerPlayer player)
+        {
+            foreach (var pair in ServerNPC.NPCPool)
+            {
+                var bpf = new BinaryPacketFormatter(Commands.NPC_update);
+                bpf.add(pair.Value.id);
+                bpf.add(pair.Value.Position);
+                bpf.add(pair.Value.Heading);
+                bpf.add(pair.Value.Model);
+                bpf.add(pair.Value.Name);
                 player.connection.write(bpf.getBytes());
             }
         }
@@ -127,7 +153,14 @@ namespace MIVServer
 
         public ServerPlayer getPlayerById(byte id)
         {
-            return playerpool.First(a => a.id == id);
+            try
+            {
+                return playerpool.First(a => a.id == id);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private void onIncomingConnection(IAsyncResult iar)

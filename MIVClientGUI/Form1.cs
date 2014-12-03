@@ -8,6 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Web;
+using System.Net;
+using System.Net.Sockets;
+using MIVSDK;
 
 namespace MIVClientGUI
 {
@@ -25,8 +29,9 @@ namespace MIVClientGUI
 
         class ServerInfo
         {
-            public string Name, IP;
+            public string IP;
             public short Port;
+            public short GamePort;
         }
 
         private List<ServerInfo> loadFromFile()
@@ -42,9 +47,8 @@ namespace MIVClientGUI
                         string[] split = line.Split(':');
                         servers.Add(new ServerInfo()
                         {
-                            Name = split[0],
-                            IP = split[1],
-                            Port = short.Parse(split[2])
+                            IP = split[0],
+                            Port = short.Parse(split[1])
                         });
                     }
                     catch { }
@@ -62,8 +66,28 @@ namespace MIVClientGUI
             var servers = loadFromFile();
             foreach (ServerInfo server in servers)
             {
-                listView1.Items.Add(server.Name + " (" + server.IP + ":" + server.Port.ToString() + ")");
+                new Task(new Action(delegate
+                {
+                    try
+                    {
+                        var request = HttpWebRequest.CreateHttp("http://" + server.IP + ":" + server.Port.ToString() + "/get_server_data");
+                        var response = (HttpWebResponse)request.GetResponse();
+                        string ini = new StreamReader(response.GetResponseStream()).ReadToEnd();
+                        INIReader reader = new INIReader(ini.Split('\n'));
+                        response.Close();
+                        ListViewItem item = new ListViewItem(reader.getString("name") + " (" + server.IP + ":" + server.Port.ToString() + " " + reader.getString("players") + "/" + reader.getString("max_players") + ")");
+                        server.GamePort = (short)reader.getInt("game_port");
+                        item.Tag = server;
+                        listView1.Items.Add(item);
+                    }
+                    catch
+                    {
+                        ListViewItem item = new ListViewItem("Offline (" + server.IP + ":" + server.Port.ToString() + ")");
+                        listView1.Items.Add(item);
+                    }
+                })).Start();
             }
+
         }
 
         private void button2_Click(object sender, EventArgs e)

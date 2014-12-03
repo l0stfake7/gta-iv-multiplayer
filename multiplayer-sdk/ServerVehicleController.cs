@@ -13,7 +13,7 @@ namespace MIVServer
             vehicles = new Dictionary<uint, ServerVehicle>();
         }
 
-        public ServerVehicleInfo create(string model, Vector3 position, Quaternion orientation)
+        public ServerVehicle create(string model, Vector3 position, Quaternion orientation)
         {
             uint vid = findLowestFreeId();
             ServerVehicle veh = new ServerVehicle(vid);
@@ -22,7 +22,7 @@ namespace MIVServer
             veh.model = model;
             veh.velocity = Vector3.Zero;
             vehicles.Add(vid, veh);
-            return new ServerVehicleInfo() { id = vid, vehicle = veh };
+            return veh;
         }
 
         public void destroy(byte id)

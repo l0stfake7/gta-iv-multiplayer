@@ -23,7 +23,7 @@ namespace MIVClient
         public void writeChat(string text)
         {
             chatconsole.Enqueue(text);
-            while (chatconsole.Count > 8)
+            while (chatconsole.Count > 12)
             {
                 chatconsole.Dequeue();
             }

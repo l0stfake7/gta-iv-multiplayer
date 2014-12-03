@@ -74,12 +74,12 @@ namespace MIVServer
 
         public event onPlayerSendCommandDelegate onPlayerSendCommand;
 
-        public ServerVehicleInfo createVehicle(string model, Vector3 position, Quaternion orientation)
+        public ServerVehicle createVehicle(string model, Vector3 position, Quaternion orientation)
         {
             return server.vehicleController.create(model, position, orientation);
         }
 
-        public ServerVehicleInfo createVehicle(uint model, Vector3 position, Quaternion orientation)
+        public ServerVehicle createVehicle(uint model, Vector3 position, Quaternion orientation)
         {
             return server.vehicleController.create(ModelDictionary.getVehicleById(model), position, orientation);
         }

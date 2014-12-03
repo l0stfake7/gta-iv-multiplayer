@@ -30,7 +30,7 @@ namespace MIVClient
             {
                 if (ped.streamedIn && ped.gameReference != null && ped.gameReference.Exists())
                 {
-                    ped.animator.playAnimation(PedAnimations.RunTo, ped.position);
+                    ped.animator.refreshAnimation();
                 }
             }
         }
@@ -46,6 +46,12 @@ namespace MIVClient
                 Client.log("Created npc instance");
 
             }
+            return peds[id];
+        }
+
+        public StreamedPed getById(uint id)
+        {
+            if (!peds.ContainsKey(id)) return null;
             return peds[id];
         }
     }
