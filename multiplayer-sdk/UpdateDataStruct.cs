@@ -1,4 +1,5 @@
-﻿namespace MIVSDK
+﻿using SharpDX;
+namespace MIVSDK
 {
     public enum ClientState
     {
@@ -115,8 +116,7 @@
     public class UpdateDataStruct
     {
         public bool client_has_been_set;
-        public string nick;
-        public float pos_x, pos_y, pos_z, rot_x, rot_y, rot_z, rot_a, vel_x, vel_y, vel_z, acc_x, acc_y, acc_z, acc_rx, acc_ry, acc_rz, speed, heading;
+        public float pos_x, pos_y, pos_z, rot_x, rot_y, rot_z, rot_a, vel_x, vel_y, vel_z, heading;
         public PlayerState state;
         public long timestamp;
         public uint vehicle_id;
@@ -138,22 +138,14 @@
                     rot_a = 0,
                     heading = 0,
                     ped_health = 0,
-                    speed = 0,
                     vehicle_health = 0,
                     vehicle_id = 0,
                     vehicle_model = 0,
                     vel_x = 0,
                     vel_y = 0,
                     vel_z = 0,
-                    acc_x = 0,
-                    acc_y = 0,
-                    acc_z = 0,
-                    acc_rx = 0,
-                    acc_ry = 0,
-                    acc_rz = 0,
                     state = PlayerState.None,
                     vstate = VehicleState.None,
-                    nick = "",
                     client_has_been_set = false
                 };
             }
@@ -162,19 +154,19 @@
             }
         }
 
-        public MIVSDK.Math.Quaternion getOrientationQuaternion()
+        public Quaternion getOrientationQuaternion()
         {
-            return new Math.Quaternion(rot_x, rot_y, rot_z, rot_a);
+            return new Quaternion(rot_x, rot_y, rot_z, rot_a);
         }
 
-        public MIVSDK.Math.Vector3 getPositionVector()
+        public Vector3 getPositionVector()
         {
-            return new Math.Vector3(pos_x, pos_y, pos_z);
+            return new Vector3(pos_x, pos_y, pos_z);
         }
 
-        public MIVSDK.Math.Vector3 getVelocityVector()
+        public Vector3 getVelocityVector()
         {
-            return new Math.Vector3(vel_x, vel_y, vel_z);
+            return new Vector3(vel_x, vel_y, vel_z);
         }
     }
 }

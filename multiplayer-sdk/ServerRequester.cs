@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MIVSDK;
-using MIVSDK.Math;
+using SharpDX;
 
 namespace MIVServer
 {

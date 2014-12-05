@@ -22,9 +22,9 @@ namespace MIVClient
         public PlayerVehicleController playerVehicleController;
         public ServerConnection serverConnection;
         public VehicleController vehicleController;
-        public TeleportCameraController teleportCameraController;
-        private byte internalCounter;
         public bool isCurrentlyDead;
+
+        public ClientTextView debugDraw;
 
         public PedStreamer pedStreamer;
         public VehicleStreamer vehicleStreamer;
@@ -36,10 +36,10 @@ namespace MIVClient
         public Client()
         {
             isCurrentlyDead = false;
-            internalCounter = 0;
             actionQueue = new Queue<Action>();
             instance = this;
-            teleportCameraController = new TeleportCameraController(this);
+
+            debugDraw = new ClientTextView(new System.Drawing.Point(10, 400), "", new GTA.Font("Segoe UI", 24, FontScaling.Pixel));
 
             pedStreamer = new PedStreamer(this);
             vehicleStreamer = new VehicleStreamer(this);
@@ -54,17 +54,16 @@ namespace MIVClient
             Interval = 80;
             //cam = new Camera();
             //cam.Activate();
-            GTA.Timer gfxupdate = new Timer(1);
-            gfxupdate.Tick += gfxupdate_Tick;
-            gfxupdate.Start();
-            GTA.Timer slow_update = new Timer(600);
-            slow_update.Tick += slow_update_Tick;
-            slow_update.Start();
-            this.Tick += new EventHandler(this.eventOnTick);
             currentState = ClientState.Disconnected;
             System.IO.File.WriteAllText("multiv-log.txt", "");
             BindConsoleCommand("savepos", Client_ScriptCommand);
-            BindConsoleCommand("tp2wp", delegate(ParameterCollection Parameters)
+            BindConsoleCommand("saveall", Client_SaveAllCommand);
+            BindConsoleCommand("disablevehicles", (o) =>
+            {
+                World.CarDensity = 999.0f;
+                //World.GetAllVehicles().ToList().ForEach(op => op.Delete());
+            });
+            BindConsoleCommand("tp2wp", (o) =>
             {
                 Blip wp = GTA.Game.GetWaypoint();
                 if (wp != null)
@@ -74,13 +73,25 @@ namespace MIVClient
                 }
             });
             perFrameRenderer = new PerFrameRenderer(this);
-            MouseDown += Client_MouseDown;
-            MouseUp += Client_MouseUp;
-
             /*
              SET_HIDE_WEAPON_ICON
              * HIDE_HUD_AND_RADAR_THIS_FRAME
              */
+        }
+
+        public void startTimersandBindEvents()
+        {
+
+            GTA.Timer gfxupdate = new Timer(1);
+            gfxupdate.Tick += gfxupdate_Tick;
+            gfxupdate.Start();
+            GTA.Timer slow_update = new Timer(600);
+            slow_update.Tick += slow_update_Tick;
+            slow_update.Start();
+            this.Tick += new EventHandler(this.eventOnTick);
+            MouseDown += Client_MouseDown;
+            MouseUp += Client_MouseUp;
+
         }
 
         void slow_update_Tick(object sender, EventArgs e)
@@ -97,11 +108,7 @@ namespace MIVClient
             //GTA.Light l = new Light(System.Drawing.Color.Red, 5.0f, 10.0f, getPlayerPed().Position);
             Game.WantedMultiplier = 0.0f;
         }
-
-        Camera cam;
-
-        float lastmousex = 0, lastmousey = 0;
-
+        
         void onMouseMove(float x, float y)
         {
         }
@@ -114,7 +121,6 @@ namespace MIVClient
             {
                 pedStreamer.updateGfx();
                 vehicleStreamer.updateGfx();
-                teleportCameraController.onUpdate();
 
                 updateAllPlayers();
             }
@@ -189,7 +195,7 @@ namespace MIVClient
 
                 //bool in_vehicle = elemValue.vehicle_id > 0;
                 var posnew = new Vector3(elemValue.pos_x, elemValue.pos_y, elemValue.pos_z - 1.0f);
-                StreamedPed ped = pedController.getById(elemKey, elemValue.nick, posnew);
+                StreamedPed ped = pedController.getById(elemKey, "a", posnew);
                 try
                 {
                     updateVehicle(elemKey, elemValue, ped);
@@ -234,6 +240,41 @@ namespace MIVClient
             log("Saved");
         }
 
+        private List<Vector3> savedPositions;
+
+        private void Client_SaveAllCommand(ParameterCollection Parameters)
+        {
+            if(savedPositions == null) savedPositions = new List<Vector3>();
+            var vehicles = World.GetVehicles(World.GetGroundPosition(Game.CurrentCamera.Position, GroundType.Lowest), 300.0f);
+            int count = 0;
+            System.IO.File.AppendAllText("vehiclesavesession.txt", "// session date: " + DateTime.Now.ToLongDateString());
+            foreach (var vehicle in vehicles)
+            {
+                bool skip = false;
+                foreach (var position in savedPositions)
+                {
+                    if (vehicle.Position.DistanceTo(position) < 70.0f)
+                    {
+                        skip = true; 
+                        break;
+                    }
+                }
+                if (skip) continue;
+                System.IO.File.AppendAllText("vehiclesavesession.txt",
+                    "api.createVehicle(" + vehicle.Model.ToString() + ", new Vector3(" + vehicle.Position.X + "f, " +
+                    vehicle.Position.Y + "f, " +
+                    vehicle.Position.Z + "f), new Quaternion(" +
+                    vehicle.RotationQuaternion.X + "f, " +
+                    vehicle.RotationQuaternion.Y + "f, " +
+                    vehicle.RotationQuaternion.Z + "f, " +
+                    vehicle.RotationQuaternion.W + "f)); //" +
+                    (Parameters.Count > 0 ? String.Join(" ", Parameters.Cast<string>()) : "") + "\r\n");
+                count++;
+            }
+            savedPositions.Add(Player.Character.Position);
+            Game.Console.Print("Saved " + count.ToString());
+        }
+
         private void eventOnTick(object sender, EventArgs e)
         {
             try
@@ -253,7 +294,6 @@ namespace MIVClient
                 try
                 {
                     UpdateDataStruct data = new UpdateDataStruct();
-                    data.nick = nick;
                     if (Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.Driver) == Player.Character)
                     {
                         Vector3 pos = Player.Character.CurrentVehicle.Position;
@@ -261,23 +301,23 @@ namespace MIVClient
                         data.pos_y = pos.Y;
                         data.pos_z = pos.Z;
 
-                        if (currentData.pos_x > 0.1f)
+                        
+                        Vector3 vel2 = Player.Character.CurrentVehicle.Velocity;
+                        if (currentData.pos_x != 0)
                         {
-                            data.vel_x = currentData.pos_x - pos.X;
-                            data.vel_y = currentData.pos_y - pos.Y;
-                            data.vel_z = currentData.pos_z - pos.Z;
+                            float deltax = (currentData.pos_x - pos.X);
+                            float deltay = (currentData.pos_y - pos.Y);
+                            float deltaz = (currentData.pos_z - pos.Z);
+                            data.vel_x = deltax < 0 ? vel2.X * -1 : vel2.X;
+                            data.vel_y = deltay < 0 ? vel2.Y * -1 : vel2.Y;
+                            data.vel_z = deltaz < 0 ? vel2.Z * -1 : vel2.Z;
                         }
                         else
                         {
-                            Vector3 vel2 = Player.Character.CurrentVehicle.Velocity;
                             data.vel_x = vel2.X;
                             data.vel_y = vel2.Y;
                             data.vel_z = vel2.Z;
                         }
-
-                        data.acc_x = data.vel_x - currentData.vel_x;
-                        data.acc_y = data.vel_y - currentData.vel_y;
-                        data.acc_z = data.vel_z - currentData.vel_z;
 
                         Quaternion quat = Player.Character.CurrentVehicle.RotationQuaternion;
                         data.rot_x = quat.X;
@@ -285,16 +325,10 @@ namespace MIVClient
                         data.rot_z = quat.Z;
                         data.rot_a = quat.W;
 
-                        var lastrotvect = new Quaternion(currentData.rot_x, currentData.rot_y, currentData.rot_z, currentData.rot_a).ToRotation();
-                        data.acc_rx = quat.ToRotation().X - lastrotvect.X;
-                        data.acc_ry = quat.ToRotation().Y - lastrotvect.Y;
-                        data.acc_rz = quat.ToRotation().Z - lastrotvect.Z;
-
                         data.vehicle_model = Player.Character.CurrentVehicle.Model.Hash;
                         data.vehicle_health = Player.Character.CurrentVehicle.Health;
                         data.vehicle_id = vehicleController.getByVehicle(Player.Character.CurrentVehicle).id;
                         data.ped_health = Player.Character.Health;
-                        data.speed = Player.Character.CurrentVehicle.Speed;
                         data.heading = Player.Character.CurrentVehicle.Heading;
                         if (vehicleController.streamer.vehicles.Count(a => a.gameReference != null && a.gameReference == Player.Character.CurrentVehicle) > 0)
                         {
@@ -326,7 +360,6 @@ namespace MIVClient
                         // for passengers:)
                         data.vehicle_id = Player.Character.isInVehicle() ? vehicleController.getByVehicle(Player.Character.CurrentVehicle).id : 0;
                         data.ped_health = Player.Character.Health;
-                        data.speed = 0;
                         data.heading = Player.Character.Heading;
                         data.weapon = Player.Character.Weapons.CurrentType.GetHashCode();
                         data.state = 0;

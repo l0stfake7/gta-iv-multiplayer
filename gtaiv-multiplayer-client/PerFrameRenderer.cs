@@ -70,10 +70,6 @@ namespace MIVClient
                     e.Graphics.DrawText(cstr.ToString(), widthToPx(10.0f), yoffset, font_consolas);
                 }
             }
-            if (client.teleportCameraController != null)
-            {
-                client.teleportCameraController.drawCross(e.Graphics);
-            }
             ClientTextView.renderAll(e.Graphics);
             ClientRectangleView.renderAll(e.Graphics);
             ClientLineView.renderAll(e.Graphics);

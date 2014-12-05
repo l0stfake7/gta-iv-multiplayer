@@ -49,19 +49,19 @@ namespace MIVClient
         public void updateGfx()
         {
 
-        }
-
-        public void updateSlow()
-        {
-            foreach (Vehicle v in World.GetAllVehicles())
+            foreach (Vehicle v in World.GetVehicles(client.getPlayerPed().Position, 200.0f))
             {
                 if (v.Exists() && vehicles.Count(a => a.gameReference != null && a.gameReference == v) == 0)
                 {
                     v.NoLongerNeeded();
-                    v.Position += new Vector3(0, 0, -20);
+                    v.Delete();
                     //v.Delete();
                 }
             }
+        }
+
+        public void updateSlow()
+        {
             World.CarDensity = 0.0f;
             
         }
@@ -90,7 +90,7 @@ namespace MIVClient
                 {
                     float distance = playerPos.DistanceTo(vehicle.position);
                     //client.chatController.writeChat(playerPos.X.ToString() + " " + playerPos.Y.ToString() + " " + playerPos.Z.ToString() + " ");
-                    if (distance < 300.0f)
+                    if (distance < 70.0f && Game.CurrentCamera.isSphereVisible(vehicle.position, 1.0f))
                     {
                         if (!vehicle.streamedIn || vehicle.gameReference == null || !vehicle.gameReference.Exists())
                         {

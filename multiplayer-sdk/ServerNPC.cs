@@ -1,4 +1,4 @@
-﻿using MIVSDK.Math;
+﻿using SharpDX;
 using System;
 using MIVSDK;
 using System.Collections.Generic;
@@ -163,9 +163,9 @@ namespace MIVServer
         {
             if (Server.instance.playerpool != null)
             {
-                foreach (var player in Server.instance.playerpool)
+                for(int i=0;i<Server.instance.playerpool.Count;i++)
                 {
-                    player.connection.write(bpf.getBytes());
+                    Server.instance.playerpool[i].connection.write(bpf.getBytes());
                 }
             }
         }

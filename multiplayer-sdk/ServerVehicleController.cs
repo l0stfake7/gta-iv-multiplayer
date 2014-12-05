@@ -1,6 +1,7 @@
-﻿using MIVSDK.Math;
+﻿using SharpDX;
 using System;
 using System.Collections.Generic;
+using MIVSDK;
 
 namespace MIVServer
 {
@@ -22,6 +23,16 @@ namespace MIVServer
             veh.model = model;
             veh.velocity = Vector3.Zero;
             vehicles.Add(vid, veh);
+            if(Server.instance.playerpool != null) foreach (var player in Server.instance.playerpool)
+            {
+                var bpf = new BinaryPacketFormatter(Commands.Vehicle_create);
+                bpf.add(veh.id);
+                bpf.add(veh.position);
+                bpf.add(veh.orientation);
+                bpf.add(veh.velocity);
+                bpf.add(veh.model);
+                player.connection.write(bpf.getBytes());
+            }
             return veh;
         }
 

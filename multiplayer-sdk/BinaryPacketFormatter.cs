@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using SharpDX;
 
 namespace MIVSDK
 {
@@ -86,15 +87,6 @@ namespace MIVSDK
             bytes.AddRange(BitConverter.GetBytes(data.vel_y));
             bytes.AddRange(BitConverter.GetBytes(data.vel_z));
 
-            bytes.AddRange(BitConverter.GetBytes(data.acc_x));
-            bytes.AddRange(BitConverter.GetBytes(data.acc_y));
-            bytes.AddRange(BitConverter.GetBytes(data.acc_z));
-
-            bytes.AddRange(BitConverter.GetBytes(data.acc_rx));
-            bytes.AddRange(BitConverter.GetBytes(data.acc_ry));
-            bytes.AddRange(BitConverter.GetBytes(data.acc_rz));
-
-            bytes.AddRange(BitConverter.GetBytes(data.speed));
             bytes.AddRange(BitConverter.GetBytes(data.heading));
 
             bytes.AddRange(BitConverter.GetBytes(data.vehicle_model));
@@ -104,17 +96,16 @@ namespace MIVSDK
             bytes.AddRange(BitConverter.GetBytes(data.vehicle_id));
             bytes.Add((byte)data.state);
             bytes.Add((byte)data.vstate);
-            bytes.AddRange(Serializers.serialize(data.nick));
         }
 
-        public void add(Math.Vector3 a)
+        public void add(Vector3 a)
         {
             add(a.X);
             add(a.Y);
             add(a.Z);
         }
 
-        public void add(Math.Vector4 a)
+        public void add(Vector4 a)
         {
             add(a.X);
             add(a.Y);
@@ -122,7 +113,7 @@ namespace MIVSDK
             add(a.W);
         }
 
-        public void add(Math.Quaternion a)
+        public void add(Quaternion a)
         {
             add(a.X);
             add(a.Y);

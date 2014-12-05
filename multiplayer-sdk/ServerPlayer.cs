@@ -1,5 +1,5 @@
 ﻿using MIVSDK;
-using MIVSDK.Math;
+using SharpDX;
 using System;
 
 namespace MIVServer

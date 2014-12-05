@@ -49,10 +49,6 @@ namespace MIVClient
                     ped.gameReference.CurrentVehicle.PassengersLeaveVehicle(true);
                     ped.gameReference.CurrentVehicle.Delete();
                 }
-                if (data.nick != null && data.nick.Length > 0 && !ped.hasNetworkName)
-                {
-                    //ped.hasNetworkName = true;
-                }
 
                 float delta = posnew.DistanceTo(ped.gameReference.Position);
                 Vector3 vdelta = posnew - ped.gameReference.Position;
@@ -145,15 +141,12 @@ namespace MIVClient
                             }
                         }
                         if ((data.vstate & VehicleState.IsAsPassenger) != 0) return;
-                        if (veh.position.DistanceTo(posnew) > 5.0f)
-                        {
-                            veh.position = posnew;
-                            veh.gameReference.Position = posnew;
-                        }
+                        veh.position = posnew;
+                        veh.gameReference.Position = posnew;
                         veh.orientation = new Quaternion(data.rot_x, data.rot_y, data.rot_z, data.rot_a);
-                        veh.gameReference.ApplyForce(new Vector3(data.vel_x, data.vel_y, data.vel_z), Vector3.Zero);
+                        //veh.gameReference.ApplyForce(, Vector3.Zero);
                         veh.gameReference.RotationQuaternion = veh.orientation;
-                        //veh.gameReference.Velocity = ;
+                        veh.gameReference.Velocity = new Vector3(data.vel_x, data.vel_y, data.vel_z);
                         if (veh.gameReference.Velocity.Length() > 2.0f)
                         {
                             ped.gameReference.Task.DrivePointRoute(veh.gameReference, 999.0f, posnew + veh.gameReference.Velocity);

@@ -52,6 +52,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\scripthookdotnet_src\bin\ScriptHookDotNet.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX">
+      <HintPath>..\..\..\..\..\Desktop\sharpdxbin\Bin\DirectX11_2-net40\SharpDX.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -74,7 +77,6 @@
     <Compile Include="NPCPedController.cs" />
     <Compile Include="Positioners.cs" />
     <Compile Include="ServerConnection.cs" />
-    <Compile Include="TeleportCameraController.cs" />
     <Compile Include="ClientTextView.cs" />
     <Compile Include="VehicleController.cs" />
     <Compile Include="PlayerVehicleController.cs" />

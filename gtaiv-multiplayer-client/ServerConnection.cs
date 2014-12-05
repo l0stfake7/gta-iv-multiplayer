@@ -187,7 +187,7 @@ namespace MIVClient
                                     {
                                         var bpf = new BinaryPacketFormatter(Commands.Request_getCameraPosition);
                                         bpf.add(requestid);
-                                        bpf.add(new MIVSDK.Math.Vector3(Game.CurrentCamera.Position.X, Game.CurrentCamera.Position.Y, Game.CurrentCamera.Position.Z));
+                                        bpf.add(new SharpDX.Vector3(Game.CurrentCamera.Position.X, Game.CurrentCamera.Position.Y, Game.CurrentCamera.Position.Z));
                                         client.serverConnection.write(bpf.getBytes());
                                     }));
                                 }

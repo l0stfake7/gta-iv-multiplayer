@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeathmatchGamemode", "Death
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MIVClientGUI", "MIVClientGUI\MIVClientGUI.csproj", "{80807DAD-1A78-4EA5-A644-F1E363E07B0C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeleportCameraScript", "TeleportCameraScript\TeleportCameraScript.csproj", "{32D3FF95-745E-4C43-ADC3-39F9048F1883}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,16 @@ Global
 		{80807DAD-1A78-4EA5-A644-F1E363E07B0C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{80807DAD-1A78-4EA5-A644-F1E363E07B0C}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{80807DAD-1A78-4EA5-A644-F1E363E07B0C}.Release|x86.ActiveCfg = Release|Any CPU
+		{32D3FF95-745E-4C43-ADC3-39F9048F1883}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32D3FF95-745E-4C43-ADC3-39F9048F1883}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32D3FF95-745E-4C43-ADC3-39F9048F1883}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{32D3FF95-745E-4C43-ADC3-39F9048F1883}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{32D3FF95-745E-4C43-ADC3-39F9048F1883}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{32D3FF95-745E-4C43-ADC3-39F9048F1883}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32D3FF95-745E-4C43-ADC3-39F9048F1883}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32D3FF95-745E-4C43-ADC3-39F9048F1883}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{32D3FF95-745E-4C43-ADC3-39F9048F1883}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{32D3FF95-745E-4C43-ADC3-39F9048F1883}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

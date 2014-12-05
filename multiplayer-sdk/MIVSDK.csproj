@@ -48,6 +48,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SharpDX">
+      <HintPath>..\..\..\..\..\Desktop\sharpdxbin\Bin\DirectX11_2-net40\SharpDX.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -67,8 +70,8 @@
     <Compile Include="GamemodeManager.cs" />
     <Compile Include="HTTPServer.cs" />
     <Compile Include="INIReader.cs" />
+    <Compile Include="MathHelper.cs" />
     <Compile Include="ModelDictionary.cs" />
-    <Compile Include="Quaternion.cs" />
     <Compile Include="Serializers.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="ServerApi.cs" />
@@ -82,8 +85,6 @@
     <Compile Include="TextView.cs" />
     <Compile Include="UpdateDataStruct.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Vector3.cs" />
-    <Compile Include="Vector4.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -189,7 +189,8 @@ namespace MIVClient
                 }
                 catch (Exception e)
                 {
-                    //client.chatController.writeChat("PEDSTREAMER: " + e.Message);
+                    Game.Console.Print("PEDSTREAMER: " + e.Message);
+                    Game.Log("PEDSTREAMER: " + e.Message);
                 }
             }
         }

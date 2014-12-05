@@ -1,4 +1,5 @@
 ﻿using System;
+using SharpDX;
 
 namespace MIVSDK
 {
@@ -60,9 +61,9 @@ namespace MIVSDK
             return data;
         }
 
-        public Math.Quaternion readQuaternion()
+        public Quaternion readQuaternion()
         {
-            return new Math.Quaternion(readSingle(), readSingle(), readSingle(), readSingle());
+            return new Quaternion(readSingle(), readSingle(), readSingle(), readSingle());
         }
 
         public Single readSingle()
@@ -118,15 +119,6 @@ namespace MIVSDK
             output.vel_y = readSingle();
             output.vel_z = readSingle();
 
-            output.acc_x = readSingle();
-            output.acc_y = readSingle();
-            output.acc_z = readSingle();
-
-            output.acc_rx = readSingle();
-            output.acc_ry = readSingle();
-            output.acc_rz = readSingle();
-
-            output.speed = readSingle();
             output.heading = readSingle();
 
             output.vehicle_model = readInt32();
@@ -137,20 +129,18 @@ namespace MIVSDK
 
             output.state = (PlayerState)readByte();
             output.vstate = (VehicleState)readByte();
-
-            output.nick = readString();
-
+            
             return output;
         }
 
-        public Math.Vector3 readVector3()
+        public Vector3 readVector3()
         {
-            return new Math.Vector3(readSingle(), readSingle(), readSingle());
+            return new Vector3(readSingle(), readSingle(), readSingle());
         }
 
-        public Math.Vector4 readVector4()
+        public Vector4 readVector4()
         {
-            return new Math.Vector4(readSingle(), readSingle(), readSingle(), readSingle());
+            return new Vector4(readSingle(), readSingle(), readSingle(), readSingle());
         }
     }
 }
