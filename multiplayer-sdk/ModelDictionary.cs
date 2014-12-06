@@ -45,10 +45,6 @@ namespace MIVSDK
         private static void load()
         {
             ped_models_hashes = new Dictionary<string, uint>();
-            ped_models_hashes.Add("PLAYER", 0x6F0783F5);
-            ped_models_hashes.Add("M_Y_MULTIPLAYER", 0x879495E2);
-            ped_models_hashes.Add("F_Y_MULTIPLAYER", 0xD9BDC03A);
-            ped_models_hashes.Add("SUPERLOD", 0xAE4B15D6);
             ped_models_hashes.Add("IG_ANNA", 0x6E7BF45F);
             ped_models_hashes.Add("IG_ANTHONY", 0x9DD666EE);
             ped_models_hashes.Add("IG_BADMAN", 0x5927A320);

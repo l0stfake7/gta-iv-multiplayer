@@ -71,15 +71,23 @@ namespace MIVClient
                 }
                 else if (e.Key == System.Windows.Forms.Keys.Down)
                 {
-                    historyIndex--;
-                    if (historyIndex < 0) historyIndex = 0;
-                    client.chatController.currentTypedText = "";
+                    if (commandHistory.Count > 0)
+                    {
+                        historyIndex--;
+                        if (historyIndex < 0) historyIndex = 0;
+                        client.chatController.currentTypedText = commandHistory[commandHistory.Count - historyIndex - 1];
+                        cursorpos = client.chatController.currentTypedText.Length;
+                    }
                 }
                 else if (e.Key == System.Windows.Forms.Keys.Up)
                 {
-                    historyIndex++;
-                    if (historyIndex > commandHistory.Count) historyIndex = commandHistory.Count;
-                    client.chatController.currentTypedText = commandHistory[commandHistory.Count - historyIndex];
+                    if (commandHistory.Count > 0)
+                    {
+                        historyIndex++;
+                        if (historyIndex > commandHistory.Count) historyIndex = commandHistory.Count;
+                        client.chatController.currentTypedText = commandHistory[commandHistory.Count - historyIndex - 1];
+                        cursorpos = client.chatController.currentTypedText.Length;
+                    }
                 }
                 else if (e.Key == System.Windows.Forms.Keys.Right)
                 {
@@ -87,10 +95,13 @@ namespace MIVClient
                 }
                 else if (e.Key == System.Windows.Forms.Keys.Back)
                 {
-                    string leftcut = cursorpos > 0 ? client.chatController.currentTypedText.Substring(0, cursorpos - 1) : client.chatController.currentTypedText;
-                    string rightcut = client.chatController.currentTypedText.Substring(cursorpos, client.chatController.currentTypedText.Length - cursorpos);
-                    client.chatController.currentTypedText = leftcut + rightcut;
-                    cursorpos = cursorpos > 0 ? cursorpos - 1 : cursorpos;
+                    if (cursorpos > 0)
+                    {
+                        string leftcut = cursorpos > 0 ? client.chatController.currentTypedText.Substring(0, cursorpos - 1) : client.chatController.currentTypedText;
+                        string rightcut = client.chatController.currentTypedText.Substring(cursorpos, client.chatController.currentTypedText.Length - cursorpos);
+                        client.chatController.currentTypedText = leftcut + rightcut;
+                        cursorpos = cursorpos > 0 ? cursorpos - 1 : cursorpos;
+                    }
                 }
                 else
                 {
@@ -115,45 +126,6 @@ namespace MIVClient
                 {
                     VehicleSeat seat = veh.GetFreePassengerSeat();
                     client.getPlayerPed().Task.EnterVehicle(veh, seat);
-                }
-            }
-
-            if (e.Key == System.Windows.Forms.Keys.L && client.currentState == ClientState.Disconnected)
-            {
-                client.startTimersandBindEvents();
-                try
-                {
-                    if (client.client != null && client.client.Connected)
-                    {
-                        client.client.Close();
-                    }
-                    client.client = new TcpClient();
-                    INIReader ini = new INIReader(System.IO.File.ReadAllLines("server.ini"));
-                    IPAddress address = IPAddress.Parse(ini.getString("ip"));
-                    client.nick = ini.getString("nick");
-                    int port = ini.getInt("port");
-
-                    client.client.Connect(address, port);
-
-                    Client.currentData = UpdateDataStruct.Zero;
-
-                    client.serverConnection = new ServerConnection(client);
-
-                    World.CurrentDayTime = new TimeSpan(12, 00, 00);
-                    World.PedDensity = 0;
-                    World.CarDensity = 0;
-                   // AlternateHook.call(AlternateHook.OtherCommands.TERMINATE_ALL_SCRIPTS_FOR_NETWORK_GAME);
-                    AlternateHook.call(AlternateHookRequest.OtherCommands.CLEAR_AREA, 0.0f, 0.0f, 0.0f, 4000.0f, true);
-                    client.currentState = ClientState.Connecting;
-                }
-                catch
-                {
-                    client.currentState = ClientState.Disconnected;
-                    if (client.client != null && client.client.Connected)
-                    {
-                        client.client.Close();
-                    }
-                    throw;
                 }
             }
 

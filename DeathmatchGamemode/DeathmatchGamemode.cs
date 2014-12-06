@@ -2,11 +2,21 @@
 using MIVServer;
 using MIVSDK;
 using System;
+using System.Linq;
 
 namespace DeathmatchGamemode
 {
     public class DeathmatchGamemode : Gamemode
     {
+
+        private class PlayerData
+        {
+            public bool inSkinSelectionMode = false;
+            public uint currentModelIndex = 0;
+        }
+
+        private Vector3 skinCameraPos = new Vector3(-19.4158f, 599.838f, 214.9283f);
+        private Vector3 skinPedPos = new Vector3(-25.26545f, 603.2829f, 212.9283f);
 
         private Vector4[] spawns = new Vector4[]
         {
@@ -1005,14 +1015,26 @@ namespace DeathmatchGamemode
 
         void api_onPlayerSpawn(ServerPlayer player)
         {
-            int random = new Random().Next(spawns.Length);
-            player.Position = new Vector3(spawns[random].X, spawns[random].Y, spawns[random].Z);
-            player.Heading = spawns[random].W;
+            if (((PlayerData)player.metadata).inSkinSelectionMode)
+            {
+                player.Camera.Position = skinCameraPos;
+                player.Camera.LookAt(skinPedPos);
+                player.Position = skinPedPos;
+                player.Heading = 242.1461f;
+                player.Freezed = true;
+                player.Model = ModelDictionary.getAllPedModels().Keys.First();
+            }
+            else
+            {
+                int random = new Random().Next(spawns.Length);
+                player.Position = new Vector3(spawns[random].X, spawns[random].Y, spawns[random].Z);
+                player.Heading = spawns[random].W;
+            }
         }
 
         void api_onPlayerDisconnect(ServerPlayer player)
         {
-            api.writeChat("Player " + player.nick + " disconnected");
+            api.writeChat("Player " + player.Nick + " disconnected");
         }
 
         void api_onPlayerSendCommand(ServerPlayer player, string command, string[] param)
@@ -1048,10 +1070,7 @@ namespace DeathmatchGamemode
             }
             if (command == "cam")
             {
-                player.requester.getCameraPosition((vec) =>
-                {
-                    api.writeChat(vec.X.ToString() + " " + vec.Y.ToString() + " " + vec.Z.ToString());
-                });
+                player.Camera.Reset();
                 return;
             }
             if (command == "tep")
@@ -1062,21 +1081,47 @@ namespace DeathmatchGamemode
 
         private void api_onPlayerConnect(System.Net.EndPoint address, ServerPlayer player)
         {
-            api.writeChat("Player " + player.nick + " connected");
-            api.writeChat(player, "Hello " + player.nick);
+            api.writeChat("Player " + player.Nick + " connected");
+            api.writeChat(player, "Hello " + player.Nick);
+            player.metadata = new PlayerData()
+            {
+                inSkinSelectionMode = true
+            };
         }
 
         private void api_onPlayerKeyDown(ServerPlayer player, System.Windows.Forms.Keys key)
         {
-            if (key == System.Windows.Forms.Keys.O)
+            PlayerData data = (PlayerData)player.metadata;
+            if (data.inSkinSelectionMode)
             {
+                if (key == System.Windows.Forms.Keys.Left)
+                {
+                    var dict = ModelDictionary.getAllPedModels();
+                    data.currentModelIndex--;
+                    if (data.currentModelIndex < 0) data.currentModelIndex = (uint)(dict.Count - 1);
+                    player.Model = dict.Keys.ToArray()[data.currentModelIndex];
+                }
+                if (key == System.Windows.Forms.Keys.Right)
+                {
+                    var dict = ModelDictionary.getAllPedModels();
+                    data.currentModelIndex++;
+                    if (data.currentModelIndex > dict.Count) data.currentModelIndex = (uint)0;
+                    player.Model = dict.Keys.ToArray()[data.currentModelIndex];
+                }
+                if (key == System.Windows.Forms.Keys.Enter)
+                {
+                    data.inSkinSelectionMode = false;
+                    player.Camera.Reset();
+                    player.Freezed = false;
+                    api_onPlayerSpawn(player);
+                }
             }
         }
 
         private void api_onPlayerSendText(ServerPlayer player, string text)
         {
-            api.writeChat(player.nick + "(" + player.id + "): " + text);
-            Console.WriteLine("# " + player.nick + " [" + player.id + "]: " + text);
+            api.writeChat(player.Nick + "(" + player.id + "): " + text);
+            Console.WriteLine("# " + player.Nick + " [" + player.id + "]: " + text);
         }
     }
 }

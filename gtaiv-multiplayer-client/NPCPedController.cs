@@ -40,7 +40,7 @@ namespace MIVClient
             if (!peds.ContainsKey(id))
             {
                 //if (peds.ContainsKey(id)) peds.Remove(id);
-                var ped = new StreamedPed(streamer, model, name, position, heading);
+                var ped = new StreamedPed(streamer, model, name, position, heading, BlipColor.Grey);
                 peds.Add(id, ped);
                 ped.last_game_health = 100; // invicible :)
                 Client.log("Created npc instance");

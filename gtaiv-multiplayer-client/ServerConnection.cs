@@ -52,6 +52,10 @@ namespace MIVClient
             }
         }
 
+        private GTA.Vector3 fromSharpDX(SharpDX.Vector3 v){
+            return new GTA.Vector3(v.X, v.Y, v.Z);
+        }
+
 
         private void onReceive(IAsyncResult iar)
         {
@@ -83,6 +87,16 @@ namespace MIVClient
                                     client.enqueueAction(new Action(delegate
                                     {
                                         client.getPlayerPed().GravityMultiplier = g;
+                                    }));
+                                }
+                                break;
+
+                            case Commands.Player_setModel:
+                                {
+                                    string model = MIVSDK.ModelDictionary.getPedModelById(bpr.readUInt32());
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.getPlayer().Model = new Model(model);
                                     }));
                                 }
                                 break;
@@ -128,7 +142,7 @@ namespace MIVClient
                                     //client.chatController.writeChat("OasK");
                                     client.enqueueAction(new Action(delegate
                                     {
-                                        client.getPlayerPed().Position = vec;
+                                        client.getPlayer().TeleportTo(vec);
                                     }));
                                 }
                                 break;
@@ -148,6 +162,102 @@ namespace MIVClient
                                     {
                                         client.finishSpawn();
                                     }));
+
+                                }
+                                break;
+                            case Commands.Camera_setPosition:
+                                {
+                                    var data = fromSharpDX(bpr.readVector3());
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.cameraController.Position = data;
+                                    }));
+                                }
+                                break;
+                            case Commands.Camera_setDirection:
+                                {
+                                    var data = fromSharpDX(bpr.readVector3());
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.cameraController.Direction = data;
+                                    }));
+                                }
+                                break;
+
+                            case Commands.Camera_setOrientation:
+                                {
+                                    var data = fromSharpDX(bpr.readVector3());
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.cameraController.Rotation = data;
+                                    }));
+                                }
+                                break;
+                            case Commands.Camera_setFOV:
+                                {
+                                    var data = bpr.readSingle();
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.cameraController.FOV = data;
+                                    }));
+                                }
+                                break;
+
+                            case Commands.Camera_lookAt:
+                                {
+                                    var data = fromSharpDX(bpr.readVector3());
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.cameraController.LookAt(data);
+                                    }));
+                                }
+                                break;
+                            case Commands.Camera_reset:
+                                {
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.cameraController.Reset();
+                                    }));
+                                }
+                                break;
+                            case Commands.Player_freeze:
+                                {
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.getPlayer().CanControlCharacter = false;
+                                    }));
+                                }
+                                break;
+                            case Commands.Player_unfreeze:
+                                {
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        client.getPlayer().CanControlCharacter = true;
+                                    }));
+                                }
+                                break;
+                            case Commands.Global_setPlayerModel:
+                                {
+                                    byte playerid = bpr.readByte();
+                                    string model = MIVSDK.ModelDictionary.getPedModelById(bpr.readUInt32());
+                                    if (client.playerModels.ContainsKey(playerid))
+                                        client.playerModels[playerid] = model;
+                                    else
+                                        client.playerModels.Add(playerid, model);
+                                    var player = client.pedController.getById(playerid);
+                                    if (player.streamedIn && player.gameReference.Exists()) player.gameReference.Delete();
+                                }
+                                break;
+                            case Commands.Global_setPlayerName:
+                                {
+                                    byte playerid = bpr.readByte();
+                                    string name = bpr.readString();
+                                    if (client.playerNames.ContainsKey(playerid))
+                                        client.playerNames[playerid] = name;
+                                    else
+                                        client.playerNames.Add(playerid, name);
+                                    var player = client.pedController.getById(playerid);
+                                    if (player.streamedIn && player.gameReference.Exists()) player.gameReference.Delete();
                                 }
                                 break;
                             case Commands.Request_getSelectedPlayer:

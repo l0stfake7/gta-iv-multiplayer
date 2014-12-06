@@ -67,10 +67,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlternateHook.cs" />
+    <Compile Include="CameraController.cs" />
     <Compile Include="ChatController.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="ClientLineView.cs" />
     <Compile Include="ClientRectangleView.cs" />
+    <Compile Include="ClientTextureDraw.cs" />
     <Compile Include="KeyboardHandler.cs" />
     <Compile Include="PedAnimationManager.cs" />
     <Compile Include="PerFrameRenderer.cs" />

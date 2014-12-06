@@ -94,6 +94,26 @@ namespace MIVServer
                 player.connection.write(bpf.getBytes());
             }
         }
+        public void broadcastPlayerName(ServerPlayer player)
+        {
+            foreach (var single in playerpool) if (single != player)
+                {
+                    var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerName);
+                    bpf.add(new byte[1] { player.id });
+                    bpf.add(player.Nick);
+                    single.connection.write(bpf.getBytes());
+                }
+        }
+        public void broadcastPlayerModel(ServerPlayer player)
+        {
+            foreach (var single in playerpool) if (single != player)
+                {
+                    var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerModel);
+                    bpf.add(new byte[1]{player.id});
+                    bpf.add(ModelDictionary.getPedModelByName(player.Model));
+                    single.connection.write(bpf.getBytes());
+                }
+        }
         public void updateNPCsToPlayer(ServerPlayer player)
         {
             foreach (var pair in ServerNPC.NPCPool)
@@ -144,7 +164,7 @@ namespace MIVServer
                 }
             }
 
-            for(int i=0;i<playerpool.Count;i++)
+            for (int i = 0; i < playerpool.Count; i++)
             {
                 broadcastData(playerpool[i]);
                 playerpool[i].connection.flush();
@@ -184,10 +204,13 @@ namespace MIVServer
                 ServerPlayer player = new ServerPlayer(nick, connection);
                 connection.player = player;
                 player.id = findLowestFreeId();
-                player.nick = nick;
+                player.Nick = nick;
+                player.Model = "M_M_CHINATOWN_01";
                 playerpool.Add(player);
                 broadcastVehiclesToPlayer(player);
                 broadcastNPCsToPlayer(player);
+                //broadcastPlayerName(player);
+                //broadcastPlayerModel(player);
 
                 api.invokeOnPlayerConnect(client.Client.RemoteEndPoint, player);
                 api.invokeOnPlayerSpawn(player);

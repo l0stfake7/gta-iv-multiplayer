@@ -25,6 +25,7 @@ namespace MIVClientGUI
                 System.IO.File.AppendAllLines("servers.list", new string[1]{
                     textBox2.Text + ":" + textBox3.Text
                 });
+                ServerBrowser.refreshStatic();
                 this.Close();
             }
         }

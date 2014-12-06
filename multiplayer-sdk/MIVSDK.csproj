@@ -72,6 +72,7 @@
     <Compile Include="INIReader.cs" />
     <Compile Include="MathHelper.cs" />
     <Compile Include="ModelDictionary.cs" />
+    <Compile Include="PlayerCamera.cs" />
     <Compile Include="Serializers.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="ServerApi.cs" />

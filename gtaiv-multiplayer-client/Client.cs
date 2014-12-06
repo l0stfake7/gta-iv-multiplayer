@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Net;
 
 namespace MIVClient
 {
@@ -22,6 +23,7 @@ namespace MIVClient
         public PlayerVehicleController playerVehicleController;
         public ServerConnection serverConnection;
         public VehicleController vehicleController;
+        public CameraController cameraController;
         public bool isCurrentlyDead;
 
         public ClientTextView debugDraw;
@@ -35,9 +37,31 @@ namespace MIVClient
 
         public Client()
         {
+            if (System.IO.File.Exists("_serverinit.ini"))
+            {
+                Game.FadeScreenOut(0);
+                INIReader reader = new INIReader(System.IO.File.ReadAllLines("_serverinit.ini"));
+                Int64 timestamp_saved = reader.getInt64("timestamp");
+                Int64 timestamp_now = System.Diagnostics.Stopwatch.GetTimestamp();
+                TimeSpan time_delta = new TimeSpan(timestamp_now - timestamp_saved);
+                if (time_delta.Minutes < 5)
+                {
+                    System.IO.File.Delete("_serverinit.ini");
+                    initAndConnect(reader.getString("ip"), reader.getInt16("port"), reader.getString("nickname"));
+                }
+            }
+            // nope? nothing to do
+        }
+
+        private void initAndConnect(string ip, short port, string nickname)
+        {
+            playerNames = new Dictionary<byte, string>();
+            playerModels = new Dictionary<byte, string>();
             isCurrentlyDead = false;
             actionQueue = new Queue<Action>();
             instance = this;
+
+            cameraController = new CameraController(this);
 
             debugDraw = new ClientTextView(new System.Drawing.Point(10, 400), "", new GTA.Font("Segoe UI", 24, FontScaling.Pixel));
 
@@ -56,27 +80,44 @@ namespace MIVClient
             //cam.Activate();
             currentState = ClientState.Disconnected;
             System.IO.File.WriteAllText("multiv-log.txt", "");
-            BindConsoleCommand("savepos", Client_ScriptCommand);
-            BindConsoleCommand("saveall", Client_SaveAllCommand);
-            BindConsoleCommand("disablevehicles", (o) =>
-            {
-                World.CarDensity = 999.0f;
-                //World.GetAllVehicles().ToList().ForEach(op => op.Delete());
-            });
-            BindConsoleCommand("tp2wp", (o) =>
-            {
-                Blip wp = GTA.Game.GetWaypoint();
-                if (wp != null)
-                {
-                    var pos = wp.Position;
-                    Player.TeleportTo(pos.X, pos.Y);
-                }
-            });
             perFrameRenderer = new PerFrameRenderer(this);
-            /*
-             SET_HIDE_WEAPON_ICON
-             * HIDE_HUD_AND_RADAR_THIS_FRAME
-             */
+
+            Player.Character.CurrentRoom = Room.FromString("R_00000000_00000000");
+
+            startTimersandBindEvents();
+            try
+            {
+                if (client != null && client.Connected)
+                {
+                    client.Close();
+                }
+                client = new TcpClient();
+                INIReader ini = new INIReader(System.IO.File.ReadAllLines("server.ini"));
+                IPAddress address = IPAddress.Parse(ip);
+                nick = nickname;
+
+                client.Connect(address, port);
+
+                Client.currentData = UpdateDataStruct.Zero;
+
+                serverConnection = new ServerConnection(this);
+
+                World.CurrentDayTime = new TimeSpan(12, 00, 00);
+                World.PedDensity = 0;
+                World.CarDensity = 0;
+                // AlternateHook.call(AlternateHook.OtherCommands.TERMINATE_ALL_SCRIPTS_FOR_NETWORK_GAME);
+                AlternateHook.call(AlternateHookRequest.OtherCommands.CLEAR_AREA, 0.0f, 0.0f, 0.0f, 4000.0f, true);
+                currentState = ClientState.Connecting;
+            }
+            catch
+            {
+                currentState = ClientState.Disconnected;
+                if (client != null && client.Connected)
+                {
+                    client.Close();
+                }
+                throw;
+            }
         }
 
         public void startTimersandBindEvents()
@@ -108,7 +149,7 @@ namespace MIVClient
             //GTA.Light l = new Light(System.Drawing.Color.Red, 5.0f, 10.0f, getPlayerPed().Position);
             Game.WantedMultiplier = 0.0f;
         }
-        
+
         void onMouseMove(float x, float y)
         {
         }
@@ -183,6 +224,9 @@ namespace MIVClient
             if (bindPoints.ContainsKey(id)) getPlayerPed().Position = bindPoints[id];
         }
 
+        public Dictionary<byte, string> playerNames;
+        public Dictionary<byte, string> playerModels;
+
         public void updateAllPlayers()
         {
             for (int i = 0; i < serverConnection.playersdata.Keys.Count; i++)
@@ -190,12 +234,16 @@ namespace MIVClient
                 var elemKey = serverConnection.playersdata.Keys.ToArray()[i];
                 var elemValue = serverConnection.playersdata[elemKey];
 
-                if (elemValue.client_has_been_set) continue;
-                else elemValue.client_has_been_set = true;
+                //if (elemValue.client_has_been_set) continue;
+                //else elemValue.client_has_been_set = true;
 
-                //bool in_vehicle = elemValue.vehicle_id > 0;
-                var posnew = new Vector3(elemValue.pos_x, elemValue.pos_y, elemValue.pos_z - 1.0f);
-                StreamedPed ped = pedController.getById(elemKey, "a", posnew);
+                StreamedPed ped = pedController.getById(elemKey);
+                ped.model = playerModels.ContainsKey(elemKey) ? playerModels[elemKey] : "F_Y_NURSE";
+                if (ped.position == Vector3.Zero)
+                {
+                    ped.color = (BlipColor)(elemKey % 14);
+                    ped.networkname = playerNames.ContainsKey(elemKey) ? playerNames[elemKey] : "-";
+                }
                 try
                 {
                     updateVehicle(elemKey, elemValue, ped);
@@ -215,65 +263,6 @@ namespace MIVClient
             }
         }
 
-        private void Client_ScriptCommand(ParameterCollection Parameters)
-        {
-            if (Player.Character.isInVehicle())
-            {
-                System.IO.File.AppendAllText("saved.txt",
-                    "api.createVehicle(" + Player.Character.CurrentVehicle.Model.ToString() + ", new Vector3(" + Player.Character.CurrentVehicle.Position.X + "f, " +
-                    Player.Character.CurrentVehicle.Position.Y + "f, " +
-                    Player.Character.CurrentVehicle.Position.Z + "f), new Quaternion(" +
-                    Player.Character.CurrentVehicle.RotationQuaternion.X + "f, " +
-                    Player.Character.CurrentVehicle.RotationQuaternion.Y + "f, " +
-                    Player.Character.CurrentVehicle.RotationQuaternion.Z + "f, " +
-                    Player.Character.CurrentVehicle.RotationQuaternion.W + "f)); //" +
-                    (Parameters.Count > 0 ? String.Join(" ", Parameters.Cast<string>()) : "") + "\r\n");
-            }
-            else
-            {
-                System.IO.File.AppendAllText("saved.txt",
-                    "pos = " + Player.Character.Position.X + "f, " +
-                    Player.Character.Position.Y + "f, " +
-                    Player.Character.Position.Z + "f; heading = " + Player.Character.Heading + "f; //" +
-                    (Parameters.Count > 0 ? Parameters[0].ToString() : "") + "\r\n");
-            }
-            log("Saved");
-        }
-
-        private List<Vector3> savedPositions;
-
-        private void Client_SaveAllCommand(ParameterCollection Parameters)
-        {
-            if(savedPositions == null) savedPositions = new List<Vector3>();
-            var vehicles = World.GetVehicles(World.GetGroundPosition(Game.CurrentCamera.Position, GroundType.Lowest), 300.0f);
-            int count = 0;
-            System.IO.File.AppendAllText("vehiclesavesession.txt", "// session date: " + DateTime.Now.ToLongDateString());
-            foreach (var vehicle in vehicles)
-            {
-                bool skip = false;
-                foreach (var position in savedPositions)
-                {
-                    if (vehicle.Position.DistanceTo(position) < 70.0f)
-                    {
-                        skip = true; 
-                        break;
-                    }
-                }
-                if (skip) continue;
-                System.IO.File.AppendAllText("vehiclesavesession.txt",
-                    "api.createVehicle(" + vehicle.Model.ToString() + ", new Vector3(" + vehicle.Position.X + "f, " +
-                    vehicle.Position.Y + "f, " +
-                    vehicle.Position.Z + "f), new Quaternion(" +
-                    vehicle.RotationQuaternion.X + "f, " +
-                    vehicle.RotationQuaternion.Y + "f, " +
-                    vehicle.RotationQuaternion.Z + "f, " +
-                    vehicle.RotationQuaternion.W + "f)); //" +
-                    (Parameters.Count > 0 ? String.Join(" ", Parameters.Cast<string>()) : "") + "\r\n");
-                count++;
-            }
-            savedPositions.Add(Player.Character.Position);
-            Game.Console.Print("Saved " + count.ToString());
-        }
 
         private void eventOnTick(object sender, EventArgs e)
         {
@@ -301,7 +290,7 @@ namespace MIVClient
                         data.pos_y = pos.Y;
                         data.pos_z = pos.Z;
 
-                        
+
                         Vector3 vel2 = Player.Character.CurrentVehicle.Velocity;
                         if (currentData.pos_x != 0)
                         {
@@ -423,6 +412,7 @@ namespace MIVClient
 
             if (currentState == ClientState.Connecting)
             {
+                Game.FadeScreenIn(3000);
                 currentState = ClientState.Connected;
 
                 var bpf = new BinaryPacketFormatter(Commands.Connect);
@@ -431,6 +421,8 @@ namespace MIVClient
 
                 Player.Model = new Model("F_Y_HOOKER_01");
                 Player.NeverGetsTired = true;
+
+                //ClientTextureDraw draw = new ClientTextureDraw(new System.Drawing.RectangleF(20, 20, 400, 400), @"C:\Users\Aerofly\Desktop\4duzy.png");
 
                 //chatController.writeChat("Connected");
             }

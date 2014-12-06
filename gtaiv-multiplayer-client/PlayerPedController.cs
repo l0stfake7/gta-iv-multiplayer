@@ -31,12 +31,12 @@ namespace MIVClient
             return elem == null || elem.Count() == 0 ? (byte)255 : elem.First().Key;
         }
 
-        public StreamedPed getById(byte id, string nick, Vector3 position)
+        public StreamedPed getById(byte id)
         {
             if (!peds.ContainsKey(id))
             {
                 //if (peds.ContainsKey(id)) peds.Remove(id);
-                var ped = new StreamedPed(streamer, "F_Y_HOOKER_01", nick, position, 0.0f);
+                var ped = new StreamedPed(streamer, "F_Y_HOOKER_01", "", Vector3.Zero, 0.0f, 0);
                 peds.Add(id, ped);
                 ped.last_game_health = 100;
                 Client.log("Created ped instance");

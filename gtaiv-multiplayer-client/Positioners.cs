@@ -142,7 +142,10 @@ namespace MIVClient
                         }
                         if ((data.vstate & VehicleState.IsAsPassenger) != 0) return;
                         veh.position = posnew;
-                        veh.gameReference.Position = posnew;
+                        if (veh.gameReference.Position.DistanceTo(posnew) > 2.0f)
+                        {
+                            veh.gameReference.Position = posnew;
+                        }
                         veh.orientation = new Quaternion(data.rot_x, data.rot_y, data.rot_z, data.rot_a);
                         //veh.gameReference.ApplyForce(, Vector3.Zero);
                         veh.gameReference.RotationQuaternion = veh.orientation;

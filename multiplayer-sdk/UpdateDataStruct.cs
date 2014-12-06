@@ -30,15 +30,22 @@ namespace MIVSDK
         Player_setPosition,
         Player_warpIntoVehicle,
         Player_setHeading,
+        Player_setModel,
         Player_setVelocity,
         Player_setGravity,
         Player_setWeather,
         Player_setGameTime,
         Player_setHealth,
         Player_damage,
+        Player_freeze,
+        Player_unfreeze,
+
+        Global_setPlayerName,
+        Global_setPlayerModel,
 
         Vehicle_setPosition,
         Vehicle_create,
+        Vehicle_setModel,
         Vehicle_setVelocity,
         Vehicle_setOrientation,
         Vehicle_removePeds,
@@ -48,6 +55,19 @@ namespace MIVSDK
         TextView_create,
         TextView_destroy,
         TextView_update,
+
+        TextureView_create,
+        TextureView_destroy,
+        TextureView_update,
+
+        LineView_create,
+        LineView_destroy,
+        LineView_update,
+
+        RectangleView_create,
+        RectangleView_destroy,
+        RectangleView_update,
+
 
         NPCDialog_show,
         NPCDialog_hide,
@@ -72,10 +92,18 @@ namespace MIVSDK
         NPC_playAnimation,
 
         Camera_setPosition,
-        Camera_lookAt,
-        Camera_sstDirection,
+        Camera_getPosition,
+
+        Camera_setDirection,
+        Camera_getDirection,
+
         Camera_setOrientation,
+        Camera_getOrientation,
+
         Camera_setFOV,
+        Camera_getFOV,
+
+        Camera_lookAt,
         Camera_reset,
         Camera_moveSmooth,
 
@@ -84,6 +112,7 @@ namespace MIVSDK
 
         Request_getSelectedPlayer,
         Request_getCameraPosition,
+        Request_getCameraDirection,
 
         Keys_down,
         Keys_up,

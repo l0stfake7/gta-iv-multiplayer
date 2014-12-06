@@ -43,6 +43,88 @@ namespace MIVClient
             KeyDown += TeleportCameraScript_KeyDown;
             KeyUp += TeleportCameraScript_KeyUp;
 
+            BindConsoleCommand("room", (o) =>
+            {
+                Game.Console.Print(Player.Character.CurrentRoom.ToString());
+            });
+
+            BindConsoleCommand("savepos", Client_ScriptCommand);
+            BindConsoleCommand("saveall", Client_SaveAllCommand);
+            BindConsoleCommand("disablevehicles", (o) =>
+            {
+                World.CarDensity = 999.0f;
+                //World.GetAllVehicles().ToList().ForEach(op => op.Delete());
+            });
+            BindConsoleCommand("tp2wp", (o) =>
+            {
+                Blip wp = GTA.Game.GetWaypoint();
+                if (wp != null)
+                {
+                    var pos = wp.Position;
+                    Player.TeleportTo(pos.X, pos.Y);
+                }
+            });
+
+        }
+
+
+        private void Client_ScriptCommand(ParameterCollection Parameters)
+        {
+            if (Player.Character.isInVehicle())
+            {
+                System.IO.File.AppendAllText("saved.txt",
+                    "api.createVehicle(" + Player.Character.CurrentVehicle.Model.ToString() + ", new Vector3(" + Player.Character.CurrentVehicle.Position.X + "f, " +
+                    Player.Character.CurrentVehicle.Position.Y + "f, " +
+                    Player.Character.CurrentVehicle.Position.Z + "f), new Quaternion(" +
+                    Player.Character.CurrentVehicle.RotationQuaternion.X + "f, " +
+                    Player.Character.CurrentVehicle.RotationQuaternion.Y + "f, " +
+                    Player.Character.CurrentVehicle.RotationQuaternion.Z + "f, " +
+                    Player.Character.CurrentVehicle.RotationQuaternion.W + "f)); //" +
+                    (Parameters.Count > 0 ? String.Join(" ", Parameters.Cast<string>()) : "") + "\r\n");
+            }
+            else
+            {
+                System.IO.File.AppendAllText("saved.txt",
+                    "pos = " + Player.Character.Position.X + "f, " +
+                    Player.Character.Position.Y + "f, " +
+                    Player.Character.Position.Z + "f; heading = " + Player.Character.Heading + "f; //" +
+                    (Parameters.Count > 0 ? Parameters[0].ToString() : "") + "\r\n");
+            }
+        }
+
+        private List<Vector3> savedPositions;
+
+        private void Client_SaveAllCommand(ParameterCollection Parameters)
+        {
+            if (savedPositions == null) savedPositions = new List<Vector3>();
+            var vehicles = World.GetVehicles(World.GetGroundPosition(Game.CurrentCamera.Position, GroundType.Lowest), 300.0f);
+            int count = 0;
+            System.IO.File.AppendAllText("vehiclesavesession.txt", "// session date: " + DateTime.Now.ToLongDateString());
+            foreach (var vehicle in vehicles)
+            {
+                bool skip = false;
+                foreach (var position in savedPositions)
+                {
+                    if (vehicle.Position.DistanceTo(position) < 70.0f)
+                    {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) continue;
+                System.IO.File.AppendAllText("vehiclesavesession.txt",
+                    "api.createVehicle(" + vehicle.Model.ToString() + ", new Vector3(" + vehicle.Position.X + "f, " +
+                    vehicle.Position.Y + "f, " +
+                    vehicle.Position.Z + "f), new Quaternion(" +
+                    vehicle.RotationQuaternion.X + "f, " +
+                    vehicle.RotationQuaternion.Y + "f, " +
+                    vehicle.RotationQuaternion.Z + "f, " +
+                    vehicle.RotationQuaternion.W + "f)); //" +
+                    (Parameters.Count > 0 ? String.Join(" ", Parameters.Cast<string>()) : "") + "\r\n");
+                count++;
+            }
+            savedPositions.Add(Player.Character.Position);
+            Game.Console.Print("Saved " + count.ToString());
         }
 
         void TeleportCameraScript_KeyUp(object sender, KeyEventArgs e)

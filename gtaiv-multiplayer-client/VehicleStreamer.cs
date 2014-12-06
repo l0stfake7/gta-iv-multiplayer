@@ -90,7 +90,7 @@ namespace MIVClient
                 {
                     float distance = playerPos.DistanceTo(vehicle.position);
                     //client.chatController.writeChat(playerPos.X.ToString() + " " + playerPos.Y.ToString() + " " + playerPos.Z.ToString() + " ");
-                    if (distance < 70.0f && Game.CurrentCamera.isSphereVisible(vehicle.position, 1.0f))
+                    if (distance < 35.0f || (distance < 80.0f && Game.CurrentCamera.isSphereVisible(vehicle.position, 1.0f)))
                     {
                         if (!vehicle.streamedIn || vehicle.gameReference == null || !vehicle.gameReference.Exists())
                         {

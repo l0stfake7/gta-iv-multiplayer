@@ -73,6 +73,7 @@ namespace MIVClient
             ClientTextView.renderAll(e.Graphics);
             ClientRectangleView.renderAll(e.Graphics);
             ClientLineView.renderAll(e.Graphics);
+            ClientTextureDraw.renderAll(e.Graphics);
         }
     }
 }

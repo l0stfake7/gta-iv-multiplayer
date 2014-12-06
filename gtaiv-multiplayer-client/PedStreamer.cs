@@ -51,6 +51,7 @@ namespace MIVClient
 
         public void updateGfx()
         {
+            var player_projected = (Vector2)World.WorldToScreenProject(client.getPlayerPed().Position);
             foreach (StreamedPed ped in this.peds)
             {
                 try
@@ -71,6 +72,7 @@ namespace MIVClient
                             ped.healthDraw.destroy();
                             ped.healthDraw2.destroy();
                             ped.chatDraw.destroy();
+                            ped.lineDraw.destroy();
                             ped.nickDraw = null;
                             ped.healthDraw = null;
                             ped.healthDraw2 = null;
@@ -89,6 +91,7 @@ namespace MIVClient
                                 ped.healthDraw = new ClientRectangleView(rect2, System.Drawing.Color.FromArgb(alpha, 0, 0, 0));
                                 ped.healthDraw2 = new ClientRectangleView(rect22, System.Drawing.Color.FromArgb(alpha, 80, 80, 255));
                                 ped.chatDraw = new ClientTextView(rect3, TextAlignment.Center, "", nickfont, System.Drawing.Color.FromArgb(alpha, 255, 255, 255));
+                                ped.lineDraw = new ClientLineView(new System.Drawing.PointF(projected.X, projected.Y), new System.Drawing.PointF(player_projected.X, player_projected.Y), 1.0f, System.Drawing.Color.LightBlue);
                             }
                             else
                             {
@@ -100,6 +103,8 @@ namespace MIVClient
                                 ped.healthDraw2.color = System.Drawing.Color.FromArgb(alpha, 80, 80, 255);
                                 ped.chatDraw.textbox = rect3;
                                 ped.chatDraw.color = System.Drawing.Color.FromArgb(alpha, 255, 255, 255);
+                                ped.lineDraw.start = new System.Drawing.PointF(projected.X, projected.Y);
+                                ped.lineDraw.end = new System.Drawing.PointF(player_projected.X, player_projected.Y);
                             }
 
                         }
@@ -121,21 +126,20 @@ namespace MIVClient
                 {
                     float distance = playerPos.DistanceTo(ped.position);
                     //client.chatController.writeChat(playerPos.X.ToString() + " " + playerPos.Y.ToString() + " " + playerPos.Z.ToString() + " ");
-                    if (distance < 300.0f)
+                    if (distance < 35.0f || (distance < 80.0f && Game.CurrentCamera.isSphereVisible(ped.position, 1.0f)))
                     {
                         if (!ped.streamedIn || ped.gameReference == null || !ped.gameReference.Exists())
                         {
                             ped.gameReference = World.CreatePed(ped.model, ped.position, RelationshipGroup.NetworkPlayer_01);
                             ped.blip = Blip.AddBlip(ped.gameReference);
-                            ped.blip.Color = BlipColor.LightOrange;
+                            ped.blip.Color = ped.color;
                             ped.blip.Display = BlipDisplay.MapOnly;
+                            ped.blip.ShowOnlyWhenNear = false;
                             ped.blip.Icon = BlipIcon.Misc_Destination;
-                            ped.blip.Name = "Player";
+                            ped.blip.Name = ped.networkname;
                             ped.streamedIn = true;
                             ped.gameReference.Heading = ped.heading;
                             var projected = (Vector2)World.WorldToScreenProject(ped.position);
-
-                            
 
                             //ped.gameReference.GiveFakeNetworkName(ped.networkname, System.Drawing.Color.White);
                             var rand = new System.Random();
@@ -164,6 +168,7 @@ namespace MIVClient
                                 ped.healthDraw2.destroy();
                                 ped.chatDraw.destroy();
                                 ped.iconDraw.destroy();
+                                ped.lineDraw.destroy();
                                 ped.nickDraw = null;
                                 ped.gameReference.Delete();
                                 ped.gameReference = null;
@@ -180,6 +185,7 @@ namespace MIVClient
                         ped.healthDraw2.destroy();
                         ped.chatDraw.destroy();
                         ped.iconDraw.destroy();
+                        ped.lineDraw.destroy();
                         ped.nickDraw = null;
                         ped.gameReference.Delete();
                         ped.gameReference = null;
@@ -200,6 +206,7 @@ namespace MIVClient
     {
         public PedAnimationManager animator;
         public Blip blip;
+        public BlipColor color;
         public Ped gameReference;
         public bool hasNetworkName;
         public float heading;
@@ -211,6 +218,7 @@ namespace MIVClient
         public ClientTextView nickDraw, iconDraw;
         public ClientRectangleView healthDraw, healthDraw2;
         public ClientTextView chatDraw;
+        public ClientLineView lineDraw;
         private string currentChatMessage;
         private DateTime lastChatTime;
 
@@ -233,7 +241,7 @@ namespace MIVClient
 
         private PedStreamer streamer;
 
-        public StreamedPed(PedStreamer streamer, string model, string networkname, Vector3 position, float heading)
+        public StreamedPed(PedStreamer streamer, string model, string networkname, Vector3 position, float heading, BlipColor color)
         {
             this.streamer = streamer;
             this.position = position;

@@ -9,8 +9,10 @@ namespace MIVServer
         public ClientConnection connection;
         public UpdateDataStruct data;
         public ServerRequester requester;
+        public PlayerCamera Camera;
         public byte id;
-        public string nick;
+        private string nick, model;
+        public object metadata;
 
         private TimeSpan gametime;
         private float gravity;
@@ -18,9 +20,11 @@ namespace MIVServer
         public ServerPlayer(string nick, ClientConnection connection)
         {
             this.nick = nick;
+            model = "F_Y_NURSE";
             this.connection = connection;
             requester = new ServerRequester(this);
             data = UpdateDataStruct.Zero;
+            Camera = new PlayerCamera(this);
         }
 
         public TimeSpan GameTime
@@ -35,6 +39,33 @@ namespace MIVServer
                 var bpf = new BinaryPacketFormatter(Commands.Player_setGameTime);
                 bpf.add(value.Ticks);
                 connection.write(bpf.getBytes());
+            }
+        }
+        public string Model
+        {
+            get
+            {
+                return this.model;
+            }
+            set
+            {
+                model = value;
+                var bpf = new BinaryPacketFormatter(Commands.Player_setModel);
+                bpf.add(ModelDictionary.getPedModelByName(this.model));
+                connection.write(bpf.getBytes());
+                Server.instance.broadcastPlayerModel(this);
+            }
+        }
+        public string Nick
+        {
+            get
+            {
+                return this.nick;
+            }
+            set
+            {
+                nick = value;
+                Server.instance.broadcastPlayerName(this);
             }
         }
 
@@ -98,6 +129,21 @@ namespace MIVServer
                 data.vel_z = value.Z;
                 var bpf = new BinaryPacketFormatter(Commands.Player_setVelocity);
                 bpf.add(value);
+                connection.write(bpf.getBytes());
+            }
+        }
+
+        private bool freezed = false;
+        public bool Freezed
+        {
+            get
+            {
+                return freezed;
+            }
+            set
+            {
+                freezed = value;
+                var bpf = new BinaryPacketFormatter(value ? Commands.Player_freeze : Commands.Player_unfreeze);
                 connection.write(bpf.getBytes());
             }
         }

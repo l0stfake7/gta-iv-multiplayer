@@ -37,7 +37,9 @@ namespace MIVClient
             if (LineViewsPool == null) LineViewsPool = new List<ClientLineView>();
             foreach (ClientLineView view in LineViewsPool)
             {
-                g.DrawLine(view.start, view.end, view.width, view.color);
+                g.DrawLine(view.start, view.end, view.width/2.0f, view.color);
+                g.DrawLine(view.start, view.end, view.width / 1.4f, System.Drawing.Color.FromArgb(195, view.color));
+                g.DrawLine(view.start, view.end, view.width, System.Drawing.Color.FromArgb(80, view.color));
             }
         }
     }

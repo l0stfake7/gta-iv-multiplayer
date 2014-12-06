@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace MIVSDK
 {
@@ -21,10 +22,39 @@ namespace MIVSDK
         {
             return float.Parse(getString(key));
         }
-
-        public int getInt(string key)
+        public Int32 getInt(string key)
         {
-            return int.Parse(getString(key));
+            return Int32.Parse(getString(key));
+        }
+        public DateTime getDateTime(string key)
+        {
+            return DateTime.Parse(getString(key));
+        }
+        public Int16 getInt16(string key)
+        {
+            return Int16.Parse(getString(key));
+        }
+
+        public Int32 getInt32(string key)
+        {
+            return Int32.Parse(getString(key));
+        }
+        public Int64 getInt64(string key)
+        {
+            return Int64.Parse(getString(key));
+        }
+
+        public UInt16 getUInt16(string key)
+        {
+            return UInt16.Parse(getString(key));
+        }
+        public UInt32 getUInt32(string key)
+        {
+            return UInt32.Parse(getString(key));
+        }
+        public UInt64 getUInt64(string key)
+        {
+            return UInt64.Parse(getString(key));
         }
 
         public string getString(string key)

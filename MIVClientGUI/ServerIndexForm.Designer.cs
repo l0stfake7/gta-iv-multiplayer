@@ -31,23 +31,25 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.clientToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.runGameWithoutClientToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.conectManuallyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.remoteConsoleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.serverMonitorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resolutionSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clearServerListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openTutorialToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutMIVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.resolutionSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.clearServerListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.remoteConsoleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.serverMonitorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.runGameWithoutClientToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.conectManuallyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.listView1 = new System.Windows.Forms.ListView();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.button4 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -82,6 +84,25 @@
             this.clientToolStripMenuItem.Size = new System.Drawing.Size(50, 20);
             this.clientToolStripMenuItem.Text = "Client";
             // 
+            // runGameWithoutClientToolStripMenuItem
+            // 
+            this.runGameWithoutClientToolStripMenuItem.Name = "runGameWithoutClientToolStripMenuItem";
+            this.runGameWithoutClientToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.runGameWithoutClientToolStripMenuItem.Text = "Run game without client";
+            // 
+            // conectManuallyToolStripMenuItem
+            // 
+            this.conectManuallyToolStripMenuItem.Name = "conectManuallyToolStripMenuItem";
+            this.conectManuallyToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.conectManuallyToolStripMenuItem.Text = "Connect manually";
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -90,48 +111,6 @@
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
-            // 
-            // optionsToolStripMenuItem
-            // 
-            this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.resolutionSettingsToolStripMenuItem,
-            this.clearServerListToolStripMenuItem});
-            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
-            this.optionsToolStripMenuItem.Text = "Options";
-            // 
-            // helpToolStripMenuItem
-            // 
-            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openTutorialToolStripMenuItem,
-            this.aboutMIVToolStripMenuItem});
-            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
-            // 
-            // openTutorialToolStripMenuItem
-            // 
-            this.openTutorialToolStripMenuItem.Name = "openTutorialToolStripMenuItem";
-            this.openTutorialToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.openTutorialToolStripMenuItem.Text = "Open tutorial";
-            // 
-            // aboutMIVToolStripMenuItem
-            // 
-            this.aboutMIVToolStripMenuItem.Name = "aboutMIVToolStripMenuItem";
-            this.aboutMIVToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.aboutMIVToolStripMenuItem.Text = "About MIV";
-            // 
-            // resolutionSettingsToolStripMenuItem
-            // 
-            this.resolutionSettingsToolStripMenuItem.Name = "resolutionSettingsToolStripMenuItem";
-            this.resolutionSettingsToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
-            this.resolutionSettingsToolStripMenuItem.Text = "Resolution settings";
-            // 
-            // clearServerListToolStripMenuItem
-            // 
-            this.clearServerListToolStripMenuItem.Name = "clearServerListToolStripMenuItem";
-            this.clearServerListToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
-            this.clearServerListToolStripMenuItem.Text = "Clear server list";
             // 
             // remoteConsoleToolStripMenuItem
             // 
@@ -145,24 +124,47 @@
             this.serverMonitorToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
             this.serverMonitorToolStripMenuItem.Text = "Server monitor";
             // 
-            // runGameWithoutClientToolStripMenuItem
+            // optionsToolStripMenuItem
             // 
-            this.runGameWithoutClientToolStripMenuItem.Name = "runGameWithoutClientToolStripMenuItem";
-            this.runGameWithoutClientToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.runGameWithoutClientToolStripMenuItem.Text = "Run game without client";
+            this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.resolutionSettingsToolStripMenuItem,
+            this.clearServerListToolStripMenuItem});
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
+            this.optionsToolStripMenuItem.Text = "Options";
             // 
-            // exitToolStripMenuItem
+            // resolutionSettingsToolStripMenuItem
             // 
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            this.resolutionSettingsToolStripMenuItem.Name = "resolutionSettingsToolStripMenuItem";
+            this.resolutionSettingsToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+            this.resolutionSettingsToolStripMenuItem.Text = "Resolution settings";
             // 
-            // conectManuallyToolStripMenuItem
+            // clearServerListToolStripMenuItem
             // 
-            this.conectManuallyToolStripMenuItem.Name = "conectManuallyToolStripMenuItem";
-            this.conectManuallyToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
-            this.conectManuallyToolStripMenuItem.Text = "Connect manually";
+            this.clearServerListToolStripMenuItem.Name = "clearServerListToolStripMenuItem";
+            this.clearServerListToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+            this.clearServerListToolStripMenuItem.Text = "Clear server list";
+            // 
+            // helpToolStripMenuItem
+            // 
+            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openTutorialToolStripMenuItem,
+            this.aboutMIVToolStripMenuItem});
+            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.helpToolStripMenuItem.Text = "Help";
+            // 
+            // openTutorialToolStripMenuItem
+            // 
+            this.openTutorialToolStripMenuItem.Name = "openTutorialToolStripMenuItem";
+            this.openTutorialToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.openTutorialToolStripMenuItem.Text = "Open tutorial";
+            // 
+            // aboutMIVToolStripMenuItem
+            // 
+            this.aboutMIVToolStripMenuItem.Name = "aboutMIVToolStripMenuItem";
+            this.aboutMIVToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.aboutMIVToolStripMenuItem.Text = "About MIV";
             // 
             // listView1
             // 
@@ -172,6 +174,8 @@
             this.listView1.TabIndex = 2;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.List;
+            this.listView1.Click += new System.EventHandler(this.listView1_Click);
+            this.listView1.Leave += new System.EventHandler(this.listView1_Leave);
             // 
             // button1
             // 
@@ -182,6 +186,7 @@
             this.button1.TabIndex = 3;
             this.button1.Text = "Connect";
             this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // button2
             // 
@@ -205,18 +210,40 @@
             // 
             // label1
             // 
-            this.label1.Location = new System.Drawing.Point(318, 22);
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(340, 32);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(592, 23);
+            this.label1.Size = new System.Drawing.Size(58, 13);
             this.label1.TabIndex = 6;
-            this.label1.Text = "Server info (not selected)";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.label1.Text = "Nickname:";
+            // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(404, 29);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(121, 20);
+            this.textBox1.TabIndex = 7;
+            this.textBox1.Text = "Player";
+            this.textBox1.Leave += new System.EventHandler(this.textBox1_Leave);
+            // 
+            // button4
+            // 
+            this.button4.Enabled = false;
+            this.button4.Location = new System.Drawing.Point(255, 26);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(75, 23);
+            this.button4.TabIndex = 8;
+            this.button4.Text = "Refresh";
+            this.button4.UseVisualStyleBackColor = true;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
             // ServerBrowser
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(922, 607);
+            this.Controls.Add(this.button4);
+            this.Controls.Add(this.textBox1);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
@@ -257,6 +284,8 @@
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Button button4;
     }
 }
 
