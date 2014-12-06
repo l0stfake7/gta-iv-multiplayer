@@ -145,6 +145,27 @@ namespace MIVServer
                                 }
                             }
                             break;
+                        case Commands.Request_isObjectVisible:
+                            {
+                                if (player != null)
+                                {
+                                    uint requestid = bpr.readUInt32();
+                                    var vect = bpr.readByte() == 1;
+                                    Request.dispatch(requestid, vect);
+                                }
+                            }
+                            break;
+                        case Commands.Request_worldToScreen:
+                            {
+                                if (player != null)
+                                {
+                                    uint requestid = bpr.readUInt32();
+                                    var x = bpr.readSingle();
+                                    var y = bpr.readSingle();
+                                    Request.dispatch(requestid, new SharpDX.Vector2(x, y));
+                                }
+                            }
+                            break;
 
                         case Commands.Chat_sendMessage:
                             {

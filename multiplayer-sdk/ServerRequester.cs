@@ -13,6 +13,8 @@ namespace MIVServer
         Commands action;
         Action<object[]> onComplete;
         static Dictionary<uint, Request> requestPool;
+        public BinaryPacketFormatter bpf;
+        private ClientConnection connection;
         private static uint findLowestFreeId()
         {
             for (uint i = 1; i < uint.MaxValue; i++)
@@ -21,15 +23,24 @@ namespace MIVServer
             }
             throw new Exception("No free ids");
         }
-        public Request(ClientConnection connection, Commands action, Action<object[]> onComplete)
-        {
+        private void InitInstance(ClientConnection connection, Commands action, Action<object[]> onComplete){
+            
             if (requestPool == null) requestPool = new Dictionary<uint, Request>();
             this.action = action;
+            this.connection = connection;
             this.onComplete = onComplete;
             uint id = findLowestFreeId();
             requestPool.Add(id, this);
-            var bpf = new BinaryPacketFormatter(action);
+            bpf = new BinaryPacketFormatter(action);
             bpf.add(id);
+        }
+        public Request(ClientConnection connection, Commands action, Action<object[]> onComplete)
+        {
+            InitInstance(connection, action, onComplete);
+        }
+
+        public void Flush(){
+
             connection.write(bpf.getBytes());
         }
 
@@ -46,6 +57,24 @@ namespace MIVServer
         {
             this.player = player;
         }
+        public void isObjectVisible(Vector3 position, Action<bool> onComplete)
+        {
+            var req = new Request(player.connection, Commands.Request_isObjectVisible, (o) =>
+            {
+                onComplete.Invoke((bool)o[0]);
+            });
+            req.bpf.add(position);
+            req.Flush();
+        }
+        public void worldToScreenProject(Vector3 position, Action<Vector2> onComplete)
+        {
+            var req = new Request(player.connection, Commands.Request_worldToScreen, (o) =>
+            {
+                onComplete.Invoke((Vector2)o[0]);
+            });
+            req.bpf.add(position);
+            req.Flush();
+        }
 
         public void getSelectedPlayer(Action<ServerPlayer> onComplete)
         {
@@ -53,6 +82,7 @@ namespace MIVServer
             {
                 onComplete.Invoke(Server.instance.api.getPlayer((byte)o[0]));
             });
+            req.Flush();
         }
         public void getCameraPosition(Action<Vector3> onComplete)
         {
@@ -60,6 +90,7 @@ namespace MIVServer
             {
                 onComplete.Invoke((Vector3)o[0]);
             });
+            req.Flush();
         }
 
     }

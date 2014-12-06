@@ -52,7 +52,8 @@ namespace MIVClient
             }
         }
 
-        private GTA.Vector3 fromSharpDX(SharpDX.Vector3 v){
+        private GTA.Vector3 fromSharpDX(SharpDX.Vector3 v)
+        {
             return new GTA.Vector3(v.X, v.Y, v.Z);
         }
 
@@ -298,6 +299,34 @@ namespace MIVClient
                                         var bpf = new BinaryPacketFormatter(Commands.Request_getCameraPosition);
                                         bpf.add(requestid);
                                         bpf.add(new SharpDX.Vector3(Game.CurrentCamera.Position.X, Game.CurrentCamera.Position.Y, Game.CurrentCamera.Position.Z));
+                                        client.serverConnection.write(bpf.getBytes());
+                                    }));
+                                }
+                                break;
+                            case Commands.Request_worldToScreen:
+                                {
+                                    uint requestid = bpr.readUInt32();
+                                    var world = bpr.readVector3();
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var bpf = new BinaryPacketFormatter(Commands.Request_worldToScreen);
+                                        bpf.add(requestid);
+                                        var screen = (Vector2)World.WorldToScreenProject(new Vector3(world.X, world.Y, world.Z));
+                                        bpf.add(screen.X);
+                                        bpf.add(screen.Y);
+                                        client.serverConnection.write(bpf.getBytes());
+                                    }));
+                                }
+                                break;
+                            case Commands.Request_isObjectVisible:
+                                {
+                                    uint requestid = bpr.readUInt32();
+                                    var position = bpr.readVector3();
+                                    client.enqueueAction(new Action(delegate
+                                    {
+                                        var bpf = new BinaryPacketFormatter(Commands.Request_isObjectVisible);
+                                        bpf.add(requestid);
+                                        bpf.add(new byte[1] { (byte)(Game.CurrentCamera.isSphereVisible(new Vector3(position.X, position.Y, position.Z), 1.0f) ? 1 : 0) });
                                         client.serverConnection.write(bpf.getBytes());
                                     }));
                                 }

@@ -113,6 +113,8 @@ namespace MIVSDK
         Request_getSelectedPlayer,
         Request_getCameraPosition,
         Request_getCameraDirection,
+        Request_isObjectVisible,
+        Request_worldToScreen,
 
         Keys_down,
         Keys_up,

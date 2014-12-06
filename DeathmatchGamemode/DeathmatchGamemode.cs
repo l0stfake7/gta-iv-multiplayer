@@ -1073,9 +1073,18 @@ namespace DeathmatchGamemode
                 player.Camera.Reset();
                 return;
             }
-            if (command == "tep")
+            if (command == "test")
             {
-                player.Position = new Vector3(2468.039f, 147.9008f, 5.838196f);
+                var pos = new Vector3(2468.039f, 147.9008f, 5.838196f);
+                player.requester.isObjectVisible(pos, (response) =>
+                {
+                    api.writeChat(response.ToString());
+                });
+                player.requester.worldToScreenProject(pos, (response) =>
+                {
+                    api.writeChat(response.X.ToString() + " " + response.Y.ToString());
+                });
+
             }
         }
 
