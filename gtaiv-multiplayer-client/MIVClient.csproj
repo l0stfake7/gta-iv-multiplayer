@@ -69,10 +69,14 @@
     <Compile Include="AlternateHook.cs" />
     <Compile Include="CameraController.cs" />
     <Compile Include="ChatController.cs" />
+    <Compile Include="CheckpointController.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="ClientLineView.cs" />
     <Compile Include="ClientRectangleView.cs" />
     <Compile Include="ClientTextureDraw.cs" />
+    <Compile Include="DrawBase.cs" />
+    <Compile Include="DrawController.cs" />
+    <Compile Include="IDControllerBase.cs" />
     <Compile Include="KeyboardHandler.cs" />
     <Compile Include="PedAnimationManager.cs" />
     <Compile Include="PerFrameRenderer.cs" />
@@ -80,6 +84,7 @@
     <Compile Include="Positioners.cs" />
     <Compile Include="ServerConnection.cs" />
     <Compile Include="ClientTextView.cs" />
+    <Compile Include="StreamerBase.cs" />
     <Compile Include="VehicleController.cs" />
     <Compile Include="PlayerVehicleController.cs" />
     <Compile Include="PlayerPedController.cs" />

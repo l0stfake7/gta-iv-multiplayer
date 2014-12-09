@@ -70,7 +70,7 @@ namespace MIVServer
                         if (single.id != player.id)
                         {
                             var bpf = new BinaryPacketFormatter(Commands.UpdateData);
-                            bpf.add(new byte[1] { (byte)player.id });
+                            bpf.add(player.id);
                             bpf.add(player.data);
                             single.connection.write(bpf.getBytes());
                             //Console.WriteLine("Streaming to player " + single.Value.nick);
@@ -99,7 +99,7 @@ namespace MIVServer
             foreach (var single in playerpool) if (single != player)
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerName);
-                    bpf.add(new byte[1] { player.id });
+                    bpf.add(player.id);
                     bpf.add(player.Nick);
                     single.connection.write(bpf.getBytes());
                 }
@@ -109,7 +109,7 @@ namespace MIVServer
             foreach (var single in playerpool) if (single != player)
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerModel);
-                    bpf.add(new byte[1]{player.id});
+                    bpf.add(player.id);
                     bpf.add(ModelDictionary.getPedModelByName(player.Model));
                     single.connection.write(bpf.getBytes());
                 }
@@ -136,8 +136,7 @@ namespace MIVServer
                 bpf.add(pair.Value.id);
                 bpf.add(pair.Value.position);
                 bpf.add(pair.Value.orientation);
-                bpf.add(pair.Value.velocity);
-                bpf.add(pair.Value.model);
+                bpf.add(ModelDictionary.getVehicleByName(pair.Value.model));
                 player.connection.write(bpf.getBytes());
             }
         }
@@ -171,7 +170,7 @@ namespace MIVServer
             }
         }
 
-        public ServerPlayer getPlayerById(byte id)
+        public ServerPlayer getPlayerById(uint id)
         {
             try
             {
@@ -204,8 +203,17 @@ namespace MIVServer
                 ServerPlayer player = new ServerPlayer(nick, connection);
                 connection.player = player;
                 player.id = findLowestFreeId();
+                for (int i = 0; i < playerpool.Count; i++)
+                {
+                    player.connection.write(
+                        new BinaryPacketFormatter(Commands.Global_createPlayer, playerpool[i].id, ModelDictionary.getPedModelByName(playerpool[i].Model), playerpool[i].Nick)
+                        .getBytes());
+                    playerpool[i].connection.write(
+                        new BinaryPacketFormatter(Commands.Global_createPlayer, player.id, ModelDictionary.getPedModelByName("M_Y_SWAT"), nick)
+                        .getBytes());
+                }
                 player.Nick = nick;
-                player.Model = "M_M_CHINATOWN_01";
+                player.Model = "M_Y_SWAT";
                 playerpool.Add(player);
                 broadcastVehiclesToPlayer(player);
                 broadcastNPCsToPlayer(player);
@@ -214,6 +222,9 @@ namespace MIVServer
 
                 api.invokeOnPlayerConnect(client.Client.RemoteEndPoint, player);
                 api.invokeOnPlayerSpawn(player);
+
+                var starter = new BinaryPacketFormatter(Commands.Client_resumeBroadcast);
+                connection.write(starter.getBytes());
 
                 connection.flush();
             };

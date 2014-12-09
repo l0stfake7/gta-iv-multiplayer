@@ -22,7 +22,7 @@ namespace MIVSDK
         public static uint getPedModelByName(string name)
         {
             if (ped_models_hashes == null) load();
-            return ped_models_hashes.Where(a => a.Key == name.ToUpper()).First().Value;
+            return ped_models_hashes.First(a => a.Key == name.ToUpper()).Value;
         }
         public static Dictionary<string, uint> getAllVehicles()
         {
@@ -39,7 +39,7 @@ namespace MIVSDK
         public static uint getVehicleByName(string name)
         {
             if (vehicle_hashes == null) load();
-            return vehicle_hashes.Where(a => a.Key == name.ToUpper()).First().Value;
+            return vehicle_hashes.First(a => a.Key == name.ToUpper()).Value;
         }
 
         private static void load()

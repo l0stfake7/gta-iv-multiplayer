@@ -32,16 +32,17 @@ namespace MIVSDK
         Player_setHeading,
         Player_setModel,
         Player_setVelocity,
-        Player_setGravity,
-        Player_setWeather,
-        Player_setGameTime,
         Player_setHealth,
         Player_damage,
         Player_freeze,
         Player_unfreeze,
+        Player_setVirtualWorld,
 
         Global_setPlayerName,
         Global_setPlayerModel,
+        Global_setPlayerPedText,
+        Global_createPlayer,
+        Global_removePlayer,
 
         Vehicle_setPosition,
         Vehicle_create,
@@ -51,6 +52,7 @@ namespace MIVSDK
         Vehicle_removePeds,
         Vehicle_repair,
         Vehicle_repaint,
+        Vehicle_setVirtualWorld,
 
         TextView_create,
         TextView_destroy,
@@ -68,6 +70,22 @@ namespace MIVSDK
         RectangleView_destroy,
         RectangleView_update,
 
+        Client_setVirtualWorld,
+        Client_setGfxInterval,
+        Client_setBrodcastInterval,
+        Client_setSlowInterval,
+        Client_pauseBroadcast,
+        Client_resumeBroadcast,
+        Client_clearChat,
+        Client_consoleWrite,
+
+        Game_fadeScreenIn,
+        Game_fadeScreenOut,
+        Game_showLoadingScreen,
+        Game_hideLoadingScreen,
+        Game_setGravity,
+        Game_setWeather,
+        Game_setGameTime,
 
         NPCDialog_show,
         NPCDialog_hide,
@@ -90,6 +108,7 @@ namespace MIVSDK
         NPC_enterVehicle,
         NPC_leaveVehicle,
         NPC_playAnimation,
+        NPC_setVirtualWorld,
 
         Camera_setPosition,
         Camera_getPosition,
@@ -109,7 +128,7 @@ namespace MIVSDK
 
         InternalClient_requestSpawn,
         InternalClient_finishSpawn,
-
+        
         Request_getSelectedPlayer,
         Request_getCameraPosition,
         Request_getCameraDirection,

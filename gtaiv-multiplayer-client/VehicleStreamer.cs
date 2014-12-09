@@ -7,48 +7,68 @@ using System.Linq;
 
 namespace MIVClient
 {
-    public class StreamedVehicle
+    public class StreamedVehicle : StreamedObjectBase
     {
         public Vehicle gameReference;
-        public uint id;
         public string model;
         public Quaternion orientation;
         public Vector3 position;
-        public bool streamedIn;
 
-        private VehicleStreamer streamer;
-
-        public StreamedVehicle(VehicleStreamer streamer, uint id, string model, Vector3 position, Quaternion orientation)
+        public StreamedVehicle(VehicleStreamer streamer, string model, Vector3 position, Quaternion orientation) : base(streamer)
         {
-            this.streamer = streamer;
             this.model = model;
-            this.id = id;
             this.position = position;
             this.orientation = orientation;
-            streamedIn = false;
-            streamer.add(this);
         }
-
-        public void delete()
+        public override void StreamIn()
         {
-            streamer.delete(this);
+            gameReference = World.CreateVehicle(new Model(model), position);
+            gameReference.RotationQuaternion = orientation;
+            Client.instance.prepareVehicle(this);
+
+        }
+        public override void StreamOut()
+        {
+            gameReference.Delete();
+            gameReference = null;
+        }
+        public override bool IsStreamedIn()
+        {
+            return StreamedIn && gameReference != null && gameReference.Exists();
+        }
+        public override bool NeedRestream()
+        {
+            return !gameReference.isAlive || gameReference.Health == 0;
+        }
+        public override Vector3 GetPosition()
+        {
+            return position;
         }
     }
 
-    public class VehicleStreamer
+    public class VehicleStreamer : StreamerBase
     {
         public List<StreamedVehicle> vehicles;
 
-        private Client client;
-
-        public VehicleStreamer(Client client)
+        public VehicleStreamer(Client client, float range) : base(client, range)
         {
-            this.client = client;
-            vehicles = new List<StreamedVehicle>();
         }
-        public void updateGfx()
+        public override void UpdateGfx()
         {
 
+        }
+
+        public override void UpdateSlow()
+        {
+            World.CarDensity = 0.0f;
+            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.DISABLE_CAR_GENERATORS);
+            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.DISABLE_CAR_GENERATORS_WITH_HELI);
+            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.SET_CAR_GENERATORS_ACTIVE_IN_AREA, 0);
+        }
+
+        public override void UpdateNormalTick()
+        {
+            
             foreach (Vehicle v in World.GetVehicles(client.getPlayerPed().Position, 200.0f))
             {
                 if (v.Exists() && vehicles.Count(a => a.gameReference != null && a.gameReference == v) == 0)
@@ -58,71 +78,6 @@ namespace MIVClient
                     //v.Delete();
                 }
             }
-        }
-
-        public void updateSlow()
-        {
-            World.CarDensity = 0.0f;
-            
-        }
-
-        public void add(StreamedVehicle vehicle)
-        {
-            vehicles.Add(vehicle);
-        }
-
-        public void delete(uint id)
-        {
-            vehicles.Remove(vehicles.First(a => a.id == id));
-        }
-
-        public void delete(StreamedVehicle vehicle)
-        {
-            vehicles.Remove(vehicle);
-        }
-
-        public void update()
-        {
-            Vector3 playerPos = client.getPlayerPed().Position;
-            foreach (StreamedVehicle vehicle in vehicles)
-            {
-                try
-                {
-                    float distance = playerPos.DistanceTo(vehicle.position);
-                    //client.chatController.writeChat(playerPos.X.ToString() + " " + playerPos.Y.ToString() + " " + playerPos.Z.ToString() + " ");
-                    if (distance < 35.0f || (distance < 80.0f && Game.CurrentCamera.isSphereVisible(vehicle.position, 1.0f)))
-                    {
-                        if (!vehicle.streamedIn || vehicle.gameReference == null || !vehicle.gameReference.Exists())
-                        {
-                            var model = new Model(vehicle.model);
-                            if (model.isValid)
-                            {
-                                vehicle.gameReference = World.CreateVehicle(new Model(vehicle.model), vehicle.position);
-                                vehicle.gameReference.RotationQuaternion = vehicle.orientation;
-                                client.prepareVehicle(vehicle);
-                                vehicle.streamedIn = true;
-                            }
-                            else
-                            {
-                                vehicle.delete();
-                                break;
-                            }
-                        }
-                    }
-                    else if (vehicle.streamedIn)
-                    {
-                        vehicle.gameReference.Delete();
-                        vehicle.gameReference = null;
-                        vehicle.streamedIn = false;
-                    }
-                }
-                catch (Exception e)
-                {
-                    client.chatController.writeDebug("VStreamer" + e.Message);
-                }
-            }
-            //var peds = World.GetPeds(client.getPlayerPed().Position, 200.0f);
-            //foreach (Ped a in peds) if (a.Exists() && a.isAlive && a != client.getPlayerPed()) a.Delete();
         }
     }
 }

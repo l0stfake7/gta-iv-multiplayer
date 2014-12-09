@@ -10,31 +10,27 @@ using GTA;
 
 namespace MIVClient
 {
-    public class ClientTextureDraw
+    public class ClientTextureDraw : DrawBase
     {
 
         public RectangleF box;
         Texture texture;
 
-        public static List<ClientTextureDraw> TextureViewsPool;
-
         public ClientTextureDraw(RectangleF box, byte[] texture)
+            : base()
         {
-            if (TextureViewsPool == null) TextureViewsPool = new List<ClientTextureDraw>();
             this.box = box;
             this.texture = new Texture(texture);
-            TextureViewsPool.Add(this);
         }
         public ClientTextureDraw(RectangleF box, string file)
+            : base()
         {
-            if (TextureViewsPool == null) TextureViewsPool = new List<ClientTextureDraw>();
             this.box = box;
             this.texture = new Texture(System.IO.File.ReadAllBytes(file));
-            TextureViewsPool.Add(this);
         }
         public ClientTextureDraw(RectangleF box, Uri url)
+            : base()
         {
-            if (TextureViewsPool == null) TextureViewsPool = new List<ClientTextureDraw>();
             this.box = box;
             try
             {
@@ -43,23 +39,12 @@ namespace MIVClient
                 byte[] buffer = new byte[resp.ContentLength];
                 stream.Read(buffer, 0, buffer.Length);
                 this.texture = new Texture(buffer);
-                TextureViewsPool.Add(this);
             }
             catch { }
         }
-        public void destroy()
+        protected override void render(GTA.Graphics g)
         {
-            if (TextureViewsPool == null) TextureViewsPool = new List<ClientTextureDraw>();
-            else TextureViewsPool.Remove(this);
-        }
-
-        public static void renderAll(GTA.Graphics g)
-        {
-            if (TextureViewsPool == null) TextureViewsPool = new List<ClientTextureDraw>();
-            foreach (ClientTextureDraw view in TextureViewsPool)
-            {
-                g.DrawSprite(view.texture, view.box);
-            }
+            g.DrawSprite(texture, box);
         }
     }
 }

@@ -10,7 +10,8 @@ namespace MIVServer
         public UpdateDataStruct data;
         public ServerRequester requester;
         public PlayerCamera Camera;
-        public byte id;
+        public uint id;
+        private uint virtualWorld;
         private string nick, model;
         public object metadata;
 
@@ -20,6 +21,7 @@ namespace MIVServer
         public ServerPlayer(string nick, ClientConnection connection)
         {
             this.nick = nick;
+            virtualWorld = 0;
             model = "F_Y_NURSE";
             this.connection = connection;
             requester = new ServerRequester(this);
@@ -36,11 +38,35 @@ namespace MIVServer
             set
             {
                 gametime = value;
-                var bpf = new BinaryPacketFormatter(Commands.Player_setGameTime);
-                bpf.add(value.Ticks);
+                var bpf = new BinaryPacketFormatter(Commands.Game_setGameTime);
+                bpf.add((Int64)value.Ticks);
                 connection.write(bpf.getBytes());
             }
         }
+
+        private string currentPedText = "";
+        public string CurrentPedText
+        {
+            get
+            {
+                return currentPedText;
+            }
+            set
+            {
+                currentPedText = value;
+                var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerPedText);
+                bpf.add(id);
+                bpf.add(value);
+                foreach (var single in Server.instance.playerpool)
+                {
+                    if (single.id != this.id)
+                    {
+                        single.connection.write(bpf.getBytes());
+                    }
+                }
+            }
+        }
+
         public string Model
         {
             get
@@ -56,6 +82,22 @@ namespace MIVServer
                 Server.instance.broadcastPlayerModel(this);
             }
         }
+        public uint VirtualWorld
+        {
+            get
+            {
+                return virtualWorld;
+            }
+            set
+            {
+                virtualWorld = value;
+                var bpf = new BinaryPacketFormatter(Commands.Player_setVirtualWorld);
+                bpf.add(ModelDictionary.getPedModelByName(this.model));
+                connection.write(bpf.getBytes());
+                Server.instance.broadcastPlayerModel(this);
+            }
+        }
+
         public string Nick
         {
             get
@@ -78,8 +120,38 @@ namespace MIVServer
             set
             {
                 gravity = value;
-                var bpf = new BinaryPacketFormatter(Commands.Player_setGravity);
+                var bpf = new BinaryPacketFormatter(Commands.Game_setGravity);
                 bpf.add(value);
+                connection.write(bpf.getBytes());
+            }
+        }
+
+        public enum WeatherType
+        {
+            ExtraSunny = 0,
+            Sunny = 1,
+            SunnyAndWindy = 2,
+            Cloudy = 3,
+            Raining = 4,
+            Drizzle = 5,
+            Foggy = 6,
+            ThunderStorm = 7,
+            ExtraSunny2 = 8,
+            SunnyAndWindy2 = 9,
+        }
+
+        private WeatherType weather = 0;
+        public WeatherType Weather
+        {
+            get
+            {
+                return this.weather;
+            }
+            set
+            {
+                weather = value;
+                var bpf = new BinaryPacketFormatter(Commands.Game_setWeather);
+                bpf.add(new byte[1] { (byte)value });
                 connection.write(bpf.getBytes());
             }
         }
@@ -154,9 +226,9 @@ namespace MIVServer
 
             if (data.vehicle_id > 0)
             {
-                Server.instance.vehicleController.vehicles[data.vehicle_id].position = data.getPositionVector();
-                Server.instance.vehicleController.vehicles[data.vehicle_id].orientation = data.getOrientationQuaternion();
-                Server.instance.vehicleController.vehicles[data.vehicle_id].velocity = data.getVelocityVector();
+                //Server.instance.vehicleController.vehicles[data.vehicle_id].position = data.getPositionVector();
+                //Server.instance.vehicleController.vehicles[data.vehicle_id].orientation = data.getOrientationQuaternion();
+                //Server.instance.vehicleController.vehicles[data.vehicle_id].velocity = data.getVelocityVector();
             }
             Server.instance.api.invokeOnPlayerUpdate(this);
             //Server.instance.broadcastData(this);

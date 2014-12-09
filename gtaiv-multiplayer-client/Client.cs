@@ -35,6 +35,10 @@ namespace MIVClient
 
         private Dictionary<int, GTA.Vector3> bindPoints;
 
+        public uint CurrentVirtualWorld;
+
+        public bool BroadcastingPaused;
+
         public Client()
         {
             if (System.IO.File.Exists("_serverinit.ini"))
@@ -55,22 +59,25 @@ namespace MIVClient
 
         private void initAndConnect(string ip, short port, string nickname)
         {
-            playerNames = new Dictionary<byte, string>();
-            playerModels = new Dictionary<byte, string>();
+            BroadcastingPaused = true;
+            playerNames = new Dictionary<uint, string>();
+            playerModels = new Dictionary<uint, string>();
             isCurrentlyDead = false;
             actionQueue = new Queue<Action>();
             instance = this;
+
+            CurrentVirtualWorld = 0;
 
             cameraController = new CameraController(this);
 
             debugDraw = new ClientTextView(new System.Drawing.Point(10, 400), "", new GTA.Font("Segoe UI", 24, FontScaling.Pixel));
 
-            pedStreamer = new PedStreamer(this);
-            vehicleStreamer = new VehicleStreamer(this);
+            pedStreamer = new PedStreamer(this, 100.0f);
+            vehicleStreamer = new VehicleStreamer(this, 100.0f);
 
-            pedController = new PlayerPedController(pedStreamer);
-            npcPedController = new NPCPedController(pedStreamer);
-            vehicleController = new VehicleController(vehicleStreamer);
+            pedController = new PlayerPedController();
+            npcPedController = new NPCPedController();
+            vehicleController = new VehicleController();
             playerVehicleController = new PlayerVehicleController();
             chatController = new ChatController(this);
             keyboardHandler = new KeyboardHandler(this);
@@ -92,7 +99,6 @@ namespace MIVClient
                     client.Close();
                 }
                 client = new TcpClient();
-                INIReader ini = new INIReader(System.IO.File.ReadAllLines("server.ini"));
                 IPAddress address = IPAddress.Parse(ip);
                 nick = nickname;
 
@@ -137,8 +143,8 @@ namespace MIVClient
 
         void slow_update_Tick(object sender, EventArgs e)
         {
-            vehicleStreamer.updateSlow();
-            pedStreamer.updateSlow();
+            vehicleStreamer.UpdateSlow();
+            pedStreamer.UpdateSlow();
 
             npcPedController.update();
 
@@ -160,10 +166,8 @@ namespace MIVClient
             //AlternateHook.call(AlternateHook.OtherCommands.HIDE_HELP_TEXT_THIS_FRAME, 1);
             if (currentState == ClientState.Connected)
             {
-                pedStreamer.updateGfx();
-                vehicleStreamer.updateGfx();
-
-                updateAllPlayers();
+                pedStreamer.UpdateGfx();
+                vehicleStreamer.UpdateGfx();
             }
         }
 
@@ -224,8 +228,8 @@ namespace MIVClient
             if (bindPoints.ContainsKey(id)) getPlayerPed().Position = bindPoints[id];
         }
 
-        public Dictionary<byte, string> playerNames;
-        public Dictionary<byte, string> playerModels;
+        public Dictionary<uint, string> playerNames;
+        public Dictionary<uint, string> playerModels;
 
         public void updateAllPlayers()
         {
@@ -234,10 +238,15 @@ namespace MIVClient
                 var elemKey = serverConnection.playersdata.Keys.ToArray()[i];
                 var elemValue = serverConnection.playersdata[elemKey];
 
-                //if (elemValue.client_has_been_set) continue;
-                //else elemValue.client_has_been_set = true;
+                if (elemValue.client_has_been_set) continue;
+                else elemValue.client_has_been_set = true;
 
-                StreamedPed ped = pedController.getById(elemKey);
+                //if (!pedController.Exists(elemKey))
+                //{
+                    //pedController.Add(new StreamedPed(pedStreamer, "F_Y_NURSE", "-", Vector3.Zero, 0, (BlipColor)(elemKey % 13)));
+                //}
+
+                StreamedPed ped = pedController.GetInstance(elemKey);
                 ped.model = playerModels.ContainsKey(elemKey) ? playerModels[elemKey] : "F_Y_NURSE";
                 if (ped.position == Vector3.Zero)
                 {
@@ -280,133 +289,145 @@ namespace MIVClient
             if (currentState == ClientState.Connected)
             {
                 if (currentData == null) currentData = UpdateDataStruct.Zero;
-                try
+                if (!BroadcastingPaused)
                 {
-                    UpdateDataStruct data = new UpdateDataStruct();
-                    if (Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.Driver) == Player.Character)
+                    try
                     {
-                        Vector3 pos = Player.Character.CurrentVehicle.Position;
-                        data.pos_x = pos.X;
-                        data.pos_y = pos.Y;
-                        data.pos_z = pos.Z;
-
-
-                        Vector3 vel2 = Player.Character.CurrentVehicle.Velocity;
-                        if (currentData.pos_x != 0)
+                        UpdateDataStruct data = new UpdateDataStruct();
+                        if (Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.Driver) == Player.Character)
                         {
-                            float deltax = (currentData.pos_x - pos.X);
-                            float deltay = (currentData.pos_y - pos.Y);
-                            float deltaz = (currentData.pos_z - pos.Z);
-                            data.vel_x = deltax < 0 ? vel2.X * -1 : vel2.X;
-                            data.vel_y = deltay < 0 ? vel2.Y * -1 : vel2.Y;
-                            data.vel_z = deltaz < 0 ? vel2.Z * -1 : vel2.Z;
+                            if (vehicleController.dict.Count(a => a.Value.IsStreamedIn() && a.Value.gameReference == Player.Character.CurrentVehicle) > 0)
+                            {
+                                Vector3 pos = Player.Character.CurrentVehicle.Position;
+                                data.pos_x = pos.X;
+                                data.pos_y = pos.Y;
+                                data.pos_z = pos.Z;
+
+
+                                Vector3 vel2 = Player.Character.CurrentVehicle.Velocity;
+                                if (currentData.pos_x != 0)
+                                {
+                                    float deltax = (currentData.pos_x - pos.X);
+                                    float deltay = (currentData.pos_y - pos.Y);
+                                    float deltaz = (currentData.pos_z - pos.Z);
+                                    data.vel_x = deltax < 0 ? vel2.X * -1 : vel2.X;
+                                    data.vel_y = deltay < 0 ? vel2.Y * -1 : vel2.Y;
+                                    data.vel_z = deltaz < 0 ? vel2.Z * -1 : vel2.Z;
+                                }
+                                else
+                                {
+                                    data.vel_x = vel2.X;
+                                    data.vel_y = vel2.Y;
+                                    data.vel_z = vel2.Z;
+                                }
+
+                                Quaternion quat = Player.Character.CurrentVehicle.RotationQuaternion;
+                                data.rot_x = quat.X;
+                                data.rot_y = quat.Y;
+                                data.rot_z = quat.Z;
+                                data.rot_a = quat.W;
+
+                                data.vehicle_model = Player.Character.CurrentVehicle.Model.Hash;
+                                data.vehicle_health = Player.Character.CurrentVehicle.Health;
+                                var cveh = vehicleController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == Player.Character.CurrentVehicle);
+
+                                data.vehicle_id = cveh.Key;
+                                data.ped_health = Player.Character.Health;
+                                data.heading = Player.Character.CurrentVehicle.Heading;
+
+                                cveh.Value.position = pos;
+                                cveh.Value.orientation = quat;
+                            }
+                            data.state = 0;
                         }
                         else
                         {
-                            data.vel_x = vel2.X;
-                            data.vel_y = vel2.Y;
-                            data.vel_z = vel2.Z;
+                            Vector3 pos = Player.Character.Position;
+                            data.pos_x = pos.X;
+                            data.pos_y = pos.Y;
+                            data.pos_z = pos.Z;
+
+                            Vector3 vel = Player.Character.Velocity;
+                            data.vel_x = vel.X;
+                            data.vel_y = vel.Y;
+                            data.vel_z = vel.Z;
+
+                            data.rot_x = Player.Character.Direction.X;
+                            data.rot_y = Player.Character.Direction.Y;
+                            data.rot_z = Player.Character.Direction.Z;
+                            data.rot_a = 0;
+
+                            data.vehicle_model = 0;
+                            data.vehicle_health = 0;
+                            // for passengers:)client.pedController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == selectedPed)
+                            data.vehicle_id = Player.Character.isInVehicle() ? vehicleController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == Player.Character.CurrentVehicle).Key : 0;
+                            data.ped_health = Player.Character.Health;
+                            data.heading = Player.Character.Heading;
+                            data.weapon = Player.Character.Weapons.CurrentType.GetHashCode();
+                            data.state = 0;
+                            data.state |= Player.Character.isShooting ? PlayerState.IsShooting : 0;
+                            data.state |= Game.isGameKeyPressed(GameKey.Aim) ? PlayerState.IsAiming : 0;
+                            data.state |= Game.isGameKeyPressed(GameKey.Crouch) ? PlayerState.IsCrouching : 0;
+                            data.state |= Game.isGameKeyPressed(GameKey.Jump) ? PlayerState.IsJumping : 0;
+                            data.state |= Game.isGameKeyPressed(GameKey.Attack) ? PlayerState.IsShooting : 0;
+
+                            data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.RightFront) == Player.Character ? PlayerState.IsPassenger1 : 0;
+                            data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.LeftRear) == Player.Character ? PlayerState.IsPassenger2 : 0;
+                            data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.RightRear) == Player.Character ? PlayerState.IsPassenger3 : 0;
                         }
+                        data.vstate = 0;
+                        data.vstate |= Game.isGameKeyPressed(GameKey.MoveForward) ? VehicleState.IsAccelerating : 0;
+                        data.vstate |= Game.isGameKeyPressed(GameKey.MoveBackward) ? VehicleState.IsBraking : 0;
+                        data.vstate |= Game.isGameKeyPressed(GameKey.MoveLeft) ? VehicleState.IsSterringLeft : 0;
+                        data.vstate |= Game.isGameKeyPressed(GameKey.MoveRight) ? VehicleState.IsSterringRight : 0;
+                        data.vstate |= Player.Character.isGettingIntoAVehicle ? VehicleState.IsEnteringVehicle : 0;
+                        data.vstate |= (data.state & PlayerState.IsPassenger1) != 0 || (data.state & PlayerState.IsPassenger2) != 0 || (data.state & PlayerState.IsPassenger3) != 0
+                            ? VehicleState.IsAsPassenger : 0;
 
-                        Quaternion quat = Player.Character.CurrentVehicle.RotationQuaternion;
-                        data.rot_x = quat.X;
-                        data.rot_y = quat.Y;
-                        data.rot_z = quat.Z;
-                        data.rot_a = quat.W;
+                        var bpf = new BinaryPacketFormatter(Commands.UpdateData);
+                        bpf.add(data);
+                        serverConnection.write(bpf.getBytes());
 
-                        data.vehicle_model = Player.Character.CurrentVehicle.Model.Hash;
-                        data.vehicle_health = Player.Character.CurrentVehicle.Health;
-                        data.vehicle_id = vehicleController.getByVehicle(Player.Character.CurrentVehicle).id;
-                        data.ped_health = Player.Character.Health;
-                        data.heading = Player.Character.CurrentVehicle.Heading;
-                        if (vehicleController.streamer.vehicles.Count(a => a.gameReference != null && a.gameReference == Player.Character.CurrentVehicle) > 0)
+                        if (Player.Character.Health == 0 || Player.Character.isDead || !Player.Character.isAlive)
                         {
-                            var cveh = vehicleController.streamer.vehicles.First(a => a.gameReference != null && a.gameReference == Player.Character.CurrentVehicle);
-                            cveh.position = pos;
-                            cveh.orientation = quat;
+                            Player.Character.Die();
+                            isCurrentlyDead = true;
                         }
-                        data.state = 0;
+
+                        if (isCurrentlyDead && !Player.Character.isDead && Player.Character.isAlive && Player.Character.Health > 0)
+                        {
+                            Game.FadeScreenOut(200);
+                            isCurrentlyDead = false;
+
+                            var bpf2 = new BinaryPacketFormatter(Commands.InternalClient_requestSpawn);
+                            serverConnection.write(bpf2.getBytes());
+                        }
+
+                        currentData = data;
+
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Vector3 pos = Player.Character.Position;
-                        data.pos_x = pos.X;
-                        data.pos_y = pos.Y;
-                        data.pos_z = pos.Z;
-
-                        Vector3 vel = Player.Character.Velocity;
-                        data.vel_x = vel.X;
-                        data.vel_y = vel.Y;
-                        data.vel_z = vel.Z;
-
-                        data.rot_x = Player.Character.Direction.X;
-                        data.rot_y = Player.Character.Direction.Y;
-                        data.rot_z = Player.Character.Direction.Z;
-                        data.rot_a = 0;
-
-                        data.vehicle_model = 0;
-                        data.vehicle_health = 0;
-                        // for passengers:)
-                        data.vehicle_id = Player.Character.isInVehicle() ? vehicleController.getByVehicle(Player.Character.CurrentVehicle).id : 0;
-                        data.ped_health = Player.Character.Health;
-                        data.heading = Player.Character.Heading;
-                        data.weapon = Player.Character.Weapons.CurrentType.GetHashCode();
-                        data.state = 0;
-                        data.state |= Player.Character.isShooting ? PlayerState.IsShooting : 0;
-                        data.state |= Game.isGameKeyPressed(GameKey.Aim) ? PlayerState.IsAiming : 0;
-                        data.state |= Game.isGameKeyPressed(GameKey.Crouch) ? PlayerState.IsCrouching : 0;
-                        data.state |= Game.isGameKeyPressed(GameKey.Jump) ? PlayerState.IsJumping : 0;
-                        data.state |= Game.isGameKeyPressed(GameKey.Attack) ? PlayerState.IsShooting : 0;
-
-                        data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.RightFront) == Player.Character ? PlayerState.IsPassenger1 : 0;
-                        data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.LeftRear) == Player.Character ? PlayerState.IsPassenger2 : 0;
-                        data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.RightRear) == Player.Character ? PlayerState.IsPassenger3 : 0;
+                        Game.Log("Failed sending new player data with message " + ex.Message);
                     }
-                    data.vstate = 0;
-                    data.vstate |= Game.isGameKeyPressed(GameKey.MoveForward) ? VehicleState.IsAccelerating : 0;
-                    data.vstate |= Game.isGameKeyPressed(GameKey.MoveBackward) ? VehicleState.IsBraking : 0;
-                    data.vstate |= Game.isGameKeyPressed(GameKey.MoveLeft) ? VehicleState.IsSterringLeft : 0;
-                    data.vstate |= Game.isGameKeyPressed(GameKey.MoveRight) ? VehicleState.IsSterringRight : 0;
-                    data.vstate |= Player.Character.isGettingIntoAVehicle ? VehicleState.IsEnteringVehicle : 0;
-                    data.vstate |= (data.state & PlayerState.IsPassenger1) != 0 || (data.state & PlayerState.IsPassenger2) != 0 || (data.state & PlayerState.IsPassenger3) != 0
-                        ? VehicleState.IsAsPassenger : 0;
-
-                    var bpf = new BinaryPacketFormatter(Commands.UpdateData);
-                    bpf.add(data);
-                    serverConnection.write(bpf.getBytes());
-
-                    if (Player.Character.Health == 0 || Player.Character.isDead || !Player.Character.isAlive)
-                    {
-                        Player.Character.Die();
-                        isCurrentlyDead = true;
-                    }
-
-                    if (isCurrentlyDead && !Player.Character.isDead && Player.Character.isAlive && Player.Character.Health > 0)
-                    {
-                        Game.FadeScreenOut(200);
-                        isCurrentlyDead = false;
-
-                        var bpf2 = new BinaryPacketFormatter(Commands.InternalClient_requestSpawn);
-                        serverConnection.write(bpf2.getBytes());
-                    }
-
-                    currentData = data;
-                    serverConnection.flush();
-
                 }
-                catch (Exception ex)
-                {
-                    log("Failed sending new player data with message " + ex.Message);
-                }
-
                 try
                 {
-                    pedStreamer.update();
-                    vehicleStreamer.update();
+                    serverConnection.flush();
                 }
                 catch (Exception ex)
                 {
-                    log("Failed updating streamers with message " + ex.Message);
+                    Game.Log("Failed sending packets " + ex.Message);
+                }
+                try
+                {
+                    updateAllPlayers();
+                    pedStreamer.Update();
+                    vehicleStreamer.Update();
+                }
+                catch (Exception ex)
+                {
+                    log("Failed updating streamers and players with message " + ex.Message);
                 }
             }
 

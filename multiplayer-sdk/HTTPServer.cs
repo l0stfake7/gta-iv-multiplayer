@@ -23,16 +23,23 @@ namespace MIVServer
         void onConnect(IAsyncResult iar)
         {
             var client = http_listener.EndAcceptTcpClient(iar);
-            var streamReader = new StreamReader(client.GetStream());
-            string request = streamReader.ReadLine();
-            string response = createResponse(request);
-            if (response != null)
+            try
             {
-                byte[] buf = Encoding.UTF8.GetBytes(response);
-                streamReader.BaseStream.Write(buf, 0, buf.Length);
+                using (var streamReader = new StreamReader(client.GetStream()))
+                {
+                    string request = streamReader.ReadLine();
+                    if (request != null)
+                    {
+                        string response = createResponse(request);
+                        if (response != null)
+                        {
+                            byte[] buf = Encoding.UTF8.GetBytes(response);
+                            streamReader.BaseStream.Write(buf, 0, buf.Length);
+                        }
+                    }
+                }
             }
-            streamReader.Close();
-            Console.WriteLine(request);
+            catch { }
             http_listener.BeginAcceptTcpClient(onConnect, null);
         }
 
@@ -49,11 +56,20 @@ namespace MIVServer
                 "Vary: Accept-Encoding\r\n";
                 if (command == "get_server_data")
                 {
-                    string response = "name=" + Server.instance.config.getString("server_name") + "\nmax_players=" + Server.instance.config.getString("max_players") + "\ngame_port=" + Server.instance.config.getString("game_port") +  "\nplayers=" +
+                    string response = "name=" + Server.instance.config.getString("server_name") + "\nmax_players=" + Server.instance.config.getString("max_players") + "\ngame_port=" + Server.instance.config.getString("game_port") + "\nplayers=" +
                         Server.instance.playerpool.Count;
 
                     return headers + "Content-Length: " + response.Length + "\r\n\r\n" + response + "\r\n\r\n";
                 }
+            }
+            else
+            {
+                string headers = "HTTP/1.1 200 OK\r\n" +
+                "Content-Type: text/HTML\r\n" +
+                "Accept-Ranges: bytes\r\n" +
+                "Vary: Accept-Encoding\r\n" +
+                "refresh:5;url=http://gta.vdgtech.eu\r\n\r\nThat command is invalid. Redirecting to gta.vdgtech.eu in 5 seconds.\r\n\r\n";
+                return headers;
             }
             return null;
         }

@@ -8,9 +8,10 @@ using GTA;
 
 namespace MIVClient
 {
-    public class ClientTextView
+    public class ClientTextView : DrawBase
     {
-        public enum DrawType{
+        public enum DrawType
+        {
             Rectangle,
             Point
         }
@@ -22,49 +23,36 @@ namespace MIVClient
         public GTA.Font font;
         public Color color;
 
-        public static List<ClientTextView> TextViewsPool;
-
         public ClientTextView(RectangleF textbox, TextAlignment alignment, string text, GTA.Font font, Color color)
+            : base()
         {
-            if (TextViewsPool == null) TextViewsPool = new List<ClientTextView>();
             this.textbox = textbox;
             this.alignment = alignment;
             this.text = text;
             this.font = font;
             this.color = color;
             type = DrawType.Rectangle;
-            TextViewsPool.Add(this);
         }
         public ClientTextView(Point point, string text, GTA.Font font)
+            : base()
         {
-            if (TextViewsPool == null) TextViewsPool = new List<ClientTextView>();
             this.point = point;
             this.text = text;
             this.font = font;
             type = DrawType.Point;
-            TextViewsPool.Add(this);
         }
 
-        public void destroy()
+        protected override void render(GTA.Graphics g)
         {
-            if (TextViewsPool == null) TextViewsPool = new List<ClientTextView>();
-            TextViewsPool.Remove(this);
-        }
-
-        public static void renderAll(GTA.Graphics g)
-        {
-            if (TextViewsPool == null) TextViewsPool = new List<ClientTextView>();
-            foreach (ClientTextView view in TextViewsPool)
+            if (type == DrawType.Rectangle)
             {
-                if (view.type == DrawType.Rectangle)
-                {
-                    g.DrawText(view.text, view.textbox, view.alignment, view.color, view.font);
-                }
-                else
-                {
-                    g.DrawText(view.text, view.point.X, view.point.Y, view.font);
-                }
+                g.DrawText(text, textbox, alignment, color, font);
             }
+            else
+            {
+                g.DrawText(text, point.X, point.Y, font);
+            }
+
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System;
 
 namespace MIVClient
 {
@@ -23,6 +25,11 @@ namespace MIVClient
         public void writeChat(string text)
         {
             chatconsole.Enqueue(text);
+            try
+            {
+                File.AppendAllText("miv_chatHistory.txt", DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + ": " + text + "\r\n");
+            }
+            catch { }
             while (chatconsole.Count > 12)
             {
                 chatconsole.Dequeue();

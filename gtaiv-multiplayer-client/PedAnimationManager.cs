@@ -54,7 +54,7 @@ namespace MIVClient
         public void playAnimation(PedAnimations anim, params object[] param)
         {
             lastParams = param;
-            if (!ped.streamedIn || ped.gameReference == null || !ped.gameReference.Exists())
+            if (ped.IsStreamedIn())
             {
                 currentAnimation = PedAnimations.NotStreamed;
                 return;

@@ -963,7 +963,7 @@ namespace DeathmatchGamemode
             api.createVehicle("POLICE", new Vector3(-173.0317f, 272.3221f, 14.43763f), new Quaternion(-0.02928617f, 0.01854296f, 0.7071857f, 0.7061777f)); //oplice
             api.createVehicle("BLISTA", new Vector3(-193.0686f, 293.6498f, 14.57422f), new Quaternion(-0.005227661f, 0.03427088f, -0.01627137f, 0.9992664f)); //bus
             api.createVehicle("PRIMO", new Vector3(-193.3126f, 333.744f, 14.53526f), new Quaternion(-0.001298098f, 0.03176659f, -0.02627786f, 0.999149f)); //primo
-            api.createVehicle("ROMEO", new Vector3(-230.3364f, 340.1446f, 14.50708f), new Quaternion(-0.03258187f, -0.006839427f, 0.9927344f, -0.115629f)); //romeo
+            api.createVehicle("ROMERO", new Vector3(-230.3364f, 340.1446f, 14.50708f), new Quaternion(-0.03258187f, -0.006839427f, 0.9927344f, -0.115629f)); //romeo
             api.createVehicle("POLICE2", new Vector3(-254.6183f, 272.2597f, 14.5031f), new Quaternion(-0.02169987f, 0.02011596f, 0.7134325f, 0.700099f)); //romeo
             api.createVehicle("PRIMO", new Vector3(-246.4241f, 272.4527f, 14.48144f), new Quaternion(-0.01935347f, 0.01869651f, 0.7128517f, 0.7007983f)); //primo
             api.createVehicle("TAXI2", new Vector3(-226.1842f, 272.3907f, 14.49781f), new Quaternion(-0.0246615f, 0.01908576f, 0.7055625f, 0.7079613f)); //taxi
@@ -977,7 +977,7 @@ namespace DeathmatchGamemode
             api.createVehicle("SABREGT", new Vector3(-190.662f, 238.0278f, 14.52205f), new Quaternion(0.005922097f, -0.03470945f, 0.1292048f, 0.9909926f)); //sabre gt
             api.createVehicle("BLISTA", new Vector3(-179.097f, 193.3891f, 14.47749f), new Quaternion(0.003143757f, -0.01116914f, 0.9981435f, -0.05979124f)); //bus
             api.createVehicle("PMP600", new Vector3(-168.2918f, 151.6172f, 14.45264f), new Quaternion(0.02342152f, 0.0009504845f, 0.9943504f, -0.1035266f)); //bobcat
-            api.createVehicle("ROMEO", new Vector3(-214.6939f, 160.3058f, 14.44315f), new Quaternion(-0.001716826f, -0.03475021f, -0.01936596f, 0.999207f)); //romeo
+            api.createVehicle("ROMERO", new Vector3(-214.6939f, 160.3058f, 14.44315f), new Quaternion(-0.001716826f, -0.03475021f, -0.01936596f, 0.999207f)); //romeo
             api.createVehicle("PRIMO", new Vector3(-215.0857f, 193.1165f, 14.4923f), new Quaternion(0.001982026f, 0.02319973f, 0.01776342f, 0.999571f)); //primo
             api.createVehicle("POLMAV", new Vector3(-215.3695f, 223.9587f, 14.4941f), new Quaternion(-0.003962317f, 0.0218101f, 0.003715113f, 0.9997474f)); //limo
             api.createVehicle("NRG900", new Vector3(-276.691f, 284.2321f, 14.51862f), new Quaternion(0.001020271f, 0.03293191f, 0.0185688f, 0.9992846f)); //nrg
@@ -1073,6 +1073,16 @@ namespace DeathmatchGamemode
                 player.Camera.Reset();
                 return;
             }
+            if (command == "weather")
+            {
+                player.Weather = (ServerPlayer.WeatherType)int.Parse(param[0]);
+                return;
+            }
+            if (command == "time")
+            {
+                player.GameTime = new TimeSpan(6, 30, 10);
+                return;
+            }
             if (command == "test")
             {
                 var pos = new Vector3(2468.039f, 147.9008f, 5.838196f);
@@ -1096,6 +1106,8 @@ namespace DeathmatchGamemode
             {
                 inSkinSelectionMode = true
             };
+            player.Weather = ServerPlayer.WeatherType.SunnyAndWindy;
+            player.GameTime = new TimeSpan(17, 00, 00);
         }
 
         private void api_onPlayerKeyDown(ServerPlayer player, System.Windows.Forms.Keys key)
@@ -1106,8 +1118,8 @@ namespace DeathmatchGamemode
                 if (key == System.Windows.Forms.Keys.Left)
                 {
                     var dict = ModelDictionary.getAllPedModels();
-                    data.currentModelIndex--;
-                    if (data.currentModelIndex < 0) data.currentModelIndex = (uint)(dict.Count - 1);
+                    if (data.currentModelIndex == 0) data.currentModelIndex = (uint)(dict.Count - 1);
+                    else data.currentModelIndex--;
                     player.Model = dict.Keys.ToArray()[data.currentModelIndex];
                 }
                 if (key == System.Windows.Forms.Keys.Right)
@@ -1131,6 +1143,11 @@ namespace DeathmatchGamemode
         {
             api.writeChat(player.Nick + "(" + player.id + "): " + text);
             Console.WriteLine("# " + player.Nick + " [" + player.id + "]: " + text);
+            player.CurrentPedText = text;
+            after(2500, delegate
+            {
+                player.CurrentPedText = "";
+            });
         }
     }
 }

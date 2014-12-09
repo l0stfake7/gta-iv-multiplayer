@@ -23,6 +23,7 @@ namespace MIVClientGUI
         {
             instance = this;
             InitializeComponent();
+            loadConfiguration();
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -77,7 +78,7 @@ namespace MIVClientGUI
             {
                 File.WriteAllText("servers.list", "");
             }
-            listView1.Clear();
+            listView1.Items.Clear();
             var servers = loadFromFile();
             foreach (ServerInfo server in servers)
             {
@@ -90,18 +91,27 @@ namespace MIVClientGUI
                         string ini = new StreamReader(response.GetResponseStream()).ReadToEnd();
                         INIReader reader = new INIReader(ini.Split('\n'));
                         response.Close();
-                        ListViewItem item = new ListViewItem(reader.getString("name") + " (" + server.IP + ":" + server.Port.ToString() + " " + reader.getString("players") + "/" + reader.getString("max_players") + ")");
-                        server.GamePort = (short)reader.getInt32("game_port");
+                        server.GamePort = reader.getInt16("game_port");
+                        ListViewItem item = createListItem(reader.getString("name"), server.IP, server.Port.ToString() + "." + server.GamePort.ToString(), reader.getString("players") + "/" + reader.getString("max_players"));
                         item.Tag = server;
                         listView1.Items.Add(item);
                     }
                     catch
                     {
-                        ListViewItem item = new ListViewItem("Offline (" + server.IP + ":" + server.Port.ToString() + ")");
+                        ListViewItem item = createListItem("Offline", server.IP, server.Port.ToString() + "." + server.GamePort.ToString(), "-");
                         listView1.Items.Add(item);
                     }
                 })).Start();
             }
+        }
+
+        private ListViewItem createListItem(string servername, string ip, string ports, string playercount)
+        {
+            ListViewItem item = new ListViewItem(new string[4]{
+                servername, ip, ports, playercount
+            });
+           // item.Font = new System.Drawing.Font(new FontFamily("Segoe UI"), 16.0f, FontStyle.Regular);
+            return item;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -126,6 +136,7 @@ namespace MIVClientGUI
 
         private void button1_Click(object sender, EventArgs e)
         {
+            saveConfiguration();
             ServerInfo server = listView1.SelectedItems[0].Tag as ServerInfo;
             if (server != null && server.GamePort > 1)
             {
@@ -134,10 +145,7 @@ namespace MIVClientGUI
                 ini += "port=" + server.GamePort + "\r\n";
                 ini += "nickname=" + textBox1.Text + "\r\n";
                 File.WriteAllText("_serverinit.ini", ini);
-                Process gameProcess = new Process();
-                gameProcess.StartInfo = new ProcessStartInfo("LaunchGTAIV.exe");
-                gameProcess.Start();
-                gameProcess.WaitForExit();
+                new GameLaunchedForm().ShowDialog();
             }
         }
 
@@ -177,6 +185,27 @@ namespace MIVClientGUI
                 button1.Enabled = false;
                 button3.Enabled = false;
             }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            listView1.SelectedItems[0].Remove();
+            System.IO.File.Delete("servers.list");
+            foreach (ListViewItem server in listView1.Items)
+            {
+                var info = (ServerInfo)server.Tag;
+                System.IO.File.AppendAllLines("servers.list", new string[1]{
+                    info.IP + ":" + info.Port
+                });
+            }
+            refreshList();
+        }
+
+        private void runGameWithoutClientToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process gameProcess = new Process();
+            gameProcess.StartInfo = new ProcessStartInfo("LaunchGTAIV.exe");
+            gameProcess.Start();
         }
     }
 }

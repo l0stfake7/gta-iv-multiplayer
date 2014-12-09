@@ -21,7 +21,6 @@ namespace MIVServer
             veh.position = position;
             veh.orientation = orientation;
             veh.model = model;
-            veh.velocity = Vector3.Zero;
             vehicles.Add(vid, veh);
             if(Server.instance.playerpool != null) foreach (var player in Server.instance.playerpool)
             {
@@ -29,8 +28,7 @@ namespace MIVServer
                 bpf.add(veh.id);
                 bpf.add(veh.position);
                 bpf.add(veh.orientation);
-                bpf.add(veh.velocity);
-                bpf.add(veh.model);
+                bpf.add(ModelDictionary.getVehicleByName(veh.model));
                 player.connection.write(bpf.getBytes());
             }
             return veh;
@@ -44,7 +42,7 @@ namespace MIVServer
             }
         }
 
-        public ServerVehicle getById(uint id, int model, Vector3 position)
+        public ServerVehicle getById(uint id)
         {
             if (!vehicles.ContainsKey(id))
             {
@@ -63,9 +61,4 @@ namespace MIVServer
         }
     }
 
-    public class ServerVehicleInfo
-    {
-        public uint id;
-        public ServerVehicle vehicle;
-    }
 }

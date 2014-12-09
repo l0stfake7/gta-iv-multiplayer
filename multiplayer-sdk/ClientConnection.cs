@@ -130,7 +130,7 @@ namespace MIVServer
                                 if (player != null)
                                 {
                                     uint requestid = bpr.readUInt32();
-                                    byte playerid = bpr.readByte();
+                                    uint playerid = bpr.readUInt32();
                                     Request.dispatch(requestid, playerid);
                                 }
                             }
@@ -187,7 +187,7 @@ namespace MIVServer
                             {
                                 if (player != null)
                                 {
-                                    byte playerid = bpr.readByte();
+                                    uint playerid = bpr.readUInt32();
                                     var bpf = new BinaryPacketFormatter(Commands.Player_setHealth);
                                     bpf.add(Server.instance.getPlayerById(playerid).data.ped_health - 10);
                                     Server.instance.getPlayerById(playerid).connection.write(bpf.getBytes());

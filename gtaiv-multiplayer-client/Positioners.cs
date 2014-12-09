@@ -36,13 +36,13 @@ namespace MIVClient
             if (ped.gameReference != null) preparePed(ped.gameReference);
         }
 
-        public void updatePed(byte id, UpdateDataStruct data, StreamedPed ped)
+        public void updatePed(uint id, UpdateDataStruct data, StreamedPed ped)
         {
             var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z - 1.0f);
             ped.position = posnew;
             ped.heading = data.heading;
             ped.direction = new Vector3(data.rot_x, data.rot_y, data.rot_z);
-            if (ped.streamedIn && data.vehicle_id == 0)
+            if (ped.IsStreamedIn() && data.vehicle_id == 0)
             {
                 if (ped.gameReference.isInVehicle())
                 {
@@ -61,7 +61,7 @@ namespace MIVClient
                 if (healthDelta > 20 && healthDelta < 100)
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Player_damage);
-                    bpf.add(new byte[1] { id });
+                    bpf.add(id);
                     //Client.instance.chatController.writeChat("damaged " + healthDelta) ;
                     Client.instance.serverConnection.write(bpf.getBytes());
                 }
@@ -111,17 +111,17 @@ namespace MIVClient
             }
         }
 
-        public void updateVehicle(byte id, UpdateDataStruct data, StreamedPed ped)
+        public void updateVehicle(uint id, UpdateDataStruct data, StreamedPed ped)
         {
             if (data.vehicle_id > 0)
             {
                 var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z + 1.0f);
-                StreamedVehicle veh = vehicleController.getById(data.vehicle_id);
+                StreamedVehicle veh = vehicleController.GetInstance(data.vehicle_id);
                 if (veh != null)
                 {
-                    if (veh.streamedIn)
+                    if (veh.IsStreamedIn())
                     {
-                        if (ped != null && ped.streamedIn && !ped.gameReference.isInVehicle())
+                        if (ped != null && ped.IsStreamedIn() && !ped.gameReference.isInVehicle())
                         {
                             if ((data.state & PlayerState.IsPassenger1) != 0)
                             {
@@ -142,14 +142,15 @@ namespace MIVClient
                         }
                         if ((data.vstate & VehicleState.IsAsPassenger) != 0) return;
                         veh.position = posnew;
-                        if (veh.gameReference.Position.DistanceTo(posnew) > 2.0f)
-                        {
-                            veh.gameReference.Position = posnew;
-                        }
+                        //if (veh.gameReference.Position.DistanceTo(posnew) > 2.0f)
+                        //{
+                            //veh.gameReference.Position = posnew;
+                        //}
+                        veh.gameReference.Position = posnew;
                         veh.orientation = new Quaternion(data.rot_x, data.rot_y, data.rot_z, data.rot_a);
                         //veh.gameReference.ApplyForce(, Vector3.Zero);
                         veh.gameReference.RotationQuaternion = veh.orientation;
-                        veh.gameReference.Velocity = new Vector3(data.vel_x, data.vel_y, data.vel_z);
+                        //veh.gameReference.Velocity = new Vector3(data.vel_x, data.vel_y, data.vel_z);
                         if (veh.gameReference.Velocity.Length() > 2.0f)
                         {
                             ped.gameReference.Task.DrivePointRoute(veh.gameReference, 999.0f, posnew + veh.gameReference.Velocity);

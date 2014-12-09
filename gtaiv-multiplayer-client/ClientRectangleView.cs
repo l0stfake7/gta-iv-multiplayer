@@ -8,34 +8,20 @@ using GTA;
 
 namespace MIVClient
 {
-    public class ClientRectangleView
+    public class ClientRectangleView : DrawBase
     {
         public RectangleF box;
         public Color color;
 
-        public static List<ClientRectangleView> RectangleViewsPool;
-
-        public ClientRectangleView(RectangleF box, Color color)
+        public ClientRectangleView(RectangleF box, Color color) : base()
         {
-            if (RectangleViewsPool == null) RectangleViewsPool = new List<ClientRectangleView>();
             this.box = box;
             this.color = color;
-            RectangleViewsPool.Add(this);
         }
 
-        public void destroy()
+        protected override void render(GTA.Graphics g)
         {
-            if (RectangleViewsPool == null) RectangleViewsPool = new List<ClientRectangleView>();
-            RectangleViewsPool.Remove(this);
-        }
-
-        public static void renderAll(GTA.Graphics g)
-        {
-            if (RectangleViewsPool == null) RectangleViewsPool = new List<ClientRectangleView>();
-            foreach (ClientRectangleView view in RectangleViewsPool)
-            {
-                g.DrawRectangle(view.box, view.color);
-            }
+            g.DrawRectangle(box, color);
         }
     }
 }
