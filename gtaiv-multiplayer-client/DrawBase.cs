@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace MIVClient
 {
     public abstract class DrawBase
     {
-
         private static List<DrawBase> ViewsPool = new List<DrawBase>();
+
         protected DrawBase()
         {
             ViewsPool.Add(this);
         }
+
         public static void renderAll(GTA.Graphics g)
         {
             foreach (var view in ViewsPool)
@@ -21,6 +18,7 @@ namespace MIVClient
                 view.render(g);
             }
         }
+
         public void destroy()
         {
             ViewsPool.Remove(this);

@@ -1,40 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MIVSDK;
+﻿using MIVSDK;
 using SharpDX;
 
 namespace MIVServer
 {
     public class PlayerCamera
     {
-        ServerPlayer player;
+        private ServerPlayer player;
 
         public PlayerCamera(ServerPlayer player)
         {
             this.player = player;
         }
 
-        public Vector3 Position
-        {
-            set
-            {
-                var bpf = new BinaryPacketFormatter(Commands.Camera_setPosition);
-                bpf.add(value);
-                player.connection.write(bpf.getBytes());
-            }
-        }
-        public Vector3 Orientation
-        {
-            set
-            {
-                var bpf = new BinaryPacketFormatter(Commands.Camera_setOrientation);
-                bpf.add(value);
-                player.connection.write(bpf.getBytes());
-            }
-        }
         public Vector3 Direction
         {
             set
@@ -44,11 +21,32 @@ namespace MIVServer
                 player.connection.write(bpf.getBytes());
             }
         }
+
         public float FOV
         {
             set
             {
                 var bpf = new BinaryPacketFormatter(Commands.Camera_setFOV);
+                bpf.add(value);
+                player.connection.write(bpf.getBytes());
+            }
+        }
+
+        public Vector3 Orientation
+        {
+            set
+            {
+                var bpf = new BinaryPacketFormatter(Commands.Camera_setOrientation);
+                bpf.add(value);
+                player.connection.write(bpf.getBytes());
+            }
+        }
+
+        public Vector3 Position
+        {
+            set
+            {
+                var bpf = new BinaryPacketFormatter(Commands.Camera_setPosition);
                 bpf.add(value);
                 player.connection.write(bpf.getBytes());
             }

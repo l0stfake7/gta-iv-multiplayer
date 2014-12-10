@@ -1,4 +1,5 @@
 ﻿using SharpDX;
+
 namespace MIVSDK
 {
     public enum ClientState
@@ -37,6 +38,7 @@ namespace MIVSDK
         Player_freeze,
         Player_unfreeze,
         Player_setVirtualWorld,
+        Player_setVehicleHealth,
 
         Global_setPlayerName,
         Global_setPlayerModel,
@@ -53,6 +55,8 @@ namespace MIVSDK
         Vehicle_repair,
         Vehicle_repaint,
         Vehicle_setVirtualWorld,
+        Vehicle_damage,
+        Vehicle_setHealth,
 
         TextView_create,
         TextView_destroy,
@@ -128,7 +132,7 @@ namespace MIVSDK
 
         InternalClient_requestSpawn,
         InternalClient_finishSpawn,
-        
+
         Request_getSelectedPlayer,
         Request_getCameraPosition,
         Request_getCameraDirection,
@@ -161,6 +165,7 @@ namespace MIVSDK
         IsSterringRight = 8,
         IsAsPassenger = 16,
         IsEnteringVehicle = 32,
+        IsSprinting = 64,
     }
 
     public class UpdateDataStruct

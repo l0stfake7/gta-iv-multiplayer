@@ -66,45 +66,59 @@ namespace MIVClient
                     Client.instance.serverConnection.write(bpf.getBytes());
                 }
 
-                ped.gameReference.Position = posnew;
-                ped.gameReference.Heading = data.heading;
+                bool cancelPositionUpdate = false;
 
                 if ((data.state & PlayerState.IsShooting) != 0)
                 {
                     ped.animator.playAnimation(PedAnimations.Shoot);
-                } else 
-                if ((data.state & PlayerState.IsAiming) != 0)
-                {
-                    ped.animator.playAnimation(PedAnimations.Aim);
-                } else 
-                if ((data.state & PlayerState.IsRagdoll) != 0)
-                {
-                    ped.animator.playAnimation(PedAnimations.Ragdoll);
-                } else 
-                if ((data.vstate & VehicleState.IsEnteringVehicle) != 0)
-                {
-                    ped.animator.playAnimation(PedAnimations.EnterClosestVehicle);
-                } else
-                if ((data.state & PlayerState.IsCrouching) != 0)
-                {
-                    ped.animator.playAnimation(PedAnimations.Couch);
+                    cancelPositionUpdate = true;
                 }
                 else
-                {
-                    if (new Vector3(data.vel_x, data.vel_y, data.vel_z).Length() > 2.2f)
+                    if ((data.state & PlayerState.IsAiming) != 0)
                     {
-                        ped.animator.playAnimation(PedAnimations.Run);
-                    }
-                    else if (new Vector3(data.vel_x, data.vel_y, data.vel_z).Length() > 0.3f)
-                    {
-                        ped.animator.playAnimation(PedAnimations.Walk);
+                        ped.animator.playAnimation(PedAnimations.Aim);
+                        cancelPositionUpdate = true;
                     }
                     else
-                    {
-                        ped.animator.playAnimation(PedAnimations.StandStill);
-                    }
+                        if ((data.state & PlayerState.IsRagdoll) != 0)
+                        {
+                            ped.animator.playAnimation(PedAnimations.Ragdoll);
+                        }
+                        else
+                            if ((data.vstate & VehicleState.IsEnteringVehicle) != 0)
+                            {
+                                ped.animator.playAnimation(PedAnimations.EnterClosestVehicle);
+                                cancelPositionUpdate = true;
+                            }
+                            else
+                                if ((data.state & PlayerState.IsCrouching) != 0)
+                                {
+                                    ped.animator.playAnimation(PedAnimations.Couch);
+                                }
+                                else
+                                {
+                                    if ((data.vstate & VehicleState.IsAccelerating) != 0)
+                                    {
+                                        if ((data.vstate & VehicleState.IsSprinting) != 0)
+                                        {
+                                            ped.animator.playAnimation(PedAnimations.Run);
+                                        }
+                                        else
+                                        {
+                                            ped.animator.playAnimation(PedAnimations.Walk);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        ped.animator.playAnimation(PedAnimations.StandStill);
+                                    }
+                                }
 
+                if (!cancelPositionUpdate)
+                {
+                    ped.gameReference.Position = posnew;
                 }
+                ped.gameReference.Heading = data.heading;
 
                 //ped.gameReference.Velocity = new Vector3(elemValue.vel_x, elemValue.vel_y, elemValue.vel_z);
                 //ped.gameReference.Task.ClearAllImmediately();
@@ -115,7 +129,7 @@ namespace MIVClient
         {
             if (data.vehicle_id > 0)
             {
-                var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z + 1.0f);
+                var posnew = new Vector3(data.pos_x, data.pos_y, data.pos_z);
                 StreamedVehicle veh = vehicleController.GetInstance(data.vehicle_id);
                 if (veh != null)
                 {
@@ -140,28 +154,53 @@ namespace MIVClient
                                 ped.gameReference.WarpIntoVehicle(veh.gameReference, VehicleSeat.Driver);
                             }
                         }
+
+                        int healthDelta = data.ped_health - ped.gameReference.Health;
+                        ped.gameReference.Health = data.ped_health;
+                        ped.last_game_health = data.ped_health;
+
+                        if (healthDelta > 20 && healthDelta < 100)
+                        {
+                            var bpf = new BinaryPacketFormatter(Commands.Player_damage);
+                            bpf.add(id);
+                            //Client.instance.chatController.writeChat("damaged " + healthDelta) ;
+                            Client.instance.serverConnection.write(bpf.getBytes());
+                        }
+
+                        int vehicleHealthDelta = data.vehicle_health - veh.gameReference.Health;
+                        veh.gameReference.Health = data.vehicle_health;
+                        veh.last_game_health = data.vehicle_health;
+
+                        if (vehicleHealthDelta > 20 && vehicleHealthDelta < 100 && GTA.Native.Function.Call<bool>("HAS_CAR_BEEN_DAMAGED_BY_CHAR", new GTA.Native.Parameter(Player.Character)))
+                        {
+                            chatController.writeChat("yay damaged some");
+                            var bpf = new BinaryPacketFormatter(Commands.Vehicle_damage, id, ped.vehicle_id);
+                            Client.instance.serverConnection.write(bpf.getBytes());
+                        }
+
                         if ((data.vstate & VehicleState.IsAsPassenger) != 0) return;
                         veh.position = posnew;
-                        //if (veh.gameReference.Position.DistanceTo(posnew) > 2.0f)
-                        //{
-                            //veh.gameReference.Position = posnew;
-                        //}
-                        veh.gameReference.Position = posnew;
+                        if (veh.gameReference.Position.DistanceTo(posnew) > 1.0f)
+                        {
+                            veh.gameReference.Position = posnew;
+                        }
+                        //veh.gameReference.Position = posnew;
                         veh.orientation = new Quaternion(data.rot_x, data.rot_y, data.rot_z, data.rot_a);
                         //veh.gameReference.ApplyForce(, Vector3.Zero);
                         veh.gameReference.RotationQuaternion = veh.orientation;
-                        //veh.gameReference.Velocity = new Vector3(data.vel_x, data.vel_y, data.vel_z);
-                        if (veh.gameReference.Velocity.Length() > 2.0f)
+                        var vel = new Vector3(data.vel_x, data.vel_y, data.vel_z);
+                        if (System.Math.Abs(veh.gameReference.Velocity.Length() - vel.Length()) > 6.0f)
                         {
-                            ped.gameReference.Task.DrivePointRoute(veh.gameReference, 999.0f, posnew + veh.gameReference.Velocity);
+                            veh.gameReference.ApplyForce(vel);
                         }
-                        else if ((data.vstate & VehicleState.IsBraking) != 0)
+                        if ((data.vstate & VehicleState.IsBraking) == 0)
                         {
                             ped.gameReference.Task.DrivePointRoute(veh.gameReference, 999.0f, posnew - veh.gameReference.Velocity);
                         }
-                        else 
-
-                        veh.gameReference.Health = data.vehicle_health;
+                        else
+                        {
+                            ped.gameReference.Task.DrivePointRoute(veh.gameReference, 999.0f, posnew + veh.gameReference.Velocity);
+                        }
                     }
                 }
             }

@@ -1,7 +1,7 @@
 ﻿using MIVSDK;
 using SharpDX;
-using System.Net;
 using System.Collections.Generic;
+using System.Net;
 
 namespace MIVServer
 {
@@ -32,6 +32,8 @@ namespace MIVServer
 
         public delegate void onPlayerResumeDelegate(ServerPlayer player);
 
+        public delegate void onPlayerSendCommandDelegate(ServerPlayer player, string command, string[] param);
+
         public delegate void onPlayerSendTextDelegate(ServerPlayer player, string text);
 
         public delegate void onPlayerSpawnDelegate(ServerPlayer player);
@@ -41,8 +43,6 @@ namespace MIVServer
         public delegate void onPlayerUpdateDelegate(ServerPlayer player);
 
         public delegate void onPlayerWriteConsoleDelegate(ServerPlayer player, string text);
-
-        public delegate void onPlayerSendCommandDelegate(ServerPlayer player, string command, string[] param);
 
         public event onPlayerConnectDelegate onPlayerConnect;
 
@@ -62,6 +62,8 @@ namespace MIVServer
 
         public event onPlayerResumeDelegate onPlayerResume;
 
+        public event onPlayerSendCommandDelegate onPlayerSendCommand;
+
         public event onPlayerSendTextDelegate onPlayerSendText;
 
         public event onPlayerSpawnDelegate onPlayerSpawn;
@@ -71,8 +73,6 @@ namespace MIVServer
         public event onPlayerUpdateDelegate onPlayerUpdate;
 
         public event onPlayerWriteConsoleDelegate onPlayerWriteConsole;
-
-        public event onPlayerSendCommandDelegate onPlayerSendCommand;
 
         public ServerVehicle createVehicle(string model, Vector3 position, Quaternion orientation)
         {
@@ -139,6 +139,11 @@ namespace MIVServer
             if (onPlayerResume != null) onPlayerResume.Invoke(player);
         }
 
+        public void invokeOnPlayerSendCommand(ServerPlayer player, string command, string[] param)
+        {
+            if (onPlayerSendCommand != null) onPlayerSendCommand.Invoke(player, command, param);
+        }
+
         public void invokeOnPlayerSendText(ServerPlayer player, string text)
         {
             if (onPlayerSendText != null) onPlayerSendText.Invoke(player, text);
@@ -163,17 +168,7 @@ namespace MIVServer
         {
             if (onPlayerWriteConsole != null) onPlayerWriteConsole.Invoke(player, text);
         }
-        public void invokeOnPlayerSendCommand(ServerPlayer player, string command, string[] param)
-        {
-            if (onPlayerSendCommand != null) onPlayerSendCommand.Invoke(player, command, param);
-        }
 
-        /// <summary>
-        /// separator
-        /// :>
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
         public void writeChat(ServerPlayer player, string text)
         {
             var bpf = new BinaryPacketFormatter(Commands.Chat_writeLine);
@@ -185,7 +180,5 @@ namespace MIVServer
         {
             server.chat.addLine(text);
         }
-
-
     }
 }

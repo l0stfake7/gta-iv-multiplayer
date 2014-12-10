@@ -1,7 +1,4 @@
-﻿using SharpDX;
-using MIVServer;
-using System;
-using System.Timers;
+﻿using System.Timers;
 
 namespace MIVServer
 {
@@ -40,6 +37,5 @@ namespace MIVServer
             timer.Start();
             return timer;
         }
-
     }
 }

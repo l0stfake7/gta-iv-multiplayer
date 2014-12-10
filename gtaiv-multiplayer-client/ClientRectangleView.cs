@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Drawing;
-using GTA;
+﻿using System.Drawing;
 
 namespace MIVClient
 {
@@ -13,7 +7,8 @@ namespace MIVClient
         public RectangleF box;
         public Color color;
 
-        public ClientRectangleView(RectangleF box, Color color) : base()
+        public ClientRectangleView(RectangleF box, Color color)
+            : base()
         {
             this.box = box;
             this.color = color;

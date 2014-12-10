@@ -1,10 +1,7 @@
 ﻿using GTA;
 using MIVSDK;
-using System;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MIVClient
 {
@@ -14,7 +11,11 @@ namespace MIVClient
         public bool inKeyboardTypingMode;
 
         private Client client;
+        private List<string> commandHistory;
+        private int historyIndex = 0;
         private GTA.KeyboardLayoutUS keyboardUS;
+
+        private int? lastKeyUp, lastKeyDown;
 
         public KeyboardHandler(Client client)
         {
@@ -25,9 +26,6 @@ namespace MIVClient
             client.KeyDown += new GTA.KeyEventHandler(this.eventOnKeyDown);
             client.KeyUp += new GTA.KeyEventHandler(this.eventOnKeyUp);
         }
-
-        List<string> commandHistory;
-        int historyIndex = 0;
 
         private void eventOnKeyDown(object sender, GTA.KeyEventArgs e)
         {
@@ -73,10 +71,18 @@ namespace MIVClient
                 {
                     if (commandHistory.Count > 0)
                     {
-                        historyIndex--;
-                        if (historyIndex < 0) historyIndex = 0;
-                        client.chatController.currentTypedText = commandHistory[commandHistory.Count - historyIndex - 1];
-                        cursorpos = client.chatController.currentTypedText.Length;
+                        if (historyIndex <= 1)
+                        {
+                            client.chatController.currentTypedText = commandHistory[commandHistory.Count - 1];
+                            cursorpos = 0;
+                        }
+                        else
+                        {
+                            historyIndex--;
+                            if (historyIndex < 0) historyIndex = 0;
+                            client.chatController.currentTypedText = commandHistory[commandHistory.Count - historyIndex];
+                            cursorpos = client.chatController.currentTypedText.Length;
+                        }
                     }
                 }
                 else if (e.Key == System.Windows.Forms.Keys.Up)
@@ -85,7 +91,7 @@ namespace MIVClient
                     {
                         historyIndex++;
                         if (historyIndex > commandHistory.Count) historyIndex = commandHistory.Count;
-                        client.chatController.currentTypedText = commandHistory[commandHistory.Count - historyIndex - 1];
+                        client.chatController.currentTypedText = commandHistory[commandHistory.Count - historyIndex];
                         cursorpos = client.chatController.currentTypedText.Length;
                     }
                 }
@@ -118,7 +124,6 @@ namespace MIVClient
                 return;
             }
 
-
             if (e.Key == System.Windows.Forms.Keys.G)
             {
                 Vehicle veh = World.GetClosestVehicle(client.getPlayerPed().Position, 20.0f);
@@ -139,7 +144,7 @@ namespace MIVClient
             lastKeyDown = (int)e.Key;
             lastKeyUp = 0;
         }
-        int? lastKeyUp, lastKeyDown;
+
         private void eventOnKeyUp(object sender, GTA.KeyEventArgs e)
         {
             if (lastKeyUp != null && lastKeyUp == (int)e.Key) return;
@@ -149,7 +154,7 @@ namespace MIVClient
                 bpf.add((int)e.Key);
                 client.serverConnection.write(bpf.getBytes());
             }
-            
+
             lastKeyUp = (int)e.Key;
             lastKeyDown = 0;
         }

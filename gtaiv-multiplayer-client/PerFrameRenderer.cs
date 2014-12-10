@@ -1,25 +1,16 @@
 ﻿using GTA;
 using System;
-using System.Drawing;
 using System.Text;
 
 namespace MIVClient
 {
-    public class PerFrameRenderer : IDisposable
+    public sealed class PerFrameRenderer : IDisposable
     {
+        public static float test_x, test_y, test_z;
         private Client client;
         private GTA.Font font;
-        private GTA.Font font_small;
         private GTA.Font font_consolas;
-
-        private float heightToPx(float normalized)
-        {
-            return Game.Resolution.Height * (normalized / 900.0f);
-        }
-        private float widthToPx(float normalized)
-        {
-            return Game.Resolution.Width * (normalized / 1600.0f);
-        }
+        private GTA.Font font_small;
 
         public PerFrameRenderer(Client client)
         {
@@ -35,8 +26,6 @@ namespace MIVClient
             font.Dispose();
             GC.SuppressFinalize(this);
         }
-
-        public static float test_x, test_y, test_z;
 
         private void Client_PerFrameDrawing(object sender, GraphicsEventArgs e)
         {
@@ -74,6 +63,16 @@ namespace MIVClient
             ClientRectangleView.renderAll(e.Graphics);
             ClientLineView.renderAll(e.Graphics);
             ClientTextureDraw.renderAll(e.Graphics);
+        }
+
+        private float heightToPx(float normalized)
+        {
+            return Game.Resolution.Height * (normalized / 900.0f);
+        }
+
+        private float widthToPx(float normalized)
+        {
+            return Game.Resolution.Width * (normalized / 1600.0f);
         }
     }
 }

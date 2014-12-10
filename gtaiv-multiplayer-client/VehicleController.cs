@@ -1,12 +1,6 @@
-﻿using GTA;
-using System;
-using System.Collections.Generic;
-
-namespace MIVClient
+﻿namespace MIVClient
 {
     public class VehicleController : IDControllerBase<StreamedVehicle>
     {
-
     }
-
 }

@@ -1,8 +1,4 @@
-﻿using GTA;
-using System.Linq;
-using System.Collections.Generic;
-
-namespace MIVClient
+﻿namespace MIVClient
 {
     public class PlayerPedController : IDControllerBase<StreamedPed>
     {

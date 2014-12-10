@@ -1,33 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA;
+﻿using GTA;
 
 namespace MIVClient
 {
     public class CameraController
     {
-        Client client;
-        Camera camera;
+        private Camera camera;
+        private Client client;
 
         public CameraController(Client client)
         {
             this.client = client;
         }
 
-        private void createCamera()
+        public Vector3 Direction
         {
-            if (camera != null && camera.Exists())
+            get
             {
-                camera.Deactivate();
+                return camera.Direction;
             }
-            camera = new Camera();
-            camera.Position = Game.CurrentCamera.Position;
-            camera.Direction = Game.CurrentCamera.Direction;
-            camera.Rotation = Game.CurrentCamera.Rotation;
-            camera.Activate();
+            set
+            {
+                if (camera == null) createCamera();
+                camera.Direction = value;
+            }
+        }
+
+        public float FOV
+        {
+            get
+            {
+                return camera.FOV;
+            }
+            set
+            {
+                if (camera == null) createCamera();
+                camera.FOV = value;
+            }
         }
 
         public Vector3 Position
@@ -42,18 +50,7 @@ namespace MIVClient
                 camera.Position = value;
             }
         }
-        public Vector3 Direction
-        {
-            get
-            {
-                return camera.Direction;
-            }
-            set
-            {
-                if (camera == null) createCamera();
-                camera.Direction = value;
-            }
-        }
+
         public Vector3 Rotation
         {
             get
@@ -72,6 +69,7 @@ namespace MIVClient
             if (camera == null) createCamera();
             camera.LookAt(position);
         }
+
         public void Reset()
         {
             if (camera == null) createCamera();
@@ -79,17 +77,17 @@ namespace MIVClient
             camera = null;
         }
 
-        public float FOV
+        private void createCamera()
         {
-            get
+            if (camera != null && camera.Exists())
             {
-                return camera.FOV;
+                camera.Deactivate();
             }
-            set
-            {
-                if (camera == null) createCamera();
-                camera.FOV = value;
-            }
+            camera = new Camera();
+            camera.Position = Game.CurrentCamera.Position;
+            camera.Direction = Game.CurrentCamera.Direction;
+            camera.Rotation = Game.CurrentCamera.Rotation;
+            camera.Activate();
         }
     }
 }

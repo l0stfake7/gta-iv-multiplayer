@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.IO;
+using System.Text;
 
 namespace MIVServer
 {
-    class HTTPServer
+    internal class HTTPServer
     {
-        TcpListener http_listener;
+        private TcpListener http_listener;
 
         public HTTPServer()
         {
@@ -20,30 +17,7 @@ namespace MIVServer
             http_listener.BeginAcceptTcpClient(onConnect, null);
         }
 
-        void onConnect(IAsyncResult iar)
-        {
-            var client = http_listener.EndAcceptTcpClient(iar);
-            try
-            {
-                using (var streamReader = new StreamReader(client.GetStream()))
-                {
-                    string request = streamReader.ReadLine();
-                    if (request != null)
-                    {
-                        string response = createResponse(request);
-                        if (response != null)
-                        {
-                            byte[] buf = Encoding.UTF8.GetBytes(response);
-                            streamReader.BaseStream.Write(buf, 0, buf.Length);
-                        }
-                    }
-                }
-            }
-            catch { }
-            http_listener.BeginAcceptTcpClient(onConnect, null);
-        }
-
-        string createResponse(string rawline)
+        private string createResponse(string rawline)
         {
             System.Text.RegularExpressions.Regex regex = new System.Text.RegularExpressions.Regex("(GET )(/)([^ ]+)");
             var result = regex.Match(rawline);
@@ -74,5 +48,27 @@ namespace MIVServer
             return null;
         }
 
+        private void onConnect(IAsyncResult iar)
+        {
+            var client = http_listener.EndAcceptTcpClient(iar);
+            try
+            {
+                using (var streamReader = new StreamReader(client.GetStream()))
+                {
+                    string request = streamReader.ReadLine();
+                    if (request != null)
+                    {
+                        string response = createResponse(request);
+                        if (response != null)
+                        {
+                            byte[] buf = Encoding.UTF8.GetBytes(response);
+                            streamReader.BaseStream.Write(buf, 0, buf.Length);
+                        }
+                    }
+                }
+            }
+            catch { }
+            http_listener.BeginAcceptTcpClient(onConnect, null);
+        }
     }
 }

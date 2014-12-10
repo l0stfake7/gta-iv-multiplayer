@@ -1,5 +1,5 @@
-﻿using System;
-using SharpDX;
+﻿using SharpDX;
+using System;
 
 namespace MIVSDK
 {
@@ -19,12 +19,6 @@ namespace MIVSDK
         public bool canRead()
         {
             return position < length;
-        }
-        public BinaryPacketFormatter.Types readNextType()
-        {
-            var data = buffer[position];
-            position++;
-            return (BinaryPacketFormatter.Types)data;
         }
 
         public Byte readByte(bool skipTypeCheck = false)
@@ -48,7 +42,6 @@ namespace MIVSDK
         }
 
         public Double readDouble(bool skipTypeCheck = false)
-
         {
             if (!skipTypeCheck && readNextType() != BinaryPacketFormatter.Types.Double) throw new Exception("Desynchronization Double");
             var data = BitConverter.ToDouble(buffer, position);
@@ -78,6 +71,13 @@ namespace MIVSDK
             var data = BitConverter.ToInt64(buffer, position);
             position += sizeof(Int64);
             return data;
+        }
+
+        public BinaryPacketFormatter.Types readNextType()
+        {
+            var data = buffer[position];
+            position++;
+            return (BinaryPacketFormatter.Types)data;
         }
 
         public Quaternion readQuaternion(bool skipTypeCheck = false)
@@ -155,7 +155,7 @@ namespace MIVSDK
 
             output.state = (PlayerState)readByte(true);
             output.vstate = (VehicleState)readByte(true);
-            
+
             return output;
         }
 

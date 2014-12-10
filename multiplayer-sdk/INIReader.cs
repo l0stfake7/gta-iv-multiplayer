@@ -18,18 +18,21 @@ namespace MIVSDK
             }
         }
 
-        public float getFloat(string key)
-        {
-            return float.Parse(getString(key));
-        }
-        public Int32 getInt(string key)
-        {
-            return Int32.Parse(getString(key));
-        }
         public DateTime getDateTime(string key)
         {
             return DateTime.Parse(getString(key));
         }
+
+        public float getFloat(string key)
+        {
+            return float.Parse(getString(key));
+        }
+
+        public Int32 getInt(string key)
+        {
+            return Int32.Parse(getString(key));
+        }
+
         public Int16 getInt16(string key)
         {
             return Int16.Parse(getString(key));
@@ -39,27 +42,30 @@ namespace MIVSDK
         {
             return Int32.Parse(getString(key));
         }
+
         public Int64 getInt64(string key)
         {
             return Int64.Parse(getString(key));
+        }
+
+        public string getString(string key)
+        {
+            return dict[key];
         }
 
         public UInt16 getUInt16(string key)
         {
             return UInt16.Parse(getString(key));
         }
+
         public UInt32 getUInt32(string key)
         {
             return UInt32.Parse(getString(key));
         }
+
         public UInt64 getUInt64(string key)
         {
             return UInt64.Parse(getString(key));
-        }
-
-        public string getString(string key)
-        {
-            return dict[key];
         }
     }
 }

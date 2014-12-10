@@ -26,16 +26,99 @@ namespace MIVClientGUI
             loadConfiguration();
         }
 
+        public static void refreshStatic()
+        {
+            instance.refreshList();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            saveConfiguration();
+            ServerInfo server = listView1.SelectedItems[0].Tag as ServerInfo;
+            if (server != null && server.GamePort > 1)
+            {
+                string ini = "timestamp=" + System.Diagnostics.Stopwatch.GetTimestamp().ToString() + "\r\n";
+                ini += "ip=" + server.IP + "\r\n";
+                ini += "port=" + server.GamePort + "\r\n";
+                ini += "nickname=" + textBox1.Text + "\r\n";
+                File.WriteAllText("_serverinit.ini", ini);
+                new GameLaunchedForm().ShowDialog();
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            new AddServerForm().ShowDialog();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            listView1.SelectedItems[0].Remove();
+            System.IO.File.Delete("servers.list");
+            foreach (ListViewItem server in listView1.Items)
+            {
+                var info = (ServerInfo)server.Tag;
+                System.IO.File.AppendAllLines("servers.list", new string[1]{
+                    info.IP + ":" + info.Port
+                });
+            }
+            refreshList();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            refreshList();
+        }
+
+        private ListViewItem createListItem(string servername, string ip, string ports, string playercount)
+        {
+            ListViewItem item = new ListViewItem(new string[4]{
+                servername, ip, ports, playercount
+            });
+            item.Font = new System.Drawing.Font(new FontFamily("Segoe UI"), 16.0f, FontStyle.Regular);
+            return item;
+        }
+
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
         }
 
-        class ServerInfo
+        private void listView1_Click(object sender, EventArgs e)
         {
-            public string IP;
-            public short Port;
-            public short GamePort;
+            if (listView1.SelectedItems.Count > 0)
+            {
+                button1.Enabled = true;
+                button3.Enabled = true;
+            }
+            else
+            {
+                button1.Enabled = false;
+                button3.Enabled = false;
+            }
+        }
+
+        private void listView1_Leave(object sender, EventArgs e)
+        {
+            if (listView1.SelectedItems.Count > 0)
+            {
+                button1.Enabled = true;
+                button3.Enabled = true;
+            }
+            else
+            {
+                button1.Enabled = false;
+                button3.Enabled = false;
+            }
+        }
+
+        private void loadConfiguration()
+        {
+            if (System.IO.File.Exists("miv_client_config.ini"))
+            {
+                var ini = new INIReader(System.IO.File.ReadAllLines("miv_client_config.ini"));
+                textBox1.Text = ini.getString("nickname");
+            }
         }
 
         private List<ServerInfo> loadFromFile()
@@ -59,17 +142,6 @@ namespace MIVClientGUI
                 }
             }
             return servers;
-        }
-
-        private void ServerBrowser_Load(object sender, EventArgs e)
-        {
-
-            refreshList();
-        }
-
-        public static void refreshStatic()
-        {
-            instance.refreshList();
         }
 
         private void refreshList()
@@ -105,18 +177,11 @@ namespace MIVClientGUI
             }
         }
 
-        private ListViewItem createListItem(string servername, string ip, string ports, string playercount)
+        private void runGameWithoutClientToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ListViewItem item = new ListViewItem(new string[4]{
-                servername, ip, ports, playercount
-            });
-           // item.Font = new System.Drawing.Font(new FontFamily("Segoe UI"), 16.0f, FontStyle.Regular);
-            return item;
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            new AddServerForm().ShowDialog();
+            Process gameProcess = new Process();
+            gameProcess.StartInfo = new ProcessStartInfo("LaunchGTAIV.exe");
+            gameProcess.Start();
         }
 
         private void saveConfiguration()
@@ -125,28 +190,10 @@ namespace MIVClientGUI
             System.IO.File.WriteAllText("miv_client_config.ini", ini);
         }
 
-        private void loadConfiguration()
+        private void ServerBrowser_Load(object sender, EventArgs e)
         {
-            if (System.IO.File.Exists("miv_client_config.ini"))
-            {
-                var ini = new INIReader(System.IO.File.ReadAllLines("miv_client_config.ini"));
-                textBox1.Text = ini.getString("nickname");
-            }
-        }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            saveConfiguration();
-            ServerInfo server = listView1.SelectedItems[0].Tag as ServerInfo;
-            if (server != null && server.GamePort > 1)
-            {
-                string ini = "timestamp=" + System.Diagnostics.Stopwatch.GetTimestamp().ToString() + "\r\n";
-                ini += "ip=" + server.IP + "\r\n";
-                ini += "port=" + server.GamePort + "\r\n";
-                ini += "nickname=" + textBox1.Text + "\r\n";
-                File.WriteAllText("_serverinit.ini", ini);
-                new GameLaunchedForm().ShowDialog();
-            }
+            refreshList();
         }
 
         private void textBox1_Leave(object sender, EventArgs e)
@@ -154,58 +201,11 @@ namespace MIVClientGUI
             saveConfiguration();
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        class ServerInfo
         {
-            refreshList();
-        }
-
-        private void listView1_Click(object sender, EventArgs e)
-        {
-            if (listView1.SelectedItems.Count > 0)
-            {
-                button1.Enabled = true;
-                button3.Enabled = true;
-            }
-            else
-            {
-                button1.Enabled = false;
-                button3.Enabled = false;
-            }
-        }
-
-        private void listView1_Leave(object sender, EventArgs e)
-        {
-            if (listView1.SelectedItems.Count > 0)
-            {
-                button1.Enabled = true;
-                button3.Enabled = true;
-            }
-            else
-            {
-                button1.Enabled = false;
-                button3.Enabled = false;
-            }
-        }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-            listView1.SelectedItems[0].Remove();
-            System.IO.File.Delete("servers.list");
-            foreach (ListViewItem server in listView1.Items)
-            {
-                var info = (ServerInfo)server.Tag;
-                System.IO.File.AppendAllLines("servers.list", new string[1]{
-                    info.IP + ":" + info.Port
-                });
-            }
-            refreshList();
-        }
-
-        private void runGameWithoutClientToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Process gameProcess = new Process();
-            gameProcess.StartInfo = new ProcessStartInfo("LaunchGTAIV.exe");
-            gameProcess.Start();
+            public short GamePort;
+            public string IP;
+            public short Port;
         }
     }
 }

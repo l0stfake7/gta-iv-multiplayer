@@ -1,8 +1,8 @@
 ﻿using MIVSDK;
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Timers;
 
@@ -13,13 +13,13 @@ namespace MIVServer
         public static Server instance;
         public ServerApi api;
         public ServerChat chat;
+        public INIReader config;
         public List<ServerPlayer> playerpool;
         public ServerVehicleController vehicleController;
 
         private GamemodeManager gamemodeManager;
-        private TcpListener server;
-        public INIReader config;
         private HTTPServer http_server;
+        private TcpListener server;
 
         public Server()
         {
@@ -47,14 +47,6 @@ namespace MIVServer
             http_server = new HTTPServer();
             Console.WriteLine("Started game server on port " + config.getInt("game_port").ToString());
             Console.WriteLine("Started http server on port " + config.getInt("http_port").ToString());
-        }
-
-        void timer_slow_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            for (int i = 0; i < playerpool.Count; i++)
-            {
-                updateNPCsToPlayer(playerpool[i]);
-            }
         }
 
         public void broadcastData(ServerPlayer player)
@@ -94,16 +86,7 @@ namespace MIVServer
                 player.connection.write(bpf.getBytes());
             }
         }
-        public void broadcastPlayerName(ServerPlayer player)
-        {
-            foreach (var single in playerpool) if (single != player)
-                {
-                    var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerName);
-                    bpf.add(player.id);
-                    bpf.add(player.Nick);
-                    single.connection.write(bpf.getBytes());
-                }
-        }
+
         public void broadcastPlayerModel(ServerPlayer player)
         {
             foreach (var single in playerpool) if (single != player)
@@ -114,18 +97,16 @@ namespace MIVServer
                     single.connection.write(bpf.getBytes());
                 }
         }
-        public void updateNPCsToPlayer(ServerPlayer player)
+
+        public void broadcastPlayerName(ServerPlayer player)
         {
-            foreach (var pair in ServerNPC.NPCPool)
-            {
-                var bpf = new BinaryPacketFormatter(Commands.NPC_update);
-                bpf.add(pair.Value.id);
-                bpf.add(pair.Value.Position);
-                bpf.add(pair.Value.Heading);
-                bpf.add(pair.Value.Model);
-                bpf.add(pair.Value.Name);
-                player.connection.write(bpf.getBytes());
-            }
+            foreach (var single in playerpool) if (single != player)
+                {
+                    var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerName);
+                    bpf.add(player.id);
+                    bpf.add(player.Nick);
+                    single.connection.write(bpf.getBytes());
+                }
         }
 
         public void broadcastVehiclesToPlayer(ServerPlayer player)
@@ -137,6 +118,32 @@ namespace MIVServer
                 bpf.add(pair.Value.position);
                 bpf.add(pair.Value.orientation);
                 bpf.add(ModelDictionary.getVehicleByName(pair.Value.model));
+                player.connection.write(bpf.getBytes());
+            }
+        }
+
+        public ServerPlayer getPlayerById(uint id)
+        {
+            try
+            {
+                return playerpool.First(a => a.id == id);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public void updateNPCsToPlayer(ServerPlayer player)
+        {
+            foreach (var pair in ServerNPC.NPCPool)
+            {
+                var bpf = new BinaryPacketFormatter(Commands.NPC_update);
+                bpf.add(pair.Value.id);
+                bpf.add(pair.Value.Position);
+                bpf.add(pair.Value.Heading);
+                bpf.add(pair.Value.Model);
+                bpf.add(pair.Value.Name);
                 player.connection.write(bpf.getBytes());
             }
         }
@@ -167,18 +174,6 @@ namespace MIVServer
             {
                 broadcastData(playerpool[i]);
                 playerpool[i].connection.flush();
-            }
-        }
-
-        public ServerPlayer getPlayerById(uint id)
-        {
-            try
-            {
-                return playerpool.First(a => a.id == id);
-            }
-            catch
-            {
-                return null;
             }
         }
 
@@ -230,6 +225,14 @@ namespace MIVServer
             };
 
             connection.startReceiving();
+        }
+
+        private void timer_slow_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            for (int i = 0; i < playerpool.Count; i++)
+            {
+                updateNPCsToPlayer(playerpool[i]);
+            }
         }
     }
 }

@@ -1,15 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System;
 
 namespace MIVClient
 {
     public class ChatController
     {
         public Queue<string> chatconsole;
-        public Queue<string> debugconsole;
         public string currentTypedText;
-
+        public Queue<string> debugconsole;
         private Client client;
 
         public ChatController(Client client)
@@ -35,6 +34,7 @@ namespace MIVClient
                 chatconsole.Dequeue();
             }
         }
+
         public void writeDebug(string text)
         {
             debugconsole.Enqueue(text);

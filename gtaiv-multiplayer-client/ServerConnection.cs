@@ -2,8 +2,8 @@
 using MIVSDK;
 using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
 using System.Linq;
+using System.Net.Sockets;
 
 namespace MIVClient
 {
@@ -14,6 +14,8 @@ namespace MIVClient
         private const int BUFSIZE = 1024 * 100;
         private byte[] buffer;
         private Client client;
+
+        private List<byte> internal_buffer;
 
         public ServerConnection(Client client)
         {
@@ -33,14 +35,6 @@ namespace MIVClient
             client.client.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
         }
 
-        private List<byte> internal_buffer;
-        public void write(byte[] bytes)
-        {
-            lock (internal_buffer)
-            {
-                internal_buffer.AddRange(bytes);
-            }
-        }
         public void flush()
         {
             lock (internal_buffer)
@@ -53,15 +47,23 @@ namespace MIVClient
             }
         }
 
+        public void write(byte[] bytes)
+        {
+            lock (internal_buffer)
+            {
+                internal_buffer.AddRange(bytes);
+            }
+        }
+
         private GTA.Vector3 fromSharpDX(SharpDX.Vector3 v)
         {
             return new GTA.Vector3(v.X, v.Y, v.Z);
         }
+
         private GTA.Quaternion fromSharpDX(SharpDX.Quaternion v)
         {
             return new GTA.Quaternion(v.X, v.Y, v.Z, v.W);
         }
-
 
         private void onReceive(IAsyncResult iar)
         {
@@ -97,6 +99,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Player_setHeading:
                                     {
                                         var g = bpr.readSingle();
@@ -106,6 +109,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Game_setGameTime:
                                     {
                                         var g = bpr.readInt64();
@@ -115,16 +119,18 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Game_setWeather:
                                     {
                                         var g = bpr.readByte();
                                         client.enqueueAction(new Action(delegate
                                         {
-                                            World.Weather = (Weather)g;
-                                            AlternateHook.call(AlternateHookRequest.OtherCommands.FORCE_WEATHER_NOW, g);
+                                            World.Weather = (Weather)(int)g;
+                                            AlternateHook.call(AlternateHookRequest.OtherCommands.FORCE_WEATHER_NOW, (int)g);
                                         }));
                                     }
                                     break;
+
                                 case Commands.Game_fadeScreenIn:
                                     {
                                         var data = bpr.readInt32();
@@ -134,6 +140,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Game_fadeScreenOut:
                                     {
                                         var data = bpr.readInt32();
@@ -143,6 +150,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Game_showLoadingScreen:
                                     {
                                         var data = bpr.readInt32();
@@ -152,6 +160,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Game_hideLoadingScreen:
                                     {
                                         var data = bpr.readInt32();
@@ -162,6 +171,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Game_setGravity:
                                     {
                                         var data = bpr.readSingle();
@@ -171,21 +181,25 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Client_setVirtualWorld:
                                     {
                                         client.CurrentVirtualWorld = bpr.readUInt32();
                                     }
                                     break;
+
                                 case Commands.Client_pauseBroadcast:
                                     {
                                         client.BroadcastingPaused = true;
                                     }
                                     break;
+
                                 case Commands.Client_resumeBroadcast:
                                     {
                                         client.BroadcastingPaused = false;
                                     }
                                     break;
+
                                 case Commands.Vehicle_removePeds:
                                     {
                                         uint id = bpr.readUInt32();
@@ -200,6 +214,7 @@ namespace MIVClient
                                         }
                                     }
                                     break;
+
                                 case Commands.Vehicle_repaint:
                                     {
                                         uint id = bpr.readUInt32();
@@ -214,6 +229,7 @@ namespace MIVClient
                                         }
                                     }
                                     break;
+
                                 case Commands.Vehicle_repair:
                                     {
                                         uint id = bpr.readUInt32();
@@ -228,6 +244,7 @@ namespace MIVClient
                                         }
                                     }
                                     break;
+
                                 case Commands.Vehicle_setModel:
                                     {
                                         uint id = bpr.readUInt32();
@@ -243,6 +260,7 @@ namespace MIVClient
                                         }
                                     }
                                     break;
+
                                 case Commands.Vehicle_setOrientation:
                                     {
                                         uint id = bpr.readUInt32();
@@ -258,6 +276,7 @@ namespace MIVClient
                                         }
                                     }
                                     break;
+
                                 case Commands.Vehicle_setPosition:
                                     {
                                         uint id = bpr.readUInt32();
@@ -273,6 +292,7 @@ namespace MIVClient
                                         }
                                     }
                                     break;
+
                                 case Commands.Vehicle_setVelocity:
                                     {
                                         uint id = bpr.readUInt32();
@@ -287,6 +307,7 @@ namespace MIVClient
                                         }
                                     }
                                     break;
+
                                 case Commands.Vehicle_setVirtualWorld:
                                     {
                                         uint id = bpr.readUInt32();
@@ -298,6 +319,7 @@ namespace MIVClient
                                         }
                                     }
                                     break;
+
                                 case Commands.NPC_setVirtualWorld:
                                     {
                                         uint id = bpr.readUInt32();
@@ -321,6 +343,20 @@ namespace MIVClient
                                     }
                                     break;
 
+                                case Commands.Player_setVehicleHealth:
+                                    {
+                                        int h = bpr.readInt32();
+                                        //client.chatController.writeChat("setting healtcz " + h.ToString());
+                                        client.enqueueAction(new Action(delegate
+                                        {
+                                            if (client.getPlayerPed().isInVehicle())
+                                            {
+                                                client.getPlayerPed().CurrentVehicle.Health = h;
+                                            }
+                                        }));
+                                    }
+                                    break;
+
                                 case Commands.Chat_writeLine:
                                     {
                                         client.chatController.writeChat(bpr.readString());
@@ -337,6 +373,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Player_setVelocity:
                                     {
                                         Vector3 vec = fromSharpDX(bpr.readVector3());
@@ -353,9 +390,9 @@ namespace MIVClient
                                         {
                                             client.finishSpawn();
                                         }));
-
                                     }
                                     break;
+
                                 case Commands.Camera_setPosition:
                                     {
                                         var data = fromSharpDX(bpr.readVector3());
@@ -365,6 +402,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Camera_setDirection:
                                     {
                                         var data = fromSharpDX(bpr.readVector3());
@@ -384,6 +422,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Camera_setFOV:
                                     {
                                         var data = bpr.readSingle();
@@ -403,6 +442,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Camera_reset:
                                     {
                                         client.enqueueAction(new Action(delegate
@@ -411,6 +451,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Player_freeze:
                                     {
                                         client.enqueueAction(new Action(delegate
@@ -419,6 +460,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Player_unfreeze:
                                     {
                                         client.enqueueAction(new Action(delegate
@@ -427,16 +469,19 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Global_setPlayerPedText:
                                     {
                                         uint playerid = bpr.readUInt32();
+                                        string text = bpr.readString();
                                         if (client.pedController.Exists(playerid))
                                         {
                                             StreamedPed ped = client.pedController.GetInstance(playerid);
-                                            ped.CurrentChatMessage = bpr.readString();
+                                            ped.CurrentChatMessage = text;
                                         }
                                     }
                                     break;
+
                                 case Commands.Global_setPlayerModel:
                                     {
                                         uint playerid = bpr.readUInt32();
@@ -452,6 +497,7 @@ namespace MIVClient
                                         }
                                     }
                                     break;
+
                                 case Commands.Global_setPlayerName:
                                     {
                                         uint playerid = bpr.readUInt32();
@@ -467,6 +513,7 @@ namespace MIVClient
                                         }
                                     }
                                     break;
+
                                 case Commands.Global_createPlayer:
                                     {
                                         uint playerid = bpr.readUInt32();
@@ -486,6 +533,7 @@ namespace MIVClient
                                         client.pedController.Add(playerid, new StreamedPed(client.pedStreamer, model, name, Vector3.Zero, 0, (BlipColor)(playerid % 13)));
                                     }
                                     break;
+
                                 case Commands.Request_getSelectedPlayer:
                                     {
                                         uint requestid = bpr.readUInt32();
@@ -516,6 +564,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Request_getCameraPosition:
                                     {
                                         uint requestid = bpr.readUInt32();
@@ -528,6 +577,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Request_worldToScreen:
                                     {
                                         uint requestid = bpr.readUInt32();
@@ -543,6 +593,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.Request_isObjectVisible:
                                     {
                                         uint requestid = bpr.readUInt32();
@@ -585,6 +636,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.NPC_update:
                                     {
                                         //int count = bpr.readInt32();
@@ -604,6 +656,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.NPC_setPosition:
                                     {
                                         uint id = bpr.readUInt32();
@@ -621,6 +674,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.NPC_setHeading:
                                     {
                                         uint id = bpr.readUInt32();
@@ -638,6 +692,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.NPC_runTo:
                                     {
                                         uint id = bpr.readUInt32();
@@ -656,6 +711,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.NPC_walkTo:
                                     {
                                         uint id = bpr.readUInt32();
@@ -674,6 +730,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.NPC_enterVehicle:
                                     {
                                         uint id = bpr.readUInt32();
@@ -692,6 +749,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.NPC_driveTo:
                                     {
                                         uint id = bpr.readUInt32();
@@ -712,6 +770,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.NPC_leaveVehicle:
                                     {
                                         uint id = bpr.readUInt32();
@@ -727,6 +786,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.NPC_setModel:
                                     {
                                         uint id = bpr.readUInt32();
@@ -743,6 +803,7 @@ namespace MIVClient
                                         }));
                                     }
                                     break;
+
                                 case Commands.NPC_setImmortal:
                                     {
                                         uint id = bpr.readUInt32();

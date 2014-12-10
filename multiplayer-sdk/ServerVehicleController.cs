@@ -1,7 +1,7 @@
-﻿using SharpDX;
+﻿using MIVSDK;
+using SharpDX;
 using System;
 using System.Collections.Generic;
-using MIVSDK;
 
 namespace MIVServer
 {
@@ -22,15 +22,15 @@ namespace MIVServer
             veh.orientation = orientation;
             veh.model = model;
             vehicles.Add(vid, veh);
-            if(Server.instance.playerpool != null) foreach (var player in Server.instance.playerpool)
-            {
-                var bpf = new BinaryPacketFormatter(Commands.Vehicle_create);
-                bpf.add(veh.id);
-                bpf.add(veh.position);
-                bpf.add(veh.orientation);
-                bpf.add(ModelDictionary.getVehicleByName(veh.model));
-                player.connection.write(bpf.getBytes());
-            }
+            if (Server.instance.playerpool != null) foreach (var player in Server.instance.playerpool)
+                {
+                    var bpf = new BinaryPacketFormatter(Commands.Vehicle_create);
+                    bpf.add(veh.id);
+                    bpf.add(veh.position);
+                    bpf.add(veh.orientation);
+                    bpf.add(ModelDictionary.getVehicleByName(veh.model));
+                    player.connection.write(bpf.getBytes());
+                }
             return veh;
         }
 
@@ -60,5 +60,4 @@ namespace MIVServer
             throw new Exception("No free ids");
         }
     }
-
 }

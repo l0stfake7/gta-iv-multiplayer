@@ -1,16 +1,12 @@
-﻿using System;
+﻿using SharpDX;
+using System;
 using System.Collections.Generic;
-using SharpDX;
 
 namespace MIVSDK
 {
     public class BinaryPacketFormatter
     {
         private List<byte> bytes;
-        public enum Types
-        {
-            Byte, Int16, UInt16, Int32, UInt32, Int64, UInt64, Raw, Command, String, Single, UpdateDataStruct, Vector2, Vector3, Vector4, Quaternion, Double
-        }
 
         public BinaryPacketFormatter()
         {
@@ -22,6 +18,7 @@ namespace MIVSDK
         {
             add(command);
         }
+
         public BinaryPacketFormatter(Commands command, params object[] args)
             : this()
         {
@@ -47,6 +44,11 @@ namespace MIVSDK
                 if (obj is Vector4) add((Vector4)obj);
                 if (obj is Quaternion) add((Quaternion)obj);
             }
+        }
+
+        public enum Types
+        {
+            Byte, Int16, UInt16, Int32, UInt32, Int64, UInt64, Raw, Command, String, Single, UpdateDataStruct, Vector2, Vector3, Vector4, Quaternion, Double
         }
 
         public void add(byte[] buffer)
@@ -102,6 +104,7 @@ namespace MIVSDK
             byte[] buf = BitConverter.GetBytes(integer);
             bytes.AddRange(buf);
         }
+
         public void add(UInt64 integer)
         {
             bytes.Add((byte)Types.UInt64);

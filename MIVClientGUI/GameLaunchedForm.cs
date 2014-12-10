@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Diagnostics;
+using System.Windows.Forms;
 
 namespace MIVClientGUI
 {
@@ -15,13 +8,7 @@ namespace MIVClientGUI
     {
         public GameLaunchedForm()
         {
-
             InitializeComponent();
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-
         }
 
         private void GameLaunchedForm_Load(object sender, EventArgs e)
@@ -36,6 +23,10 @@ namespace MIVClientGUI
             gameProcess.Start();
             gameProcess.WaitForExit();
             this.Close();
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
         }
     }
 }

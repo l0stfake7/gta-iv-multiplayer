@@ -1,17 +1,15 @@
-﻿using System;
+﻿using GTA;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GTA;
 
 namespace MIVClient
 {
     public abstract class StreamedObjectBase
     {
-        protected StreamerBase streamer;
         public bool StreamedIn;
         public uint VirtualWorld;
+        protected StreamerBase streamer;
 
         public StreamedObjectBase(StreamerBase streamer)
         {
@@ -20,45 +18,49 @@ namespace MIVClient
             StreamedIn = false;
             VirtualWorld = 0;
         }
+
         public void Delete()
         {
             streamer.Delete(this);
         }
 
-        public abstract void StreamIn();
-        public abstract void StreamOut();
-        public abstract bool IsStreamedIn();
-        public abstract bool NeedRestream();
         public abstract Vector3 GetPosition();
+
+        public abstract bool IsStreamedIn();
+
+        public abstract bool NeedRestream();
+
+        public abstract void StreamIn();
+
+        public abstract void StreamOut();
     }
+
     public abstract class StreamerBase
     {
-
-        protected Client client;
         public List<StreamedObjectBase> instances;
+        protected Client client;
         protected float streamDistance;
+
         public StreamerBase(Client client, float streamDistance)
         {
             instances = new List<StreamedObjectBase>();
             this.client = client;
             this.streamDistance = streamDistance;
         }
-        public abstract void UpdateGfx();
-        public abstract void UpdateNormalTick();
-        public abstract void UpdateSlow();
 
         public void Add(StreamedObjectBase instance)
         {
             instances.Add(instance);
         }
-        public List<StreamedObjectBase> GetAllStreamed()
-        {
-            return instances.Where(a => a.IsStreamedIn()).ToList();
-        }
 
         public void Delete(StreamedObjectBase instance)
         {
             instances.Remove(instance);
+        }
+
+        public List<StreamedObjectBase> GetAllStreamed()
+        {
+            return instances.Where(a => a.IsStreamedIn()).ToList();
         }
 
         public void Update()
@@ -98,5 +100,11 @@ namespace MIVClient
                 }
             }
         }
+
+        public abstract void UpdateGfx();
+
+        public abstract void UpdateNormalTick();
+
+        public abstract void UpdateSlow();
     }
 }

@@ -1,27 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using GTA;
 using System.Drawing;
-using GTA;
 
 namespace MIVClient
 {
     public class ClientTextView : DrawBase
     {
-        public enum DrawType
-        {
-            Rectangle,
-            Point
-        }
-        public DrawType type;
-        public RectangleF textbox;
-        public Point point;
         public TextAlignment alignment;
-        public string text;
-        public GTA.Font font;
+
         public Color color;
+
+        public GTA.Font font;
+
+        public Point point;
+
+        public string text;
+
+        public RectangleF textbox;
+
+        public DrawType type;
 
         public ClientTextView(RectangleF textbox, TextAlignment alignment, string text, GTA.Font font, Color color)
             : base()
@@ -33,6 +29,7 @@ namespace MIVClient
             this.color = color;
             type = DrawType.Rectangle;
         }
+
         public ClientTextView(Point point, string text, GTA.Font font)
             : base()
         {
@@ -40,6 +37,12 @@ namespace MIVClient
             this.text = text;
             this.font = font;
             type = DrawType.Point;
+        }
+
+        public enum DrawType
+        {
+            Rectangle,
+            Point
         }
 
         protected override void render(GTA.Graphics g)
@@ -52,7 +55,6 @@ namespace MIVClient
             {
                 g.DrawText(text, point.X, point.Y, font);
             }
-
         }
     }
 }

@@ -13,6 +13,12 @@ namespace MIVSDK
             return ped_models_hashes;
         }
 
+        public static Dictionary<string, uint> getAllVehicles()
+        {
+            if (vehicle_hashes == null) load();
+            return vehicle_hashes;
+        }
+
         public static string getPedModelById(uint id)
         {
             if (ped_models_hashes == null) load();
@@ -23,11 +29,6 @@ namespace MIVSDK
         {
             if (ped_models_hashes == null) load();
             return ped_models_hashes.First(a => a.Key == name.ToUpper()).Value;
-        }
-        public static Dictionary<string, uint> getAllVehicles()
-        {
-            if (vehicle_hashes == null) load();
-            return vehicle_hashes;
         }
 
         public static string getVehicleById(uint id)
