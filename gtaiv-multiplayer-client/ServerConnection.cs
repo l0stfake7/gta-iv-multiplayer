@@ -110,6 +110,19 @@ namespace MIVClient
                                     }
                                     break;
 
+
+                                case Commands.Player_setVirtualWorld:
+                                    {
+                                        uint id = bpr.readUInt32();
+                                        uint vworld = bpr.readUInt32();
+                                        if (client.pedController.Exists(id))
+                                        {
+                                            var instance = client.pedController.GetInstance(id);
+                                            instance.VirtualWorld = vworld;
+                                        }
+                                    }
+                                    break;
+
                                 case Commands.Game_setGameTime:
                                     {
                                         var g = bpr.readInt64();
@@ -167,7 +180,7 @@ namespace MIVClient
                                         client.enqueueAction(new Action(delegate
                                         {
                                             AlternateHook.call(AlternateHookRequest.OtherCommands.DONT_DISPLAY_LOADING_ON_FADE_THIS_FRAME);
-                                            Game.FadeScreenOut(1);
+                                            Game.FadeScreenIn(1);
                                         }));
                                     }
                                     break;
@@ -197,6 +210,16 @@ namespace MIVClient
                                 case Commands.Client_resumeBroadcast:
                                     {
                                         client.BroadcastingPaused = false;
+                                    }
+                                    break;
+
+                                case Commands.Client_JSEval:
+                                    {
+                                        string script = bpr.readString();
+                                        client.enqueueAction(new Action(delegate
+                                        {
+                                            client.jsEngine.Execute(script);
+                                        }));
                                     }
                                     break;
 

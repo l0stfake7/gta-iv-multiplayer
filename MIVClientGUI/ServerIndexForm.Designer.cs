@@ -59,14 +59,17 @@
             // 
             // menuStrip1
             // 
+            this.menuStrip1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.clientToolStripMenuItem,
             this.toolsToolStripMenuItem,
             this.optionsToolStripMenuItem,
             this.helpToolStripMenuItem});
+            this.menuStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.Flow;
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(922, 24);
+            this.menuStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+            this.menuStrip1.Size = new System.Drawing.Size(519, 25);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -76,27 +79,28 @@
             this.runGameWithoutClientToolStripMenuItem,
             this.conectManuallyToolStripMenuItem,
             this.exitToolStripMenuItem});
+            this.clientToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.clientToolStripMenuItem.Name = "clientToolStripMenuItem";
-            this.clientToolStripMenuItem.Size = new System.Drawing.Size(50, 20);
+            this.clientToolStripMenuItem.Size = new System.Drawing.Size(52, 21);
             this.clientToolStripMenuItem.Text = "Client";
             // 
             // runGameWithoutClientToolStripMenuItem
             // 
             this.runGameWithoutClientToolStripMenuItem.Name = "runGameWithoutClientToolStripMenuItem";
-            this.runGameWithoutClientToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.runGameWithoutClientToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
             this.runGameWithoutClientToolStripMenuItem.Text = "Run game without client";
             this.runGameWithoutClientToolStripMenuItem.Click += new System.EventHandler(this.runGameWithoutClientToolStripMenuItem_Click);
             // 
             // conectManuallyToolStripMenuItem
             // 
             this.conectManuallyToolStripMenuItem.Name = "conectManuallyToolStripMenuItem";
-            this.conectManuallyToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.conectManuallyToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
             this.conectManuallyToolStripMenuItem.Text = "Connect manually";
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(215, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -105,20 +109,21 @@
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.remoteConsoleToolStripMenuItem,
             this.serverMonitorToolStripMenuItem});
+            this.toolsToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(52, 21);
             this.toolsToolStripMenuItem.Text = "Tools";
             // 
             // remoteConsoleToolStripMenuItem
             // 
             this.remoteConsoleToolStripMenuItem.Name = "remoteConsoleToolStripMenuItem";
-            this.remoteConsoleToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
+            this.remoteConsoleToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
             this.remoteConsoleToolStripMenuItem.Text = "Remote console";
             // 
             // serverMonitorToolStripMenuItem
             // 
             this.serverMonitorToolStripMenuItem.Name = "serverMonitorToolStripMenuItem";
-            this.serverMonitorToolStripMenuItem.Size = new System.Drawing.Size(159, 22);
+            this.serverMonitorToolStripMenuItem.Size = new System.Drawing.Size(170, 22);
             this.serverMonitorToolStripMenuItem.Text = "Server monitor";
             // 
             // optionsToolStripMenuItem
@@ -126,20 +131,21 @@
             this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.resolutionSettingsToolStripMenuItem,
             this.clearServerListToolStripMenuItem});
+            this.optionsToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(66, 21);
             this.optionsToolStripMenuItem.Text = "Options";
             // 
             // resolutionSettingsToolStripMenuItem
             // 
             this.resolutionSettingsToolStripMenuItem.Name = "resolutionSettingsToolStripMenuItem";
-            this.resolutionSettingsToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+            this.resolutionSettingsToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.resolutionSettingsToolStripMenuItem.Text = "Resolution settings";
             // 
             // clearServerListToolStripMenuItem
             // 
             this.clearServerListToolStripMenuItem.Name = "clearServerListToolStripMenuItem";
-            this.clearServerListToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+            this.clearServerListToolStripMenuItem.Size = new System.Drawing.Size(186, 22);
             this.clearServerListToolStripMenuItem.Text = "Clear server list";
             // 
             // helpToolStripMenuItem
@@ -147,20 +153,21 @@
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openTutorialToolStripMenuItem,
             this.aboutMIVToolStripMenuItem});
+            this.helpToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(47, 21);
             this.helpToolStripMenuItem.Text = "Help";
             // 
             // openTutorialToolStripMenuItem
             // 
             this.openTutorialToolStripMenuItem.Name = "openTutorialToolStripMenuItem";
-            this.openTutorialToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.openTutorialToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
             this.openTutorialToolStripMenuItem.Text = "Open tutorial";
             // 
             // aboutMIVToolStripMenuItem
             // 
             this.aboutMIVToolStripMenuItem.Name = "aboutMIVToolStripMenuItem";
-            this.aboutMIVToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.aboutMIVToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
             this.aboutMIVToolStripMenuItem.Text = "About MIV";
             // 
             // listView1
@@ -169,20 +176,22 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.listView1.AutoArrange = false;
+            this.listView1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(230)))));
+            this.listView1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.listView1.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.nameColumn,
             this.ipColumn,
             this.portsColumn,
             this.playerCountColumn});
-            this.listView1.Font = new System.Drawing.Font("Segoe UI", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.listView1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.listView1.FullRowSelect = true;
             this.listView1.GridLines = true;
             this.listView1.HideSelection = false;
-            this.listView1.Location = new System.Drawing.Point(12, 56);
+            this.listView1.Location = new System.Drawing.Point(12, 64);
             this.listView1.MultiSelect = false;
             this.listView1.Name = "listView1";
             this.listView1.ShowGroups = false;
-            this.listView1.Size = new System.Drawing.Size(898, 539);
+            this.listView1.Size = new System.Drawing.Size(495, 482);
             this.listView1.TabIndex = 2;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
@@ -192,29 +201,30 @@
             // nameColumn
             // 
             this.nameColumn.Text = "Name";
-            this.nameColumn.Width = 363;
+            this.nameColumn.Width = 232;
             // 
             // ipColumn
             // 
             this.ipColumn.Text = "IP Address";
-            this.ipColumn.Width = 157;
+            this.ipColumn.Width = 97;
             // 
             // portsColumn
             // 
             this.portsColumn.Text = "Ports";
-            this.portsColumn.Width = 125;
+            this.portsColumn.Width = 80;
             // 
             // playerCountColumn
             // 
             this.playerCountColumn.Text = "Player count";
-            this.playerCountColumn.Width = 178;
+            this.playerCountColumn.Width = 85;
             // 
             // button1
             // 
             this.button1.Enabled = false;
-            this.button1.Location = new System.Drawing.Point(12, 27);
+            this.button1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.button1.Location = new System.Drawing.Point(13, 31);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.Size = new System.Drawing.Size(75, 27);
             this.button1.TabIndex = 3;
             this.button1.Text = "Connect";
             this.button1.UseVisualStyleBackColor = true;
@@ -222,9 +232,10 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(93, 27);
+            this.button2.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.button2.Location = new System.Drawing.Point(94, 31);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.Size = new System.Drawing.Size(75, 27);
             this.button2.TabIndex = 4;
             this.button2.Text = "Add";
             this.button2.UseVisualStyleBackColor = true;
@@ -233,9 +244,10 @@
             // button3
             // 
             this.button3.Enabled = false;
-            this.button3.Location = new System.Drawing.Point(174, 27);
+            this.button3.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.button3.Location = new System.Drawing.Point(175, 31);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(75, 23);
+            this.button3.Size = new System.Drawing.Size(75, 27);
             this.button3.TabIndex = 5;
             this.button3.Text = "Remove";
             this.button3.UseVisualStyleBackColor = true;
@@ -244,26 +256,32 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(340, 32);
+            this.label1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label1.ForeColor = System.Drawing.Color.Black;
+            this.label1.Location = new System.Drawing.Point(341, 36);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(58, 13);
+            this.label1.Size = new System.Drawing.Size(68, 17);
             this.label1.TabIndex = 6;
             this.label1.Text = "Nickname:";
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(404, 29);
+            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textBox1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.textBox1.Location = new System.Drawing.Point(415, 33);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(121, 20);
+            this.textBox1.Size = new System.Drawing.Size(92, 25);
             this.textBox1.TabIndex = 7;
             this.textBox1.Text = "Player";
             this.textBox1.Leave += new System.EventHandler(this.textBox1_Leave);
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(255, 26);
+            this.button4.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.button4.Location = new System.Drawing.Point(256, 30);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(75, 23);
+            this.button4.Size = new System.Drawing.Size(75, 28);
             this.button4.TabIndex = 8;
             this.button4.Text = "Refresh";
             this.button4.UseVisualStyleBackColor = true;
@@ -273,7 +291,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(922, 607);
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(230)))));
+            this.ClientSize = new System.Drawing.Size(519, 558);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.label1);

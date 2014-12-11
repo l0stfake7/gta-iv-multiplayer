@@ -196,10 +196,16 @@ namespace MIVServer
             set
             {
                 virtualWorld = value;
-                var bpf = new BinaryPacketFormatter(Commands.Player_setVirtualWorld);
-                bpf.add(ModelDictionary.getPedModelByName(this.model));
+                var bpf = new BinaryPacketFormatter(Commands.Client_setVirtualWorld, value);
                 connection.write(bpf.getBytes());
-                Server.instance.broadcastPlayerModel(this);
+                var bpf2 = new BinaryPacketFormatter(Commands.Player_setVirtualWorld, id, value);
+                foreach (var single in Server.instance.playerpool)
+                {
+                    if (single.id != this.id)
+                    {
+                        single.connection.write(bpf.getBytes());
+                    }
+                }
             }
         }
 

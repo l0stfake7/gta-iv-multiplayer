@@ -65,13 +65,13 @@ namespace MIVClient
                             }
                             else
                             {
-                                ped.nickDraw.textbox = rect;
+                                ped.nickDraw.Box = rect;
                                 ped.nickDraw.color = System.Drawing.Color.FromArgb(alpha, 255, 255, 255);
-                                ped.healthDraw.box = rect2;
+                                ped.healthDraw.Box = rect2;
                                 ped.healthDraw.color = System.Drawing.Color.FromArgb(alpha, 0, 0, 0);
-                                ped.healthDraw2.box = rect22;
+                                ped.healthDraw2.Box = rect22;
                                 ped.healthDraw2.color = System.Drawing.Color.FromArgb(alpha, 80, 80, 255);
-                                ped.chatDraw.textbox = rect3;
+                                ped.chatDraw.Box = rect3;
                                 ped.chatDraw.color = System.Drawing.Color.FromArgb(alpha, 255, 255, 255);
                             }
                         }

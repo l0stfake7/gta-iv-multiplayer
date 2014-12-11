@@ -32,10 +32,13 @@ namespace MIVClient
         public ServerConnection serverConnection;
         public VehicleController vehicleController;
         public VehicleStreamer vehicleStreamer;
+        public JavaScriptEngine jsEngine;
 
         private Queue<Action> actionQueue;
 
         private Dictionary<int, GTA.Vector3> bindPoints;
+
+        private ClientRectangleView darkscreen;
 
         public Client()
         {
@@ -43,7 +46,8 @@ namespace MIVClient
             {
                 if (System.IO.File.Exists("miv_lastserver.ini"))
                 {
-                    Game.FadeScreenOut(0);
+                    darkscreen = new ClientRectangleView(new System.Drawing.RectangleF(0, 0, 2000, 2000), System.Drawing.Color.Black);
+                    Game.FadeScreenOut(1);
                     string[] lines = System.IO.File.ReadAllLines("miv_lastserver.ini");
                     INIReader reader = new INIReader(lines);
                     initAndConnect(reader.getString("ip"), reader.getInt16("port"), reader.getString("nickname"));
@@ -51,7 +55,7 @@ namespace MIVClient
             });
             if (System.IO.File.Exists("_serverinit.ini"))
             {
-                Game.FadeScreenOut(0);
+                darkscreen = new ClientRectangleView(new System.Drawing.RectangleF(0, 0, 2000, 2000), System.Drawing.Color.Black);
                 string[] lines = System.IO.File.ReadAllLines("_serverinit.ini");
                 INIReader reader = new INIReader(lines);
                 Int64 timestamp_saved = reader.getInt64("timestamp");
@@ -63,6 +67,10 @@ namespace MIVClient
                     System.IO.File.WriteAllLines("miv_lastserver.ini", lines);
                     initAndConnect(reader.getString("ip"), reader.getInt16("port"), reader.getString("nickname"));
                 }
+            }
+            else
+            {
+                FileSystemOverlay.crashIfSPPreparationFail();
             }
             // nope? nothing to do
         }
@@ -294,15 +302,18 @@ namespace MIVClient
                         bpf.add(data);
                         serverConnection.write(bpf.getBytes());
 
-                        if (Player.Character.Health == 0 || Player.Character.isDead || !Player.Character.isAlive)
+                        if (!isCurrentlyDead && (Player.Character.Health == 0 || Player.Character.isDead || !Player.Character.isAlive))
                         {
-                            Player.Character.Die();
+                            Game.FadeScreenOut(4000);
+                            //Player.Character.Die();
+                            AlternateHook.call(AlternateHookRequest.OtherCommands.FAKE_DEATHARREST);
+                            AlternateHook.call(AlternateHookRequest.OtherCommands.CREATE_PLAYER, 0.0f, 0.0f, 0.0f, null);
                             isCurrentlyDead = true;
                         }
 
                         if (isCurrentlyDead && !Player.Character.isDead && Player.Character.isAlive && Player.Character.Health > 0)
                         {
-                            Game.FadeScreenOut(200);
+                            Game.FadeScreenIn(2000);
                             isCurrentlyDead = false;
 
                             var bpf2 = new BinaryPacketFormatter(Commands.InternalClient_requestSpawn);
@@ -340,8 +351,12 @@ namespace MIVClient
 
             if (currentState == ClientState.Connecting)
             {
-                Game.FadeScreenIn(3000);
                 currentState = ClientState.Connected;
+
+                darkscreen.destroy();
+                Game.FadeScreenIn(3000);
+                AlternateHook.call(AlternateHookRequest.OtherCommands.DO_SCREEN_FADE_IN_UNHACKED, 2000);
+                AlternateHook.call(AlternateHookRequest.OtherCommands.FORCE_LOADING_SCREEN, false);
 
                 var bpf = new BinaryPacketFormatter(Commands.Connect);
                 bpf.add(nick);
@@ -350,6 +365,7 @@ namespace MIVClient
                 Player.Model = new Model("F_Y_HOOKER_01");
                 Player.NeverGetsTired = true;
 
+                
                 //ClientTextureDraw draw = new ClientTextureDraw(new System.Drawing.RectangleF(20, 20, 400, 400), @"C:\Users\Aerofly\Desktop\4duzy.png");
 
                 //chatController.writeChat("Connected");
@@ -369,6 +385,8 @@ namespace MIVClient
 
         private void initAndConnect(string ip, short port, string nickname)
         {
+            AlternateHook.call(AlternateHookRequest.OtherCommands.DISABLE_PAUSE_MENU, 1);
+            AlternateHook.call(AlternateHookRequest.OtherCommands.SET_FILTER_MENU_ON, 1);
             BroadcastingPaused = true;
             playerNames = new Dictionary<uint, string>();
             playerModels = new Dictionary<uint, string>();
@@ -376,11 +394,13 @@ namespace MIVClient
             actionQueue = new Queue<Action>();
             instance = this;
 
+            jsEngine = new JavaScriptEngine();
+
             CurrentVirtualWorld = 0;
 
             cameraController = new CameraController(this);
 
-            debugDraw = new ClientTextView(new System.Drawing.Point(10, 400), "", new GTA.Font("Segoe UI", 24, FontScaling.Pixel));
+            debugDraw = new ClientTextView(new System.Drawing.PointF(10, 400), "", new GTA.Font("Segoe UI", 24, FontScaling.Pixel), System.Drawing.Color.White);
 
             pedStreamer = new PedStreamer(this, 100.0f);
             vehicleStreamer = new VehicleStreamer(this, 100.0f);
@@ -398,6 +418,7 @@ namespace MIVClient
             currentState = ClientState.Disconnected;
             System.IO.File.WriteAllText("multiv-log.txt", "");
             perFrameRenderer = new PerFrameRenderer(this);
+
 
             Player.Character.CurrentRoom = Room.FromString("R_00000000_00000000");
 

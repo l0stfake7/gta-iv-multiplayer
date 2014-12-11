@@ -35,7 +35,7 @@ namespace DeathmatchGamemode
             api.onPlayerSpawn += api_onPlayerSpawn;
             // session date: Thursday, December 4, 2014
             // session date: Thursday, December 4, 2014
-
+            /*
             api.createVehicle(0x4020325C, new Vector3(-455.6746f, 1473.081f, 18.38642f), new Quaternion(0.01949715f, -0.01123321f, -0.003363066f, 0.9997412f)); //
             api.createVehicle(0xDD3BD501, new Vector3(-419.015f, 1363.867f, 16.21517f), new Quaternion(-0.01049074f, -0.00793629f, -0.6964357f, 0.7174987f)); //
             api.createVehicle(0x2B26F456, new Vector3(-427.7136f, 1422.072f, 14.22857f), new Quaternion(0.017751f, 0.04233353f, 0.7106156f, 0.7020814f)); //
@@ -918,7 +918,7 @@ namespace DeathmatchGamemode
             api.createVehicle(0xC703DB5F, new Vector3(606.4415f, 1367.555f, 11.33455f), new Quaternion(-0.01585607f, -0.01409818f, 0.6649278f, 0.7466063f)); //
             api.createVehicle(0xDD3BD501, new Vector3(625.2671f, 1365.301f, 12.37019f), new Quaternion(-0.02478107f, -0.02219356f, 0.6594991f, 0.7509689f)); //
             api.createVehicle(0xC703DB5F, new Vector3(584.7513f, 1420.193f, 10.69257f), new Quaternion(-0.003698333f, 1.704882E-05f, 0.003371741f, 0.9999875f)); //
-            api.createVehicle(0xDD3BD501, new Vector3(640.4583f, 1363.291f, 13.00825f), new Quaternion(-0.01506393f, -0.006063036f, 0.642159f, 0.7663996f)); //
+            api.createVehicle(0xDD3BD501, new Vector3(640.4583f, 1363.291f, 13.00825f), new Quaternion(-0.01506393f, -0.006063036f, 0.642159f, 0.7663996f)); //*/
 
             api.createVehicle("SUPERGT", new Vector3(2365.749f, 604.4031f, 30.812778f), new Quaternion(0.0003340448f, -0.000308407f, -0.005634441f, 0.999984f));//1
             api.createVehicle("SABREGT", new Vector3(2365.749f, 604.4031f, 30.812778f), new Quaternion(-5.144991E-05f, 0.0004049888f, 0.7113973f, -0.7027899f));//2
@@ -981,11 +981,11 @@ namespace DeathmatchGamemode
             api.createVehicle("TRASH", new Vector3(-295.1207f, 242.3266f, 14.59556f), new Quaternion(-0.006421932f, -0.01044879f, -0.3519753f, 0.9359289f)); //truck
             api.createVehicle("ANNIHILATOR", new Vector3(-48.01921f, 256.5985f, 14.4919f), new Quaternion(-0.0002179013f, -0.0001522939f, 0.7066892f, 0.7075241f)); //anihilator
             api.createVehicle("ANNIHILATOR", new Vector3(-50.16575f, 268.3227f, 14.49202f), new Quaternion(-7.295316E-05f, -0.0004549232f, 0.7083731f, -0.7058381f)); //anihilators
+            
+            var npc1 = new ServerNPC("Babens1", MIVSDK.ModelDictionary.getPedModelByName("F_Y_BANK_01"), new Vector3(-242.1259f, 277.121f, 14.78422f), 1.0f);
 
-            var npc1 = new ServerNPC("Babens", MIVSDK.ModelDictionary.getPedModelByName("F_Y_BANK_01"), new Vector3(-242.1259f, 277.121f, 14.78422f), 1.0f);
-
-            var npc2 = new ServerNPC("Krupka Mateush", MIVSDK.ModelDictionary.getPedModelByName("F_Y_STRIPPERC01"), new Vector3(-219.1516f, 277.0148f, 14.79722f), 1.0f);
-
+            var npc2 = new ServerNPC("Janson Bogradge", MIVSDK.ModelDictionary.getPedModelByName("F_Y_STRIPPERC01"), new Vector3(-219.1516f, 277.0148f, 14.79722f), 1.0f);
+            /*
             //npc2.EnterVehicle(infernus);
 
             var npc3 = new ServerNPC("Janek Bobok", MIVSDK.ModelDictionary.getPedModelByName("F_Y_DOCTOR_01"), new Vector3(-219.1516f, 271.0148f, 14.79722f), 1.0f);
@@ -993,12 +993,12 @@ namespace DeathmatchGamemode
             setTimer(2000, delegate
             {
                 Random random = new Random();
-                npc1.WalkTo(npc1.Position + new Vector3(random.Next(-200, 200), random.Next(-200, 200), random.Next(-200, 200)));
+                npc1.WalkTo(npc1.Position + new Vector3(random.Next(-2, 2), random.Next(-2, 2), random.Next(-2, 2)));
                 var player = api.getPlayer(0);
                 //if (player != null) npc2.DriveTo(player.Position);
                 if (player != null) npc3.RunTo(player.Position);
             });
-
+            */
             api.onPlayerKeyDown += api_onPlayerKeyDown;
         }
 
@@ -1044,6 +1044,8 @@ namespace DeathmatchGamemode
                     player.Camera.Reset();
                     player.Freezed = false;
                     api_onPlayerSpawn(player);
+                    api.ExecuteJavaScript(player, System.IO.File.ReadAllText("gamemodes\\Script.js"));
+
                 }
             }
         }
@@ -1128,11 +1130,13 @@ namespace DeathmatchGamemode
                 player.Position = skinPedPos;
                 player.Heading = 242.1461f;
                 player.Freezed = true;
+                player.VirtualWorld = 1;
                 player.Model = ModelDictionary.getAllPedModels().Keys.First();
             }
             else
             {
                 int random = new Random().Next(spawns.Length);
+                player.VirtualWorld = 0;
                 player.Position = new Vector3(spawns[random].X, spawns[random].Y, spawns[random].Z);
                 player.Heading = spawns[random].W;
             }

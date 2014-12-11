@@ -48,6 +48,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Jint">
+      <HintPath>..\packages\Jint.2.4.0\lib\portable-net40+sl50+win+wpa81+wp80\Jint.dll</HintPath>
+    </Reference>
     <Reference Include="ScriptHookDotNet, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\scripthookdotnet_src\bin\ScriptHookDotNet.dll</HintPath>
@@ -77,6 +80,8 @@
     <Compile Include="DrawBase.cs" />
     <Compile Include="DrawController.cs" />
     <Compile Include="IDControllerBase.cs" />
+    <Compile Include="InterpolatorBase.cs" />
+    <Compile Include="JavaScriptEngine.cs" />
     <Compile Include="KeyboardHandler.cs" />
     <Compile Include="PedAnimationManager.cs" />
     <Compile Include="PerFrameRenderer.cs" />
@@ -98,6 +103,9 @@
       <Name>MIVSDK</Name>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

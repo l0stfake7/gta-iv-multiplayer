@@ -75,7 +75,7 @@ namespace MIVClientGUI
             ListViewItem item = new ListViewItem(new string[4]{
                 servername, ip, ports, playercount
             });
-            item.Font = new System.Drawing.Font(new FontFamily("Segoe UI"), 16.0f, FontStyle.Regular);
+            //item.Font = new System.Drawing.Font(new FontFamily("Segoe UI"), 16.0f, FontStyle.Regular);
             return item;
         }
 
@@ -179,6 +179,7 @@ namespace MIVClientGUI
 
         private void runGameWithoutClientToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            FileSystemOverlay.prepareForSP();
             Process gameProcess = new Process();
             gameProcess.StartInfo = new ProcessStartInfo("LaunchGTAIV.exe");
             gameProcess.Start();
@@ -194,6 +195,7 @@ namespace MIVClientGUI
         {
 
             refreshList();
+            FileSystemOverlay.prepareForSP();
         }
 
         private void textBox1_Leave(object sender, EventArgs e)

@@ -59,10 +59,7 @@ namespace MIVClient
                     e.Graphics.DrawText(cstr.ToString(), widthToPx(10.0f), yoffset, font_consolas);
                 }
             }
-            ClientTextView.renderAll(e.Graphics);
-            ClientRectangleView.renderAll(e.Graphics);
-            ClientLineView.renderAll(e.Graphics);
-            ClientTextureDraw.renderAll(e.Graphics);
+            DrawBase.renderAll(e.Graphics);
         }
 
         private float heightToPx(float normalized)

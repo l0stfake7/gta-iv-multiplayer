@@ -40,6 +40,9 @@ namespace MIVSDK
         Player_setVirtualWorld,
         Player_setVehicleHealth,
 
+        Client_JSEval,
+        Client_JSGetValue,
+
         Global_setPlayerName,
         Global_setPlayerModel,
         Global_setPlayerPedText,

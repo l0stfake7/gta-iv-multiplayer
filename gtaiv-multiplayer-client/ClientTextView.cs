@@ -11,18 +11,17 @@ namespace MIVClient
 
         public GTA.Font font;
 
-        public Point point;
-
         public string text;
 
-        public RectangleF textbox;
+        public float width, height;
 
         public DrawType type;
 
         public ClientTextView(RectangleF textbox, TextAlignment alignment, string text, GTA.Font font, Color color)
-            : base()
+            : base(textbox.Location)
         {
-            this.textbox = textbox;
+            this.width = textbox.Width;
+            this.height = textbox.Height;
             this.alignment = alignment;
             this.text = text;
             this.font = font;
@@ -30,13 +29,27 @@ namespace MIVClient
             type = DrawType.Rectangle;
         }
 
-        public ClientTextView(Point point, string text, GTA.Font font)
-            : base()
+        public ClientTextView(PointF point, string text, GTA.Font font, Color color)
+            : base(point)
         {
-            this.point = point;
             this.text = text;
             this.font = font;
+            this.color = color;
             type = DrawType.Point;
+        }
+
+        public RectangleF Box
+        {
+            get
+            {
+                return new RectangleF(position.X, position.Y, width, height);
+            }
+            set
+            {
+                position = value.Location;
+                width = value.Width;
+                height = value.Height;
+            }
         }
 
         public enum DrawType
@@ -49,11 +62,11 @@ namespace MIVClient
         {
             if (type == DrawType.Rectangle)
             {
-                g.DrawText(text, textbox, alignment, color, font);
+                g.DrawText(text, new RectangleF(position.X, position.Y, width, height), alignment, color, font);
             }
             else
             {
-                g.DrawText(text, point.X, point.Y, font);
+                g.DrawText(text, position.X, position.Y, color, font);
             }
         }
     }

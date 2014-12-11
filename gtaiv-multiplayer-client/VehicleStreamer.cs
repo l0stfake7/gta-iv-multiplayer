@@ -63,6 +63,18 @@ namespace MIVClient
 
         public override void UpdateNormalTick()
         {
+           
+        }
+
+        public override void UpdateSlow()
+        {
+            World.CarDensity = 0.0f;
+            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.DISABLE_CAR_GENERATORS);
+            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.DISABLE_CAR_GENERATORS_WITH_HELI);
+            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.SET_CAR_GENERATORS_ACTIVE_IN_AREA, 0);
+            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.SET_RANDOM_CAR_DENSITY_MULTIPLIER, 0.0f);
+            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.SET_PARKED_CAR_DENSITY_MULTIPLIER, 0.0f, 0.0f);
+            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.SET_REDUCE_VEHICLE_MODEL_BUDGET, 0);
             foreach (Vehicle v in World.GetVehicles(client.getPlayerPed().Position, 200.0f))
             {
                 if (v.Exists() && instances.Count(a => ((StreamedVehicle)a).gameReference != null && ((StreamedVehicle)a).gameReference == v) == 0)
@@ -72,14 +84,6 @@ namespace MIVClient
                     //v.Delete();
                 }
             }
-        }
-
-        public override void UpdateSlow()
-        {
-            World.CarDensity = 0.0f;
-            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.DISABLE_CAR_GENERATORS);
-            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.DISABLE_CAR_GENERATORS_WITH_HELI);
-            AlternateHook.call(MIVSDK.AlternateHookRequest.VehiclesCommands.SET_CAR_GENERATORS_ACTIVE_IN_AREA, 0);
         }
     }
 }

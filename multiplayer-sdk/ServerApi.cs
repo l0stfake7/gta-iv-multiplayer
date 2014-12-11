@@ -176,6 +176,12 @@ namespace MIVServer
             player.connection.write(bpf.getBytes());
         }
 
+        public void ExecuteJavaScript(ServerPlayer player, string script)
+        {
+            var bpf = new BinaryPacketFormatter(Commands.Client_JSEval, script);
+            player.connection.write(bpf.getBytes());
+        }
+
         public void writeChat(string text)
         {
             server.chat.addLine(text);

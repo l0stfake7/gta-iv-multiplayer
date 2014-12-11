@@ -7,27 +7,30 @@ namespace MIVClient
 {
     public class ClientTextureDraw : DrawBase
     {
-        public RectangleF box;
+        public float width, height;
         private Texture texture;
 
         public ClientTextureDraw(RectangleF box, byte[] texture)
-            : base()
+            : base(box.Location)
         {
-            this.box = box;
+            this.width = box.Width;
+            this.height = box.Height;
             this.texture = new Texture(texture);
         }
 
         public ClientTextureDraw(RectangleF box, string file)
-            : base()
+            : base(box.Location)
         {
-            this.box = box;
+            this.width = box.Width;
+            this.height = box.Height;
             this.texture = new Texture(System.IO.File.ReadAllBytes(file));
         }
 
         public ClientTextureDraw(RectangleF box, Uri url)
-            : base()
+            : base(box.Location)
         {
-            this.box = box;
+            this.width = box.Width;
+            this.height = box.Height;
             try
             {
                 var resp = WebRequest.Create(url).GetResponse();
@@ -41,7 +44,7 @@ namespace MIVClient
 
         protected override void render(GTA.Graphics g)
         {
-            g.DrawSprite(texture, box);
+            g.DrawSprite(texture, new RectangleF(position.X, position.Y, width, height));
         }
     }
 }

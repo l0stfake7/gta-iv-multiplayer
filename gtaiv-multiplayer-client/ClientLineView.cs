@@ -9,7 +9,7 @@ namespace MIVClient
         private float width;
 
         public ClientLineView(PointF start, PointF end, float width, Color color)
-            : base()
+            : base(start)
         {
             this.start = start;
             this.end = end;

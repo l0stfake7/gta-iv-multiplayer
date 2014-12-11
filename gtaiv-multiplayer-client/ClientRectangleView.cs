@@ -4,19 +4,34 @@ namespace MIVClient
 {
     public class ClientRectangleView : DrawBase
     {
-        public RectangleF box;
+        public float width, height;
         public Color color;
 
         public ClientRectangleView(RectangleF box, Color color)
-            : base()
+            : base(box.Location)
         {
-            this.box = box;
+            this.width = box.Width;
+            this.height = box.Height;
             this.color = color;
+        }
+
+        public RectangleF Box
+        {
+            get
+            {
+                return new RectangleF(position.X, position.Y, width, height);
+            }
+            set
+            {
+                position = value.Location;
+                width = value.Width;
+                height = value.Height;
+            }
         }
 
         protected override void render(GTA.Graphics g)
         {
-            g.DrawRectangle(box, color);
+            g.DrawRectangle(Box, color);
         }
     }
 }

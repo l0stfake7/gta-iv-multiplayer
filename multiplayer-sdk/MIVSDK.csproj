@@ -66,6 +66,7 @@
     <Compile Include="BinaryPacketFormatter.cs" />
     <Compile Include="BinaryPacketReader.cs" />
     <Compile Include="ClientConnection.cs" />
+    <Compile Include="FileSystemOverlay.cs" />
     <Compile Include="Gamemode.cs" />
     <Compile Include="GamemodeManager.cs" />
     <Compile Include="HTTPServer.cs" />
