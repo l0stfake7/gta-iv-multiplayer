@@ -1,4 +1,7 @@
-﻿using MIVSDK;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using MIVSDK;
 using SharpDX;
 using System;
 
@@ -55,13 +58,13 @@ namespace MIVServer
             {
                 currentPedText = value;
                 var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerPedText, id, value);
-                foreach (var single in Server.instance.playerpool)
+                Server.instance.InvokeParallelForEachPlayer((single) =>
                 {
                     if (single.id != this.id)
                     {
                         single.connection.write(bpf.getBytes());
                     }
-                }
+                });
             }
         }
 
@@ -199,13 +202,13 @@ namespace MIVServer
                 var bpf = new BinaryPacketFormatter(Commands.Client_setVirtualWorld, value);
                 connection.write(bpf.getBytes());
                 var bpf2 = new BinaryPacketFormatter(Commands.Player_setVirtualWorld, id, value);
-                foreach (var single in Server.instance.playerpool)
+                Server.instance.InvokeParallelForEachPlayer((single) =>
                 {
                     if (single.id != this.id)
                     {
-                        single.connection.write(bpf.getBytes());
+                        single.connection.write(bpf2.getBytes());
                     }
-                }
+                });
             }
         }
 
@@ -224,6 +227,13 @@ namespace MIVServer
             }
         }
 
+        public void GiveWeapon(Enums.Weapon weapon, int ammo)
+        {
+            int w = (int)weapon;
+            var bpf = new BinaryPacketFormatter(Commands.Player_giveWeapon, w, ammo);
+            connection.write(bpf.getBytes());
+        }
+
         public void updateData(UpdateDataStruct data)
         {
             this.data = data;
@@ -233,6 +243,7 @@ namespace MIVServer
                 Server.instance.vehicleController.vehicles[data.vehicle_id].position = data.getPositionVector();
                 Server.instance.vehicleController.vehicles[data.vehicle_id].orientation = data.getOrientationQuaternion();
                 Server.instance.vehicleController.vehicles[data.vehicle_id].velocity = data.getVelocityVector();
+                Server.instance.vehicleController.vehicles[data.vehicle_id].health = data.vehicle_health;
             }
             Server.instance.api.invokeOnPlayerUpdate(this);
             //Server.instance.broadcastData(this);

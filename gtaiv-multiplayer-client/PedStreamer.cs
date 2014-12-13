@@ -1,4 +1,7 @@
-﻿using GTA;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using GTA;
 using System;
 using System.Linq;
 
@@ -10,6 +13,8 @@ namespace MIVClient
     {
         private System.Drawing.Color nickcolor, chatcolor;
         private GTA.Font nickfont;
+        public float DrawDistance;
+        public bool checkLOS;
 
         public PedStreamer(Client client, float range)
             : base(client, range)
@@ -18,6 +23,8 @@ namespace MIVClient
             nickfont.Effect = FontEffect.None;
             nickcolor = System.Drawing.Color.LightYellow;
             chatcolor = System.Drawing.Color.White;
+            DrawDistance = 120.0f;
+            checkLOS = true;
             //fa_font = new Font("FotntAwesome", 24, FontScaling.Pixel, false, false);
         }
 
@@ -34,27 +41,43 @@ namespace MIVClient
                         var peddelta = ped.gameReference.Position - client.getPlayerPed().Position;
                         float distance = peddelta.Length();
                         //float distance_from_centerscreen = (projected - new Vector2(Game.Resolution.Width, Game.Resolution.Height)).Length();
-                        int alpha = (int)Math.Round((255.0f * (distance / -80.0f + 1.0f)));
+                        int alpha = (int)Math.Round((255.0f * (distance / -DrawDistance + 1.0f)));
                         if (alpha > 255) alpha = 255;
                         if (alpha < 0) alpha = 0;
                         if (projected.X < -120 || projected.X > Game.Resolution.Width || projected.Y < -50 || projected.Y > Game.Resolution.Height ||
-                            (peddelta + Game.CurrentCamera.Direction).Length() < distance || !Game.CurrentCamera.isSphereVisible(ped.gameReference.Position, 3.0f))
+                            (peddelta + Game.CurrentCamera.Direction).Length() < distance || (checkLOS && !Game.CurrentCamera.isSphereVisible(ped.gameReference.Position, 3.0f)))
                         {
                             ped.nickDraw.destroy();
                             ped.healthDraw.destroy();
                             ped.healthDraw2.destroy();
+                            ped.carHealthDraw.destroy();
+                            ped.carHealthDraw2.destroy();
                             ped.chatDraw.destroy();
                             ped.nickDraw = null;
                             ped.healthDraw = null;
                             ped.healthDraw2 = null;
+                            ped.carHealthDraw = null;
+                            ped.carHealthDraw2 = null;
                             ped.chatDraw = null;
                         }
                         else
                         {
                             var rect = new System.Drawing.RectangleF(projected.X - 100, projected.Y - 50, 200, 30);
+
                             var rect2 = new System.Drawing.RectangleF(projected.X - 37, projected.Y - 22, 37 * 2, 11);
                             var rect22 = new System.Drawing.RectangleF(projected.X - 35, projected.Y - 20, (35.0f * 2.0f) * (ped.last_game_health < 0 ? 0 : ped.last_game_health / 100.0f), 7);
-                            var rect3 = new System.Drawing.RectangleF(projected.X - 30, projected.Y - 10, 60, 30);
+
+                            var rect3 = new System.Drawing.RectangleF(projected.X - 300, projected.Y - 10, 600, 130);
+
+                            System.Drawing.RectangleF carrect1 = System.Drawing.RectangleF.Empty;
+                            System.Drawing.RectangleF carrect2 = System.Drawing.RectangleF.Empty;
+                            bool invehicle = ped.gameReference.isInVehicle();
+                            if (invehicle)
+                            {
+                                carrect1 = new System.Drawing.RectangleF(projected.X - 37, projected.Y - 2, 37 * 2, 11);
+                                carrect2 = new System.Drawing.RectangleF(projected.X - 35, projected.Y, (35.0f * 2.0f) * (ped.gameReference.CurrentVehicle.Health < 0 ? 0 : ped.gameReference.CurrentVehicle.Health / 1000.0f), 7);
+                            }
+
                             var chaticonframe = new System.Drawing.RectangleF(projected.X - 30, projected.Y - 80, 60, 30);
                             if (ped.nickDraw == null)
                             {
@@ -62,6 +85,11 @@ namespace MIVClient
                                 ped.healthDraw = new ClientRectangleView(rect2, System.Drawing.Color.FromArgb(alpha, 0, 0, 0));
                                 ped.healthDraw2 = new ClientRectangleView(rect22, System.Drawing.Color.FromArgb(alpha, 80, 80, 255));
                                 ped.chatDraw = new ClientTextView(rect3, TextAlignment.Center, ped.CurrentChatMessage, nickfont, System.Drawing.Color.FromArgb(alpha, 255, 255, 255));
+                                if (invehicle)
+                                {
+                                    ped.carHealthDraw = new ClientRectangleView(carrect1, System.Drawing.Color.FromArgb(alpha, 0, 0, 0));
+                                    ped.carHealthDraw2 = new ClientRectangleView(carrect2, System.Drawing.Color.FromArgb(alpha, 255, 80, 80));
+                                }
                             }
                             else
                             {
@@ -72,7 +100,31 @@ namespace MIVClient
                                 ped.healthDraw2.Box = rect22;
                                 ped.healthDraw2.color = System.Drawing.Color.FromArgb(alpha, 80, 80, 255);
                                 ped.chatDraw.Box = rect3;
+                                ped.chatDraw.text = ped.CurrentChatMessage;
                                 ped.chatDraw.color = System.Drawing.Color.FromArgb(alpha, 255, 255, 255);
+                                if (invehicle)
+                                {
+                                    if (ped.carHealthDraw != null)
+                                    {
+                                        ped.carHealthDraw.Box = carrect1;
+                                        ped.carHealthDraw.color = System.Drawing.Color.FromArgb(alpha, 0, 0, 0);
+                                        ped.carHealthDraw2.Box = carrect2;
+                                        ped.carHealthDraw2.color = System.Drawing.Color.FromArgb(alpha, 80, 80, 255);
+                                    }
+                                    else
+                                    {
+                                        ped.carHealthDraw = new ClientRectangleView(carrect1, System.Drawing.Color.FromArgb(alpha, 0, 0, 0));
+                                        ped.carHealthDraw2 = new ClientRectangleView(carrect2, System.Drawing.Color.FromArgb(alpha, 255, 80, 80));
+                                    }
+
+                                }
+                                else
+                                {
+                                    ped.carHealthDraw.destroy();
+                                    ped.carHealthDraw2.destroy();
+                                    ped.carHealthDraw = null;
+                                    ped.carHealthDraw2 = null;
+                                }
                             }
                         }
                     }
@@ -110,13 +162,14 @@ namespace MIVClient
         public Ped gameReference;
         public bool hasNetworkName;
         public float heading;
-        public ClientRectangleView healthDraw, healthDraw2;
+        public ClientRectangleView healthDraw, healthDraw2, carHealthDraw, carHealthDraw2;
         public bool immortal;
         public int last_game_health;
         public string model, networkname;
         public ClientTextView nickDraw, iconDraw;
         public Vector3 position, direction;
         public uint vehicle_id;
+        public Vector3 cameraDirection;
 
         public StreamedPed(PedStreamer streamer, string model, string networkname, Vector3 position, float heading, BlipColor color)
             : base(streamer)
@@ -128,6 +181,7 @@ namespace MIVClient
             direction = Vector3.Zero;
             hasNetworkName = false;
             vehicle_id = 0;
+            CurrentChatMessage = "";
             animator = new PedAnimationManager(this);
         }
 

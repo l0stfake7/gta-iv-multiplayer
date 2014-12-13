@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,6 +36,14 @@ namespace MIVClient
         {
             Client.instance.chatController.writeChat(text);
         }
+        public System.Timers.Timer setTimer(int i, Delegate d)
+        {
+            var timer = new System.Timers.Timer(i);
+            timer.Elapsed += (o, e) => d.DynamicInvoke();
+            timer.Start();
+            timer.Enabled = true;
+            return timer;
+        }
     }
     
     public class JavaScriptEngine
@@ -43,8 +54,8 @@ namespace MIVClient
         {
             try
             {
-                engine = new Engine();
-                //engine.SetValue("Client", Client.instance);
+                engine = new Engine(c => c.Strict(true));
+                engine.SetValue("Client", Client.instance);
                 engine.SetValue("API", new JSAPI());
             }
             catch (Exception e)

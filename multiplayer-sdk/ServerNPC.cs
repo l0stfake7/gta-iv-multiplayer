@@ -1,4 +1,7 @@
-﻿using MIVSDK;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using MIVSDK;
 using SharpDX;
 using System;
 using System.Collections.Generic;
@@ -168,10 +171,10 @@ namespace MIVServer
         {
             if (Server.instance.playerpool != null)
             {
-                for (int i = 0; i < Server.instance.playerpool.Count; i++)
+                Server.instance.InvokeParallelForEachPlayer((player) =>
                 {
-                    Server.instance.playerpool[i].connection.write(bpf.getBytes());
-                }
+                    player.connection.write(bpf.getBytes());
+                });
             }
         }
 

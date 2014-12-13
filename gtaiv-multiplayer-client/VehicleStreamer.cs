@@ -1,4 +1,7 @@
-﻿using GTA;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using GTA;
 using System.Linq;
 
 //using MIVSDK;
@@ -33,7 +36,7 @@ namespace MIVClient
 
         public override bool NeedRestream()
         {
-            return !gameReference.isAlive || gameReference.Health == 0;
+            return gameReference.Health == 0;
         }
 
         public override void StreamIn()

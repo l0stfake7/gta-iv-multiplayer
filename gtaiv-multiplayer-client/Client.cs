@@ -1,4 +1,7 @@
-﻿using GTA;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using GTA;
 using MIVSDK;
 using System;
 using System.Collections.Generic;
@@ -276,7 +279,7 @@ namespace MIVClient
                             data.vehicle_id = Player.Character.isInVehicle() ? vehicleController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == Player.Character.CurrentVehicle).Key : 0;
                             data.ped_health = Player.Character.Health;
                             data.heading = Player.Character.Heading;
-                            data.weapon = Player.Character.Weapons.CurrentType.GetHashCode();
+                            data.weapon = (int)Player.Character.Weapons.CurrentType;
                             data.state = 0;
                             data.state |= Player.Character.isShooting ? PlayerState.IsShooting : 0;
                             data.state |= Game.isGameKeyPressed(GameKey.Aim) ? PlayerState.IsAiming : 0;
@@ -298,16 +301,20 @@ namespace MIVClient
                         data.vstate |= (data.state & PlayerState.IsPassenger1) != 0 || (data.state & PlayerState.IsPassenger2) != 0 || (data.state & PlayerState.IsPassenger3) != 0
                             ? VehicleState.IsAsPassenger : 0;
 
+                        data.camdir_x = Game.CurrentCamera.Direction.X;
+                        data.camdir_y = Game.CurrentCamera.Direction.Y;
+                        data.camdir_z = Game.CurrentCamera.Direction.Z;
+
                         var bpf = new BinaryPacketFormatter(Commands.UpdateData);
                         bpf.add(data);
                         serverConnection.write(bpf.getBytes());
 
                         if (!isCurrentlyDead && (Player.Character.Health == 0 || Player.Character.isDead || !Player.Character.isAlive))
                         {
-                            Game.FadeScreenOut(4000);
+                            //Game.FadeScreenOut(4000);
                             //Player.Character.Die();
-                            AlternateHook.call(AlternateHookRequest.OtherCommands.FAKE_DEATHARREST);
-                            AlternateHook.call(AlternateHookRequest.OtherCommands.CREATE_PLAYER, 0.0f, 0.0f, 0.0f, null);
+                            //AlternateHook.call(AlternateHookRequest.OtherCommands.FAKE_DEATHARREST);
+                            //AlternateHook.call(AlternateHookRequest.OtherCommands.CREATE_PLAYER, 0.0f, 0.0f, 0.0f, null);
                             isCurrentlyDead = true;
                         }
 
@@ -318,6 +325,12 @@ namespace MIVClient
 
                             var bpf2 = new BinaryPacketFormatter(Commands.InternalClient_requestSpawn);
                             serverConnection.write(bpf2.getBytes());
+
+                            Weapon weapon = Weapon.Rifle_M4;
+                            Player.Character.Weapons.AssaultRifle_M4.Ammo = 999;
+                            Player.Character.Weapons.AssaultRifle_M4.AmmoInClip = 999;
+                            Player.Character.Weapons.Select(weapon);
+
                         }
 
                         currentData = data;
@@ -365,7 +378,6 @@ namespace MIVClient
                 Player.Model = new Model("F_Y_HOOKER_01");
                 Player.NeverGetsTired = true;
 
-                
                 //ClientTextureDraw draw = new ClientTextureDraw(new System.Drawing.RectangleF(20, 20, 400, 400), @"C:\Users\Aerofly\Desktop\4duzy.png");
 
                 //chatController.writeChat("Connected");

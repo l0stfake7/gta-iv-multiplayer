@@ -1,4 +1,7 @@
-﻿using GTA;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using GTA;
 using MIVSDK;
 
 namespace MIVClient
@@ -42,12 +45,13 @@ namespace MIVClient
             ped.position = posnew;
             ped.heading = data.heading;
             ped.direction = new Vector3(data.rot_x, data.rot_y, data.rot_z);
+            ped.cameraDirection = new Vector3(data.camdir_x, data.camdir_y, data.camdir_z);
             if (ped.IsStreamedIn() && data.vehicle_id == 0)
             {
                 if (ped.gameReference.isInVehicle())
                 {
                     ped.gameReference.CurrentVehicle.PassengersLeaveVehicle(true);
-                    ped.gameReference.CurrentVehicle.Delete();
+                    //ped.gameReference.CurrentVehicle.Delete();
                 }
 
                 float delta = posnew.DistanceTo(ped.gameReference.Position);
@@ -57,6 +61,20 @@ namespace MIVClient
                 int healthDelta = data.ped_health - ped.gameReference.Health;
                 ped.gameReference.Health = data.ped_health;
                 ped.last_game_health = data.ped_health;
+
+                if (data.weapon > 0)
+                {
+                    if (ped.gameReference.Weapons.Current != (Weapon)data.weapon)
+                    {
+                        ped.gameReference.Weapons.FromType((Weapon)data.weapon).Ammo = 999;
+                        ped.gameReference.Weapons.FromType((Weapon)data.weapon).AmmoInClip = 999;
+                        ped.gameReference.Weapons.Select((Weapon)data.weapon);
+                    }
+                }
+                else
+                {
+                    ped.gameReference.Weapons.RemoveAll();
+                }
 
                 if (healthDelta > 20 && healthDelta < 100)
                 {
@@ -171,10 +189,9 @@ namespace MIVClient
                         veh.gameReference.Health = data.vehicle_health;
                         veh.last_game_health = data.vehicle_health;
 
-                        if (vehicleHealthDelta > 20 && vehicleHealthDelta < 100 && GTA.Native.Function.Call<bool>("HAS_CAR_BEEN_DAMAGED_BY_CHAR", new GTA.Native.Parameter(Player.Character)))
+                        if (vehicleHealthDelta > 20 && vehicleHealthDelta < 2000 && data.vehicle_id > 0)
                         {
-                            chatController.writeChat("yay damaged some");
-                            var bpf = new BinaryPacketFormatter(Commands.Vehicle_damage, id, ped.vehicle_id);
+                            var bpf = new BinaryPacketFormatter(Commands.Vehicle_damage, id, data.vehicle_id, vehicleHealthDelta);
                             Client.instance.serverConnection.write(bpf.getBytes());
                         }
 

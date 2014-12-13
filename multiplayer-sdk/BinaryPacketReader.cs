@@ -1,4 +1,7 @@
-﻿using SharpDX;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using SharpDX;
 using System;
 
 namespace MIVSDK
@@ -144,6 +147,9 @@ namespace MIVSDK
             output.vel_x = readSingle(true);
             output.vel_y = readSingle(true);
             output.vel_z = readSingle(true);
+            output.camdir_x = readSingle(true);
+            output.camdir_y = readSingle(true);
+            output.camdir_z = readSingle(true);
 
             output.heading = readSingle(true);
 

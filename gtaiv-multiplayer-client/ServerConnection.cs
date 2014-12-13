@@ -1,4 +1,7 @@
-﻿using GTA;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using GTA;
 using MIVSDK;
 using System;
 using System.Collections.Generic;
@@ -11,7 +14,7 @@ namespace MIVClient
     {
         public Dictionary<uint, UpdateDataStruct> playersdata;
 
-        private const int BUFSIZE = 1024 * 100;
+        private const int BUFSIZE = 1024 * 1024 * 4;
         private byte[] buffer;
         private Client client;
 
@@ -374,7 +377,14 @@ namespace MIVClient
                                         {
                                             if (client.getPlayerPed().isInVehicle())
                                             {
-                                                client.getPlayerPed().CurrentVehicle.Health = h;
+                                                if (h <= 0)
+                                                {
+                                                    client.getPlayerPed().CurrentVehicle.Explode();
+                                                }
+                                                else
+                                                {
+                                                    client.getPlayerPed().CurrentVehicle.Health = h;
+                                                }
                                             }
                                         }));
                                     }
@@ -489,6 +499,16 @@ namespace MIVClient
                                         client.enqueueAction(new Action(delegate
                                         {
                                             client.getPlayer().CanControlCharacter = true;
+                                        }));
+                                    }
+                                    break;
+                                case Commands.Player_giveWeapon:
+                                    {
+                                        Weapon weapon = (Weapon)bpr.readInt32();
+                                        int ammo = bpr.readInt32();
+                                        client.enqueueAction(new Action(delegate
+                                        {
+                                            client.getPlayerPed().Weapons.FromType(weapon).Ammo = ammo;
                                         }));
                                     }
                                     break;

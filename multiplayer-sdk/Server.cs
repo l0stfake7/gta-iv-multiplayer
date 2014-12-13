@@ -1,10 +1,14 @@
-﻿using MIVSDK;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using MIVSDK;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Timers;
+using System.Threading.Tasks;
 
 namespace MIVServer
 {
@@ -57,7 +61,7 @@ namespace MIVServer
             {
                 if (player.data != null)
                 {
-                    foreach (var single in playerpool)
+                    InvokeParallelForEachPlayer((single) =>
                     {
                         if (single.id != player.id)
                         {
@@ -67,7 +71,7 @@ namespace MIVServer
                             single.connection.write(bpf.getBytes());
                             //Console.WriteLine("Streaming to player " + single.Value.nick);
                         }
-                    }
+                    });
                 }
             }
             catch (Exception e) { Console.WriteLine(e); }
@@ -89,24 +93,30 @@ namespace MIVServer
 
         public void broadcastPlayerModel(ServerPlayer player)
         {
-            foreach (var single in playerpool) if (single != player)
+            InvokeParallelForEachPlayer((single) =>
+            {
+                if (single != player)
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerModel);
                     bpf.add(player.id);
                     bpf.add(ModelDictionary.getPedModelByName(player.Model));
                     single.connection.write(bpf.getBytes());
                 }
+            });
         }
 
         public void broadcastPlayerName(ServerPlayer player)
         {
-            foreach (var single in playerpool) if (single != player)
+            InvokeParallelForEachPlayer((single) =>
+            {
+                if (single != player)
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerName);
                     bpf.add(player.id);
                     bpf.add(player.Nick);
                     single.connection.write(bpf.getBytes());
                 }
+            });
         }
 
         public void broadcastVehiclesToPlayer(ServerPlayer player)
@@ -162,18 +172,38 @@ namespace MIVServer
             string currentMessage;
             while ((currentMessage = chat.dequeue()) != null)
             {
-                foreach (ServerPlayer player in playerpool)
+                string message = currentMessage;
+                InvokeParallelForEachPlayer((player) =>
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Chat_writeLine);
-                    bpf.add(currentMessage);
+                    bpf.add(message);
                     player.connection.write(bpf.getBytes());
-                }
+                });
             }
 
+            InvokeParallelForEachPlayer((player) =>
+            {
+                broadcastData(player);
+                player.connection.flush();
+            });
+        }
+
+        public void InvokeParallelForEachPlayer(Action<ServerPlayer> action)
+        {
+            if (playerpool == null || playerpool.Count == 0) return;
             for (int i = 0; i < playerpool.Count; i++)
             {
-                broadcastData(playerpool[i]);
-                playerpool[i].connection.flush();
+                /*
+                ServerPlayer player = playerpool[i];
+                new Task(() =>
+                {
+                    lock (player)
+                    {
+                        action.Invoke(player);
+                    }
+                }).Start();
+                */
+                action.Invoke(playerpool[i]);
             }
         }
 
@@ -198,15 +228,15 @@ namespace MIVServer
                 ServerPlayer player = new ServerPlayer(nick, connection);
                 connection.player = player;
                 player.id = findLowestFreeId();
-                for (int i = 0; i < playerpool.Count; i++)
+                InvokeParallelForEachPlayer((p) =>
                 {
                     player.connection.write(
-                        new BinaryPacketFormatter(Commands.Global_createPlayer, playerpool[i].id, ModelDictionary.getPedModelByName(playerpool[i].Model), playerpool[i].Nick)
+                        new BinaryPacketFormatter(Commands.Global_createPlayer, p.id, ModelDictionary.getPedModelByName(p.Model), p.Nick)
                         .getBytes());
-                    playerpool[i].connection.write(
+                    p.connection.write(
                         new BinaryPacketFormatter(Commands.Global_createPlayer, player.id, ModelDictionary.getPedModelByName("M_Y_SWAT"), nick)
                         .getBytes());
-                }
+                });
                 player.Nick = nick;
                 player.Model = "M_Y_SWAT";
                 playerpool.Add(player);
@@ -229,10 +259,10 @@ namespace MIVServer
 
         private void timer_slow_Elapsed(object sender, ElapsedEventArgs e)
         {
-            for (int i = 0; i < playerpool.Count; i++)
+            InvokeParallelForEachPlayer((player) =>
             {
-                updateNPCsToPlayer(playerpool[i]);
-            }
+                updateNPCsToPlayer(player);
+            });
         }
     }
 }

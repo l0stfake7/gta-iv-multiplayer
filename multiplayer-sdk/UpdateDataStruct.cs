@@ -1,4 +1,7 @@
-﻿using SharpDX;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using SharpDX;
 
 namespace MIVSDK
 {
@@ -39,6 +42,7 @@ namespace MIVSDK
         Player_unfreeze,
         Player_setVirtualWorld,
         Player_setVehicleHealth,
+        Player_giveWeapon,
 
         Client_JSEval,
         Client_JSGetValue,
@@ -174,7 +178,7 @@ namespace MIVSDK
     public class UpdateDataStruct
     {
         public bool client_has_been_set;
-        public float pos_x, pos_y, pos_z, rot_x, rot_y, rot_z, rot_a, vel_x, vel_y, vel_z, heading;
+        public float pos_x, pos_y, pos_z, rot_x, rot_y, rot_z, rot_a, vel_x, vel_y, vel_z, camdir_x, camdir_y, camdir_z, heading;
         public PlayerState state;
         public long timestamp;
         public uint vehicle_id;
@@ -202,6 +206,9 @@ namespace MIVSDK
                     vel_x = 0,
                     vel_y = 0,
                     vel_z = 0,
+                    camdir_x = 0,
+                    camdir_y = 0,
+                    camdir_z = 0,
                     state = PlayerState.None,
                     vstate = VehicleState.None,
                     client_has_been_set = false
@@ -220,6 +227,10 @@ namespace MIVSDK
         public Vector3 getPositionVector()
         {
             return new Vector3(pos_x, pos_y, pos_z);
+        }
+        public Vector3 getCameraDirection()
+        {
+            return new Vector3(camdir_x, camdir_y, camdir_z);
         }
 
         public Vector3 getVelocityVector()

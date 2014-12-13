@@ -1,4 +1,7 @@
-﻿using MIVSDK;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using MIVSDK;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +13,7 @@ namespace MIVServer
     {
         public ServerPlayer player;
 
-        private const int BUFSIZE = 1024 * 100;
+        private const int BUFSIZE = 1024 * 1024 * 4;
 
         //NetworkStream stream;
         private byte[] buffer;
@@ -205,8 +208,9 @@ namespace MIVServer
                                 {
                                     uint playerid = bpr.readUInt32();
                                     uint vehicleid = bpr.readUInt32();
+                                    int delta = bpr.readInt32();
                                     var bpf = new BinaryPacketFormatter(Commands.Player_setVehicleHealth);
-                                    bpf.add(Server.instance.vehicleController.getById(vehicleid).health - 20);
+                                    bpf.add(Server.instance.vehicleController.getById(vehicleid).health - delta);
                                     Server.instance.getPlayerById(playerid).connection.write(bpf.getBytes());
                                 }
                             }

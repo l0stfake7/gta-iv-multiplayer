@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using System.Collections.Generic;
 
 namespace MIVClient
 {
@@ -22,7 +25,7 @@ namespace MIVClient
             {
                 if (view.currentInterpolatorX != null && view.currentInterpolatorX.HasStarted) // those conditonals actually make sense
                 {
-                    if (view.currentInterpolatorX.HasEnded && !view.currentInterpolatorY.HasStarted)
+                    if (view.currentInterpolatorX.HasEnded && !view.currentInterpolatorX.HasStarted)
                     {
                         view.currentInterpolatorX = null;
                     }

@@ -90,6 +90,7 @@
     <Compile Include="ServerConnection.cs" />
     <Compile Include="ClientTextView.cs" />
     <Compile Include="StreamerBase.cs" />
+    <Compile Include="TouchPhone.cs" />
     <Compile Include="VehicleController.cs" />
     <Compile Include="PlayerVehicleController.cs" />
     <Compile Include="PlayerPedController.cs" />

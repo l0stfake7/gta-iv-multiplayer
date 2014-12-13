@@ -1,4 +1,7 @@
-﻿using MIVSDK;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using MIVSDK;
 using SharpDX;
 using System;
 using System.Collections.Generic;
@@ -22,15 +25,15 @@ namespace MIVServer
             veh.orientation = orientation;
             veh.model = model;
             vehicles.Add(vid, veh);
-            if (Server.instance.playerpool != null) foreach (var player in Server.instance.playerpool)
-                {
-                    var bpf = new BinaryPacketFormatter(Commands.Vehicle_create);
-                    bpf.add(veh.id);
-                    bpf.add(veh.position);
-                    bpf.add(veh.orientation);
-                    bpf.add(ModelDictionary.getVehicleByName(veh.model));
-                    player.connection.write(bpf.getBytes());
-                }
+            Server.instance.InvokeParallelForEachPlayer((player) =>
+            {
+                var bpf = new BinaryPacketFormatter(Commands.Vehicle_create);
+                bpf.add(veh.id);
+                bpf.add(veh.position);
+                bpf.add(veh.orientation);
+                bpf.add(ModelDictionary.getVehicleByName(veh.model));
+                player.connection.write(bpf.getBytes());
+            });
             return veh;
         }
 

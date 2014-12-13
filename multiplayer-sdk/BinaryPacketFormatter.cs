@@ -1,4 +1,7 @@
-﻿using SharpDX;
+// Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+using SharpDX;
 using System;
 using System.Collections.Generic;
 
@@ -142,6 +145,9 @@ namespace MIVSDK
             bytes.AddRange(BitConverter.GetBytes(data.vel_x));
             bytes.AddRange(BitConverter.GetBytes(data.vel_y));
             bytes.AddRange(BitConverter.GetBytes(data.vel_z));
+            bytes.AddRange(BitConverter.GetBytes(data.camdir_x));
+            bytes.AddRange(BitConverter.GetBytes(data.camdir_y));
+            bytes.AddRange(BitConverter.GetBytes(data.camdir_z));
 
             bytes.AddRange(BitConverter.GetBytes(data.heading));
 
