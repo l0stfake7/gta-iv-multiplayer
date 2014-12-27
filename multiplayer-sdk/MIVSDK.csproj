@@ -37,6 +37,8 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <NoWarn>
+    </NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -62,7 +64,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlternateHookRequest.cs" />
     <Compile Include="BinaryPacketFormatter.cs" />
     <Compile Include="BinaryPacketReader.cs" />
     <Compile Include="ClientConnection.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="INIReader.cs" />
     <Compile Include="MathHelper.cs" />
     <Compile Include="ModelDictionary.cs" />
+    <Compile Include="ObjectCloner.cs" />
     <Compile Include="PlayerCamera.cs" />
     <Compile Include="Serializers.cs" />
     <Compile Include="Server.cs" />
@@ -83,6 +85,7 @@
     <Compile Include="ServerNPCDialog.cs" />
     <Compile Include="ServerPlayer.cs" />
     <Compile Include="ServerRequester.cs" />
+    <Compile Include="ServerUDPTunnel.cs" />
     <Compile Include="ServerVehicle.cs" />
     <Compile Include="ServerVehicleController.cs" />
     <Compile Include="TextView.cs" />

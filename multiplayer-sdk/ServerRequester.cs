@@ -41,7 +41,7 @@ namespace MIVServer
             {
                 onComplete.Invoke((bool)o[0]);
             });
-            req.bpf.add(position);
+            req.bpf.Add(position);
             req.Flush();
         }
 
@@ -51,7 +51,7 @@ namespace MIVServer
             {
                 onComplete.Invoke((Vector2)o[0]);
             });
-            req.bpf.add(position);
+            req.bpf.Add(position);
             req.Flush();
         }
     }
@@ -98,7 +98,7 @@ namespace MIVServer
             uint id = findLowestFreeId();
             requestPool.Add(id, this);
             bpf = new BinaryPacketFormatter(action);
-            bpf.add(id);
+            bpf.Add(id);
         }
     }
 }

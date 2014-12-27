@@ -20,7 +20,7 @@ namespace MIVServer
             set
             {
                 var bpf = new BinaryPacketFormatter(Commands.Camera_setDirection);
-                bpf.add(value);
+                bpf.Add(value);
                 player.connection.write(bpf.getBytes());
             }
         }
@@ -30,7 +30,7 @@ namespace MIVServer
             set
             {
                 var bpf = new BinaryPacketFormatter(Commands.Camera_setFOV);
-                bpf.add(value);
+                bpf.Add(value);
                 player.connection.write(bpf.getBytes());
             }
         }
@@ -40,7 +40,7 @@ namespace MIVServer
             set
             {
                 var bpf = new BinaryPacketFormatter(Commands.Camera_setOrientation);
-                bpf.add(value);
+                bpf.Add(value);
                 player.connection.write(bpf.getBytes());
             }
         }
@@ -50,7 +50,7 @@ namespace MIVServer
             set
             {
                 var bpf = new BinaryPacketFormatter(Commands.Camera_setPosition);
-                bpf.add(value);
+                bpf.Add(value);
                 player.connection.write(bpf.getBytes());
             }
         }
@@ -58,7 +58,7 @@ namespace MIVServer
         public void LookAt(Vector3 position)
         {
             var bpf = new BinaryPacketFormatter(Commands.Camera_lookAt);
-            bpf.add(position);
+            bpf.Add(position);
             player.connection.write(bpf.getBytes());
         }
 

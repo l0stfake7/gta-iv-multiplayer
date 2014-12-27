@@ -42,10 +42,10 @@ namespace MIVServer
         public void show(ServerPlayer player)
         {
             var bpf = new BinaryPacketFormatter(Commands.NPCDialog_show);
-            bpf.add(id);
-            bpf.add(caption);
-            bpf.add(text);
-            bpf.add(String.Join("\x01", responses.ToArray()));
+            bpf.Add(id);
+            bpf.Add(caption);
+            bpf.Add(text);
+            bpf.Add(String.Join("\x01", responses.ToArray()));
             player.connection.write(bpf.getBytes());
         }
 

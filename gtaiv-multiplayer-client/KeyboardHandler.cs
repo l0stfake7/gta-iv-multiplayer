@@ -52,7 +52,7 @@ namespace MIVClient
                             commandHistory = commandHistory.Skip(commandHistory.Count - 100).ToList();
                         }
                         var bpf = new BinaryPacketFormatter(Commands.Chat_sendMessage);
-                        bpf.add(client.chatController.currentTypedText);
+                        bpf.Add(client.chatController.currentTypedText);
                         client.serverConnection.write(bpf.getBytes());
                     }
                     client.chatController.currentTypedText = "";
@@ -140,7 +140,7 @@ namespace MIVClient
             if (client.currentState == ClientState.Connected)
             {
                 var bpf = new BinaryPacketFormatter(Commands.Keys_down);
-                bpf.add((int)e.Key);
+                bpf.Add((int)e.Key);
                 client.serverConnection.write(bpf.getBytes());
             }
 
@@ -154,7 +154,7 @@ namespace MIVClient
             if (client.currentState == ClientState.Connected)
             {
                 var bpf = new BinaryPacketFormatter(Commands.Keys_up);
-                bpf.add((int)e.Key);
+                bpf.Add((int)e.Key);
                 client.serverConnection.write(bpf.getBytes());
             }
 

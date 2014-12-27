@@ -1,4 +1,4 @@
-﻿var font = API.createFont('Segoe UI', 34.0);
+﻿/*var font = API.createFont('Segoe UI', 34.0);
 var font2 = API.createFont('Segoe UI', 84.0);
 var draw2 = API.createTextDraw(1500, 850, 'Health: ', font, 0xFFFFFF, 255);
 var draw = API.createTextDraw(200, 875, '•', font2, 0x8080FF, 255);
@@ -17,4 +17,4 @@ function movex2() {
 linintX1.OnInterpolationFinished(movex2);
 linintX2.OnInterpolationFinished(movex1);
 
-movex1();
+movex1();*/

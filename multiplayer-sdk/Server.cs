@@ -24,6 +24,7 @@ namespace MIVServer
         private GamemodeManager gamemodeManager;
         private HTTPServer http_server;
         private TcpListener server;
+        public int UDPStartPort;
 
         public Server()
         {
@@ -43,6 +44,7 @@ namespace MIVServer
             timer.Interval = config.getInt("broadcast_interval");
             timer.Enabled = true;
             timer.Start();
+            UDPStartPort = config.getInt("udp_start_port");
             Timer timer_slow = new Timer();
             timer_slow.Elapsed += timer_slow_Elapsed;
             timer_slow.Interval = config.getInt("slow_interval");
@@ -66,10 +68,10 @@ namespace MIVServer
                         if (single.id != player.id)
                         {
                             var bpf = new BinaryPacketFormatter(Commands.UpdateData);
-                            bpf.add(player.id);
-                            bpf.add(player.data);
+                            bpf.Add(player.id);
+                            bpf.Add(player.data);
                             single.connection.write(bpf.getBytes());
-                            //Console.WriteLine("Streaming to player " + single.Value.nick);
+                            //Console.WriteLine("Streaming to Player " + single.Value.nick);
                         }
                     });
                 }
@@ -82,11 +84,11 @@ namespace MIVServer
             foreach (var pair in ServerNPC.NPCPool)
             {
                 var bpf = new BinaryPacketFormatter(Commands.NPC_create);
-                bpf.add(pair.Value.id);
-                bpf.add(pair.Value.Position);
-                bpf.add(pair.Value.Heading);
-                bpf.add(pair.Value.Model);
-                bpf.add(pair.Value.Name);
+                bpf.Add(pair.Value.id);
+                bpf.Add(pair.Value.Position);
+                bpf.Add(pair.Value.Heading);
+                bpf.Add(pair.Value.Model);
+                bpf.Add(pair.Value.Name);
                 player.connection.write(bpf.getBytes());
             }
         }
@@ -98,8 +100,8 @@ namespace MIVServer
                 if (single != player)
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerModel);
-                    bpf.add(player.id);
-                    bpf.add(ModelDictionary.getPedModelByName(player.Model));
+                    bpf.Add(player.id);
+                    bpf.Add(ModelDictionary.getPedModelByName(player.Model));
                     single.connection.write(bpf.getBytes());
                 }
             });
@@ -112,8 +114,8 @@ namespace MIVServer
                 if (single != player)
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Global_setPlayerName);
-                    bpf.add(player.id);
-                    bpf.add(player.Nick);
+                    bpf.Add(player.id);
+                    bpf.Add(player.Nick);
                     single.connection.write(bpf.getBytes());
                 }
             });
@@ -124,10 +126,10 @@ namespace MIVServer
             foreach (var pair in vehicleController.vehicles)
             {
                 var bpf = new BinaryPacketFormatter(Commands.Vehicle_create);
-                bpf.add(pair.Value.id);
-                bpf.add(pair.Value.position);
-                bpf.add(pair.Value.orientation);
-                bpf.add(ModelDictionary.getVehicleByName(pair.Value.model));
+                bpf.Add(pair.Value.id);
+                bpf.Add(pair.Value.position);
+                bpf.Add(pair.Value.orientation);
+                bpf.Add(ModelDictionary.getVehicleByName(pair.Value.model));
                 player.connection.write(bpf.getBytes());
             }
         }
@@ -149,11 +151,11 @@ namespace MIVServer
             foreach (var pair in ServerNPC.NPCPool)
             {
                 var bpf = new BinaryPacketFormatter(Commands.NPC_update);
-                bpf.add(pair.Value.id);
-                bpf.add(pair.Value.Position);
-                bpf.add(pair.Value.Heading);
-                bpf.add(pair.Value.Model);
-                bpf.add(pair.Value.Name);
+                bpf.Add(pair.Value.id);
+                bpf.Add(pair.Value.Position);
+                bpf.Add(pair.Value.Heading);
+                bpf.Add(pair.Value.Model);
+                bpf.Add(pair.Value.Name);
                 player.connection.write(bpf.getBytes());
             }
         }
@@ -176,15 +178,15 @@ namespace MIVServer
                 InvokeParallelForEachPlayer((player) =>
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Chat_writeLine);
-                    bpf.add(message);
+                    bpf.Add(message);
                     player.connection.write(bpf.getBytes());
                 });
             }
 
             InvokeParallelForEachPlayer((player) =>
             {
-                broadcastData(player);
                 player.connection.flush();
+                player.udpTunnel.broadcastPlayers();
             });
         }
 
@@ -194,12 +196,12 @@ namespace MIVServer
             for (int i = 0; i < playerpool.Count; i++)
             {
                 /*
-                ServerPlayer player = playerpool[i];
+                ServerPlayer Player = playerpool[i];
                 new Task(() =>
                 {
-                    lock (player)
+                    lock (Player)
                     {
-                        action.Invoke(player);
+                        action.Invoke(Player);
                     }
                 }).Start();
                 */
@@ -216,18 +218,18 @@ namespace MIVServer
 
             ClientConnection connection = new ClientConnection(client);
 
-            connection.onConnect += delegate(string nick)
+            connection.OnConnect += delegate(string nick)
             {
                 if (playerpool.Count >= config.getInt("max_players"))
                 {
-                    Console.WriteLine("Connection from " + nick + " rejected due to player limit");
+                    Console.WriteLine("Connection from " + nick + " rejected due to Player limit");
                     client.Close();
                     return;
                 }
                 Console.WriteLine("Connect from " + nick);
-                ServerPlayer player = new ServerPlayer(nick, connection);
-                connection.player = player;
-                player.id = findLowestFreeId();
+                uint id = findLowestFreeId();
+                ServerPlayer player = new ServerPlayer(id, nick, connection);
+                connection.SetPlayer(player);
                 InvokeParallelForEachPlayer((p) =>
                 {
                     player.connection.write(
@@ -242,14 +244,15 @@ namespace MIVServer
                 playerpool.Add(player);
                 broadcastVehiclesToPlayer(player);
                 broadcastNPCsToPlayer(player);
-                //broadcastPlayerName(player);
-                //broadcastPlayerModel(player);
+                //broadcastPlayerName(Player);
+                //broadcastPlayerModel(Player);
 
                 api.invokeOnPlayerConnect(client.Client.RemoteEndPoint, player);
                 api.invokeOnPlayerSpawn(player);
 
                 var starter = new BinaryPacketFormatter(Commands.Client_resumeBroadcast);
                 connection.write(starter.getBytes());
+                connection.write(new BinaryPacketFormatter(Commands.Client_enableUDPTunnel, player.udpTunnel.getPort()).getBytes());
 
                 connection.flush();
             };

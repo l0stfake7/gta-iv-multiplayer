@@ -36,6 +36,7 @@ namespace MIVClient
         public VehicleController vehicleController;
         public VehicleStreamer vehicleStreamer;
         public JavaScriptEngine jsEngine;
+        public ClientUDPTunnel udpTunnel;
 
         private Queue<Action> actionQueue;
 
@@ -45,36 +46,42 @@ namespace MIVClient
 
         public Client()
         {
-            BindConsoleCommand("reconnect", (o) =>
+            var startup = new Timer(6000);
+            startup.Tick += (o, e) =>
             {
-                if (System.IO.File.Exists("miv_lastserver.ini"))
+                startup.Stop();
+                BindConsoleCommand("reconnect", (a) =>
+                {
+                    if (System.IO.File.Exists("miv_lastserver.ini"))
+                    {
+                        darkscreen = new ClientRectangleView(new System.Drawing.RectangleF(0, 0, 2000, 2000), System.Drawing.Color.Black);
+                        Game.FadeScreenOut(1);
+                        string[] lines = System.IO.File.ReadAllLines("miv_lastserver.ini");
+                        INIReader reader = new INIReader(lines);
+                        initAndConnect(reader.getString("ip"), reader.getInt16("port"), reader.getString("nickname"));
+                    }
+                });
+                if (System.IO.File.Exists("_serverinit.ini"))
                 {
                     darkscreen = new ClientRectangleView(new System.Drawing.RectangleF(0, 0, 2000, 2000), System.Drawing.Color.Black);
-                    Game.FadeScreenOut(1);
-                    string[] lines = System.IO.File.ReadAllLines("miv_lastserver.ini");
+                    string[] lines = System.IO.File.ReadAllLines("_serverinit.ini");
                     INIReader reader = new INIReader(lines);
-                    initAndConnect(reader.getString("ip"), reader.getInt16("port"), reader.getString("nickname"));
+                    Int64 timestamp_saved = reader.getInt64("timestamp");
+                    Int64 timestamp_now = System.Diagnostics.Stopwatch.GetTimestamp();
+                    TimeSpan time_delta = new TimeSpan(timestamp_now - timestamp_saved);
+                    if (time_delta.Minutes < 5)
+                    {
+                        System.IO.File.Delete("_serverinit.ini");
+                        System.IO.File.WriteAllLines("miv_lastserver.ini", lines);
+                        initAndConnect(reader.getString("ip"), reader.getInt16("port"), reader.getString("nickname"));
+                    }
                 }
-            });
-            if (System.IO.File.Exists("_serverinit.ini"))
-            {
-                darkscreen = new ClientRectangleView(new System.Drawing.RectangleF(0, 0, 2000, 2000), System.Drawing.Color.Black);
-                string[] lines = System.IO.File.ReadAllLines("_serverinit.ini");
-                INIReader reader = new INIReader(lines);
-                Int64 timestamp_saved = reader.getInt64("timestamp");
-                Int64 timestamp_now = System.Diagnostics.Stopwatch.GetTimestamp();
-                TimeSpan time_delta = new TimeSpan(timestamp_now - timestamp_saved);
-                if (time_delta.Minutes < 5)
+                else
                 {
-                    System.IO.File.Delete("_serverinit.ini");
-                    System.IO.File.WriteAllLines("miv_lastserver.ini", lines);
-                    initAndConnect(reader.getString("ip"), reader.getInt16("port"), reader.getString("nickname"));
+                    FileSystemOverlay.crashIfSPPreparationFail();
                 }
-            }
-            else
-            {
-                FileSystemOverlay.crashIfSPPreparationFail();
-            }
+            };
+            startup.Start();
             // nope? nothing to do
         }
 
@@ -142,6 +149,7 @@ namespace MIVClient
             {
                 var elemKey = serverConnection.playersdata.Keys.ToArray()[i];
                 var elemValue = serverConnection.playersdata[elemKey];
+                if (elemValue.pos_x == 0) continue;
 
                 if (elemValue.client_has_been_set) continue;
                 else elemValue.client_has_been_set = true;
@@ -164,7 +172,7 @@ namespace MIVClient
                 }
                 catch (Exception ex)
                 {
-                    log("Failed updating streamed vehicle data for player " + ex.Message);
+                    log("Failed updating streamed vehicle data for Player " + ex.Message);
                 }
                 try
                 {
@@ -172,7 +180,7 @@ namespace MIVClient
                 }
                 catch (Exception ex)
                 {
-                    log("Failed updating streamed ped data for player " + ex.Message);
+                    log("Failed updating streamed ped data for Player " + ex.Message);
                 }
             }
         }
@@ -205,7 +213,7 @@ namespace MIVClient
             if (currentState == ClientState.Connected)
             {
                 if (currentData == null) currentData = UpdateDataStruct.Zero;
-                if (!BroadcastingPaused)
+                if (!BroadcastingPaused && Player.Character.Exists())
                 {
                     try
                     {
@@ -214,82 +222,97 @@ namespace MIVClient
                         {
                             if (vehicleController.dict.Count(a => a.Value.IsStreamedIn() && a.Value.gameReference == Player.Character.CurrentVehicle) > 0)
                             {
-                                Vector3 pos = Player.Character.CurrentVehicle.Position;
-                                data.pos_x = pos.X;
-                                data.pos_y = pos.Y;
-                                data.pos_z = pos.Z;
-
-                                Vector3 currentSpeed = Player.Character.CurrentVehicle.Velocity;
-                                float speed = Player.Character.CurrentVehicle.Speed;
-                                if (currentData.pos_x != 0)
+                                try
                                 {
-                                    float deltax = (pos.X - currentData.pos_x);
-                                    float deltay = (pos.Y - currentData.pos_y);
-                                    float deltaz = (pos.Z - currentData.pos_z);
-                                    data.vel_x = (deltax < 0 ? currentSpeed.X * -1 : currentSpeed.X);
-                                    data.vel_y = (deltay < 0 ? currentSpeed.Y * -1 : currentSpeed.Y);
-                                    data.vel_z = (deltaz < 0 ? currentSpeed.Z * -1 : currentSpeed.Z);
+                                    Vector3 pos = Player.Character.CurrentVehicle.Position;
+                                    data.pos_x = pos.X;
+                                    data.pos_y = pos.Y;
+                                    data.pos_z = pos.Z;
+
+                                    Vector3 currentSpeed = Player.Character.CurrentVehicle.Velocity;
+                                    float speed = Player.Character.CurrentVehicle.Speed;
+                                    if (currentData.pos_x != 0)
+                                    {
+                                        float deltax = (pos.X - currentData.pos_x);
+                                        float deltay = (pos.Y - currentData.pos_y);
+                                        float deltaz = (pos.Z - currentData.pos_z);
+                                        data.vel_x = (deltax < 0 ? currentSpeed.X * -1 : currentSpeed.X);
+                                        data.vel_y = (deltay < 0 ? currentSpeed.Y * -1 : currentSpeed.Y);
+                                        data.vel_z = (deltaz < 0 ? currentSpeed.Z * -1 : currentSpeed.Z);
+                                    }
+                                    else
+                                    {
+                                        data.vel_x = currentSpeed.X;
+                                        data.vel_y = currentSpeed.Y;
+                                        data.vel_z = currentSpeed.Z;
+                                    }
+
+                                    Quaternion quat = Player.Character.CurrentVehicle.RotationQuaternion;
+                                    data.rot_x = quat.X;
+                                    data.rot_y = quat.Y;
+                                    data.rot_z = quat.Z;
+                                    data.rot_a = quat.W;
+
+                                    data.vehicle_model = Player.Character.CurrentVehicle.Model.Hash;
+                                    data.vehicle_health = Player.Character.CurrentVehicle.Health;
+                                    var cveh = vehicleController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == Player.Character.CurrentVehicle);
+
+                                    data.vehicle_id = cveh.Key;
+                                    data.ped_health = Player.Character.Health;
+                                    data.heading = Player.Character.CurrentVehicle.Heading;
+
+                                    cveh.Value.position = pos;
+                                    cveh.Value.orientation = quat;
                                 }
-                                else
+                                catch (Exception eq)
                                 {
-                                    data.vel_x = currentSpeed.X;
-                                    data.vel_y = currentSpeed.Y;
-                                    data.vel_z = currentSpeed.Z;
+                                    Game.Log("Failed pedInvehicle position measure processing: " + eq.Message);
                                 }
-
-                                Quaternion quat = Player.Character.CurrentVehicle.RotationQuaternion;
-                                data.rot_x = quat.X;
-                                data.rot_y = quat.Y;
-                                data.rot_z = quat.Z;
-                                data.rot_a = quat.W;
-
-                                data.vehicle_model = Player.Character.CurrentVehicle.Model.Hash;
-                                data.vehicle_health = Player.Character.CurrentVehicle.Health;
-                                var cveh = vehicleController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == Player.Character.CurrentVehicle);
-
-                                data.vehicle_id = cveh.Key;
-                                data.ped_health = Player.Character.Health;
-                                data.heading = Player.Character.CurrentVehicle.Heading;
-
-                                cveh.Value.position = pos;
-                                cveh.Value.orientation = quat;
                             }
                             data.state = 0;
                         }
                         else
                         {
-                            Vector3 pos = Player.Character.Position;
-                            data.pos_x = pos.X;
-                            data.pos_y = pos.Y;
-                            data.pos_z = pos.Z;
 
-                            Vector3 vel = Player.Character.Velocity;
-                            data.vel_x = vel.X;
-                            data.vel_y = vel.Y;
-                            data.vel_z = vel.Z;
+                            try
+                            {
+                                Vector3 pos = Player.Character.Position;
+                                data.pos_x = pos.X;
+                                data.pos_y = pos.Y;
+                                data.pos_z = pos.Z;
 
-                            data.rot_x = Player.Character.Direction.X;
-                            data.rot_y = Player.Character.Direction.Y;
-                            data.rot_z = Player.Character.Direction.Z;
-                            data.rot_a = 0;
+                                Vector3 vel = Player.Character.Velocity;
+                                data.vel_x = vel.X;
+                                data.vel_y = vel.Y;
+                                data.vel_z = vel.Z;
 
-                            data.vehicle_model = 0;
-                            data.vehicle_health = 0;
-                            // for passengers:)client.pedController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == selectedPed)
-                            data.vehicle_id = Player.Character.isInVehicle() ? vehicleController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == Player.Character.CurrentVehicle).Key : 0;
-                            data.ped_health = Player.Character.Health;
-                            data.heading = Player.Character.Heading;
-                            data.weapon = (int)Player.Character.Weapons.CurrentType;
-                            data.state = 0;
-                            data.state |= Player.Character.isShooting ? PlayerState.IsShooting : 0;
-                            data.state |= Game.isGameKeyPressed(GameKey.Aim) ? PlayerState.IsAiming : 0;
-                            data.state |= Game.isGameKeyPressed(GameKey.Crouch) ? PlayerState.IsCrouching : 0;
-                            data.state |= Game.isGameKeyPressed(GameKey.Jump) ? PlayerState.IsJumping : 0;
-                            data.state |= Game.isGameKeyPressed(GameKey.Attack) ? PlayerState.IsShooting : 0;
+                                data.rot_x = Player.Character.Direction.X;
+                                data.rot_y = Player.Character.Direction.Y;
+                                data.rot_z = Player.Character.Direction.Z;
+                                data.rot_a = 0;
 
-                            data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.RightFront) == Player.Character ? PlayerState.IsPassenger1 : 0;
-                            data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.LeftRear) == Player.Character ? PlayerState.IsPassenger2 : 0;
-                            data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.RightRear) == Player.Character ? PlayerState.IsPassenger3 : 0;
+                                data.vehicle_model = 0;
+                                data.vehicle_health = 0;
+                                // for passengers:)client.pedController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == selectedPed)
+                                data.vehicle_id = Player.Character.isInVehicle() ? vehicleController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == Player.Character.CurrentVehicle).Key : 0;
+                                data.ped_health = Player.Character.Health;
+                                data.heading = Player.Character.Heading;
+                                data.weapon = (int)Player.Character.Weapons.CurrentType;
+                                data.state = 0;
+                                data.state |= Player.Character.isShooting ? PlayerState.IsShooting : 0;
+                                data.state |= Game.isGameKeyPressed(GameKey.Aim) ? PlayerState.IsAiming : 0;
+                                data.state |= Game.isGameKeyPressed(GameKey.Crouch) ? PlayerState.IsCrouching : 0;
+                                data.state |= Game.isGameKeyPressed(GameKey.Jump) ? PlayerState.IsJumping : 0;
+                                data.state |= Game.isGameKeyPressed(GameKey.Attack) ? PlayerState.IsShooting : 0;
+
+                                data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.RightFront) == Player.Character ? PlayerState.IsPassenger1 : 0;
+                                data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.LeftRear) == Player.Character ? PlayerState.IsPassenger2 : 0;
+                                data.state |= Player.Character.isInVehicle() && Player.Character.CurrentVehicle.GetPedOnSeat(VehicleSeat.RightRear) == Player.Character ? PlayerState.IsPassenger3 : 0;
+                            }
+                            catch (Exception eq)
+                            {
+                                Game.Log("Failed ped position measure processing: " + eq.Message);
+                            }
                         }
                         data.vstate = 0;
                         data.vstate |= Game.isGameKeyPressed(GameKey.MoveForward) ? VehicleState.IsAccelerating : 0;
@@ -304,40 +327,47 @@ namespace MIVClient
                         data.camdir_x = Game.CurrentCamera.Direction.X;
                         data.camdir_y = Game.CurrentCamera.Direction.Y;
                         data.camdir_z = Game.CurrentCamera.Direction.Z;
-
+                        /*
                         var bpf = new BinaryPacketFormatter(Commands.UpdateData);
-                        bpf.add(data);
-                        serverConnection.write(bpf.getBytes());
-
-                        if (!isCurrentlyDead && (Player.Character.Health == 0 || Player.Character.isDead || !Player.Character.isAlive))
+                        bpf.Add(data);
+                        serverConnection.write(bpf.getBytes());*/
+                        if (udpTunnel != null)
                         {
-                            //Game.FadeScreenOut(4000);
-                            //Player.Character.Die();
-                            //AlternateHook.call(AlternateHookRequest.OtherCommands.FAKE_DEATHARREST);
-                            //AlternateHook.call(AlternateHookRequest.OtherCommands.CREATE_PLAYER, 0.0f, 0.0f, 0.0f, null);
-                            isCurrentlyDead = true;
+                            udpTunnel.broadcastData(data);
                         }
 
-                        if (isCurrentlyDead && !Player.Character.isDead && Player.Character.isAlive && Player.Character.Health > 0)
+                        try
                         {
-                            Game.FadeScreenIn(2000);
-                            isCurrentlyDead = false;
+                            if (!isCurrentlyDead && (Player.Character.Health == 0 || Player.Character.isDead || !Player.Character.isAlive))
+                            {
+                                //Game.FadeScreenOut(4000);
+                                //Player.Character.Die();
+                                //AlternateHook.call(AlternateHookRequest.OtherCommands.FAKE_DEATHARREST);
+                                //AlternateHook.call(AlternateHookRequest.OtherCommands.CREATE_PLAYER, 0.0f, 0.0f, 0.0f, null);
+                                isCurrentlyDead = true;
+                            }
 
-                            var bpf2 = new BinaryPacketFormatter(Commands.InternalClient_requestSpawn);
-                            serverConnection.write(bpf2.getBytes());
+                            if (isCurrentlyDead && !Player.Character.isDead && Player.Character.isAlive && Player.Character.Health > 0)
+                            {
+                                Game.FadeScreenIn(2000);
+                                isCurrentlyDead = false;
 
-                            Weapon weapon = Weapon.Rifle_M4;
-                            Player.Character.Weapons.AssaultRifle_M4.Ammo = 999;
-                            Player.Character.Weapons.AssaultRifle_M4.AmmoInClip = 999;
-                            Player.Character.Weapons.Select(weapon);
+                                var bpf2 = new BinaryPacketFormatter(Commands.InternalClient_requestSpawn);
+                                serverConnection.write(bpf2.getBytes());
 
+
+                            }
+                        }
+                        catch (Exception eq)
+                        {
+                            Game.Log("Failed death processing: " + eq.Message);
                         }
 
                         currentData = data;
                     }
                     catch (Exception ex)
                     {
-                        Game.Log("Failed sending new player data with message " + ex.Message);
+                        Game.Log("Failed sending new Player data with message " + ex.Message);
                     }
                 }
                 try
@@ -368,11 +398,11 @@ namespace MIVClient
 
                 darkscreen.destroy();
                 Game.FadeScreenIn(3000);
-                AlternateHook.call(AlternateHookRequest.OtherCommands.DO_SCREEN_FADE_IN_UNHACKED, 2000);
-                AlternateHook.call(AlternateHookRequest.OtherCommands.FORCE_LOADING_SCREEN, false);
+                GTA.Native.Function.Call("DO_SCREEN_FADE_IN_UNHACKED", 2000);
+                GTA.Native.Function.Call("FORCE_LOADING_SCREEN", false);
 
                 var bpf = new BinaryPacketFormatter(Commands.Connect);
-                bpf.add(nick);
+                bpf.Add(nick);
                 serverConnection.write(bpf.getBytes());
 
                 Player.Model = new Model("F_Y_HOOKER_01");
@@ -395,10 +425,12 @@ namespace MIVClient
             }
         }
 
+        public static string currentIP;
         private void initAndConnect(string ip, short port, string nickname)
         {
-            AlternateHook.call(AlternateHookRequest.OtherCommands.DISABLE_PAUSE_MENU, 1);
-            AlternateHook.call(AlternateHookRequest.OtherCommands.SET_FILTER_MENU_ON, 1);
+            currentIP = ip;
+            GTA.Native.Function.Call("DISABLE_PAUSE_MENU", 1);
+            GTA.Native.Function.Call("SET_FILTER_MENU_ON", 1);
             BroadcastingPaused = true;
             playerNames = new Dictionary<uint, string>();
             playerModels = new Dictionary<uint, string>();
@@ -455,7 +487,7 @@ namespace MIVClient
                 World.PedDensity = 0;
                 World.CarDensity = 0;
                 // AlternateHook.call(AlternateHook.OtherCommands.TERMINATE_ALL_SCRIPTS_FOR_NETWORK_GAME);
-                AlternateHook.call(AlternateHookRequest.OtherCommands.CLEAR_AREA, 0.0f, 0.0f, 0.0f, 4000.0f, true);
+                GTA.Native.Function.Call("CLEAR_AREA", 0.0f, 0.0f, 0.0f, 4000.0f, true);
                 currentState = ClientState.Connecting;
             }
             catch

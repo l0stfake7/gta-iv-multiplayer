@@ -53,8 +53,8 @@ namespace MIVServer
             {
                 heading = value;
                 var bpf = new BinaryPacketFormatter(Commands.NPC_setHeading);
-                bpf.add(id);
-                bpf.add(heading);
+                bpf.Add(id);
+                bpf.Add(heading);
                 broadcastEvent(bpf);
             }
         }
@@ -69,8 +69,8 @@ namespace MIVServer
             {
                 immortal = value;
                 var bpf = new BinaryPacketFormatter(Commands.NPC_setImmortal);
-                bpf.add(id);
-                bpf.add(new byte[1] { immortal ? (byte)1 : (byte)0 });
+                bpf.Add(id);
+                bpf.Add(new byte[1] { immortal ? (byte)1 : (byte)0 });
                 broadcastEvent(bpf);
             }
         }
@@ -85,8 +85,8 @@ namespace MIVServer
             {
                 model = value;
                 var bpf = new BinaryPacketFormatter(Commands.NPC_setModel);
-                bpf.add(id);
-                bpf.add(model);
+                bpf.Add(id);
+                bpf.Add(model);
                 broadcastEvent(bpf);
             }
         }
@@ -101,8 +101,8 @@ namespace MIVServer
             {
                 name = value;
                 var bpf = new BinaryPacketFormatter(Commands.NPC_setName);
-                bpf.add(id);
-                bpf.add(name);
+                bpf.Add(id);
+                bpf.Add(name);
                 broadcastEvent(bpf);
             }
         }
@@ -117,8 +117,8 @@ namespace MIVServer
             {
                 position = value;
                 var bpf = new BinaryPacketFormatter(Commands.NPC_setPosition);
-                bpf.add(id);
-                bpf.add(position);
+                bpf.Add(id);
+                bpf.Add(position);
                 broadcastEvent(bpf);
             }
         }
@@ -127,8 +127,8 @@ namespace MIVServer
         {
             this.position = position;
             var bpf = new BinaryPacketFormatter(Commands.NPC_driveTo);
-            bpf.add(id);
-            bpf.add(position);
+            bpf.Add(id);
+            bpf.Add(position);
             broadcastEvent(bpf);
         }
 
@@ -136,8 +136,8 @@ namespace MIVServer
         {
             currentVehicleId = vehicle.id;
             var bpf = new BinaryPacketFormatter(Commands.NPC_walkTo);
-            bpf.add(id);
-            bpf.add(vehicle.id);
+            bpf.Add(id);
+            bpf.Add(vehicle.id);
             broadcastEvent(bpf);
         }
 
@@ -145,7 +145,7 @@ namespace MIVServer
         {
             currentVehicleId = 0;
             var bpf = new BinaryPacketFormatter(Commands.NPC_leaveVehicle);
-            bpf.add(id);
+            bpf.Add(id);
             broadcastEvent(bpf);
         }
 
@@ -153,8 +153,8 @@ namespace MIVServer
         {
             this.position = position;
             var bpf = new BinaryPacketFormatter(Commands.NPC_runTo);
-            bpf.add(id);
-            bpf.add(position);
+            bpf.Add(id);
+            bpf.Add(position);
             broadcastEvent(bpf);
         }
 
@@ -162,8 +162,8 @@ namespace MIVServer
         {
             this.position = position;
             var bpf = new BinaryPacketFormatter(Commands.NPC_walkTo);
-            bpf.add(id);
-            bpf.add(position);
+            bpf.Add(id);
+            bpf.Add(position);
             broadcastEvent(bpf);
         }
 

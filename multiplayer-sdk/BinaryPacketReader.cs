@@ -11,12 +11,19 @@ namespace MIVSDK
         private byte[] buffer;
         private int position, length;
 
-        public BinaryPacketReader(byte[] buffer)
+        public BinaryPacketReader(byte[] buffer, bool skipLengthCheck = false)
         {
             this.buffer = buffer;
             position = 0;
-            length = BitConverter.ToInt32(buffer, position);
-            position += sizeof(Int32);
+            if (!skipLengthCheck)
+            {
+                length = BitConverter.ToInt32(this.buffer, position);
+                position += sizeof(Int32);
+            }
+            else
+            {
+                length = buffer.Length;
+            }
         }
 
         public bool canRead()
@@ -39,7 +46,7 @@ namespace MIVSDK
         public Commands readCommand(bool skipTypeCheck = false)
         {
             if (!skipTypeCheck && readNextType() != BinaryPacketFormatter.Types.Command) throw new Exception("Desynchronization Commands");
-            var data = BitConverter.ToInt16(buffer, position);
+            var data = BitConverter.ToInt16(this.buffer, position);
             position += sizeof(Int16);
             return (Commands)data;
         }
@@ -47,7 +54,7 @@ namespace MIVSDK
         public Double readDouble(bool skipTypeCheck = false)
         {
             if (!skipTypeCheck && readNextType() != BinaryPacketFormatter.Types.Double) throw new Exception("Desynchronization Double");
-            var data = BitConverter.ToDouble(buffer, position);
+            var data = BitConverter.ToDouble(this.buffer, position);
             position += sizeof(Double);
             return data;
         }
@@ -55,7 +62,7 @@ namespace MIVSDK
         public Int16 readInt16(bool skipTypeCheck = false)
         {
             if (!skipTypeCheck && readNextType() != BinaryPacketFormatter.Types.Int16) throw new Exception("Desynchronization Int16");
-            var data = BitConverter.ToInt16(buffer, position);
+            var data = BitConverter.ToInt16(this.buffer, position);
             position += sizeof(Int16);
             return data;
         }
@@ -63,7 +70,7 @@ namespace MIVSDK
         public Int32 readInt32(bool skipTypeCheck = false)
         {
             if (!skipTypeCheck && readNextType() != BinaryPacketFormatter.Types.Int32) throw new Exception("Desynchronization Int32");
-            var data = BitConverter.ToInt32(buffer, position);
+            var data = BitConverter.ToInt32(this.buffer, position);
             position += sizeof(Int32);
             return data;
         }
@@ -71,7 +78,7 @@ namespace MIVSDK
         public Int64 readInt64(bool skipTypeCheck = false)
         {
             if (!skipTypeCheck && readNextType() != BinaryPacketFormatter.Types.Int64) throw new Exception("Desynchronization Int64");
-            var data = BitConverter.ToInt64(buffer, position);
+            var data = BitConverter.ToInt64(this.buffer, position);
             position += sizeof(Int64);
             return data;
         }
@@ -92,7 +99,7 @@ namespace MIVSDK
         public Single readSingle(bool skipTypeCheck = false)
         {
             if (!skipTypeCheck && readNextType() != BinaryPacketFormatter.Types.Single) throw new Exception("Desynchronization Single");
-            var data = BitConverter.ToSingle(buffer, position);
+            var data = BitConverter.ToSingle(this.buffer, position);
             position += sizeof(Single);
             return data;
         }
@@ -101,7 +108,7 @@ namespace MIVSDK
         {
             if (!skipTypeCheck && readNextType() != BinaryPacketFormatter.Types.String) throw new Exception("Desynchronization String");
             int tmpint = 0;
-            var data = Serializers.unserialize_string(buffer, position, out tmpint);
+            var data = Serializers.unserialize_string(this.buffer, position, out tmpint);
             position += tmpint;
             return data;
         }
@@ -109,7 +116,7 @@ namespace MIVSDK
         public UInt16 readUInt16(bool skipTypeCheck = false)
         {
             if (!skipTypeCheck && readNextType() != BinaryPacketFormatter.Types.UInt16) throw new Exception("Desynchronization UInt16");
-            var data = BitConverter.ToUInt16(buffer, position);
+            var data = BitConverter.ToUInt16(this.buffer, position);
             position += sizeof(UInt16);
             return data;
         }
@@ -117,7 +124,7 @@ namespace MIVSDK
         public UInt32 readUInt32(bool skipTypeCheck = false)
         {
             if (!skipTypeCheck && readNextType() != BinaryPacketFormatter.Types.UInt32) throw new Exception("Desynchronization UInt32");
-            var data = BitConverter.ToUInt32(buffer, position);
+            var data = BitConverter.ToUInt32(this.buffer, position);
             position += sizeof(UInt32);
             return data;
         }
@@ -125,7 +132,7 @@ namespace MIVSDK
         public UInt64 readUInt64(bool skipTypeCheck = false)
         {
             if (!skipTypeCheck && readNextType() != BinaryPacketFormatter.Types.UInt64) throw new Exception("Desynchronization UInt64");
-            var data = BitConverter.ToUInt64(buffer, position);
+            var data = BitConverter.ToUInt64(this.buffer, position);
             position += sizeof(UInt64);
             return data;
         }

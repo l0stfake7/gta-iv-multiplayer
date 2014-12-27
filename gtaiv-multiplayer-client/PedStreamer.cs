@@ -30,28 +30,45 @@ namespace MIVClient
 
         public override void UpdateGfx()
         {
-            var player_projected = (Vector2)World.WorldToScreenProject(client.getPlayerPed().Position);
-            foreach (StreamedPed ped in instances)
+            if (!client.getPlayerPed().Exists())
             {
+                return;
+            }
+            var player_projected = (Vector2)World.WorldToScreenProject(client.getPlayerPed().Position);
+            for (int i=0;i<instances.Count;i++)
+            {
+                StreamedPed ped = (StreamedPed)instances[i];
                 try
                 {
                     if (ped.IsStreamedIn())
                     {
-                        var projected = (Vector2)World.WorldToScreenProject(ped.gameReference.Position);
-                        var peddelta = ped.gameReference.Position - client.getPlayerPed().Position;
+                        Vector2 projected = new Vector2();
+                        if (client.getPlayerPed().Exists() && ped.gameReference.Exists())
+                        {
+                            projected = (Vector2)World.WorldToScreenProject(ped.gameReference.Position);
+                        }
+                        else return;
+                        Vector3 peddelta = Vector3.Zero;
+                        if (client.getPlayerPed().Exists() && ped.gameReference.Exists())
+                        {
+                            peddelta = ped.gameReference.Position - client.getPlayerPed().Position;
+                        }
+                        else return;
                         float distance = peddelta.Length();
                         //float distance_from_centerscreen = (projected - new Vector2(Game.Resolution.Width, Game.Resolution.Height)).Length();
                         int alpha = (int)Math.Round((255.0f * (distance / -DrawDistance + 1.0f)));
                         if (alpha > 255) alpha = 255;
                         if (alpha < 0) alpha = 0;
+                        if (!ped.gameReference.Exists()) return;
                         if (projected.X < -120 || projected.X > Game.Resolution.Width || projected.Y < -50 || projected.Y > Game.Resolution.Height ||
                             (peddelta + Game.CurrentCamera.Direction).Length() < distance || (checkLOS && !Game.CurrentCamera.isSphereVisible(ped.gameReference.Position, 3.0f)))
                         {
+                            if (!ped.gameReference.Exists()) return;
                             ped.nickDraw.destroy();
                             ped.healthDraw.destroy();
                             ped.healthDraw2.destroy();
-                            ped.carHealthDraw.destroy();
-                            ped.carHealthDraw2.destroy();
+                            if (ped.carHealthDraw != null)ped.carHealthDraw.destroy();
+                            if (ped.carHealthDraw2 != null) ped.carHealthDraw2.destroy();
                             ped.chatDraw.destroy();
                             ped.nickDraw = null;
                             ped.healthDraw = null;
@@ -109,7 +126,7 @@ namespace MIVClient
                                         ped.carHealthDraw.Box = carrect1;
                                         ped.carHealthDraw.color = System.Drawing.Color.FromArgb(alpha, 0, 0, 0);
                                         ped.carHealthDraw2.Box = carrect2;
-                                        ped.carHealthDraw2.color = System.Drawing.Color.FromArgb(alpha, 80, 80, 255);
+                                        ped.carHealthDraw2.color = System.Drawing.Color.FromArgb(alpha, 255, 80, 80);
                                     }
                                     else
                                     {
@@ -120,8 +137,8 @@ namespace MIVClient
                                 }
                                 else
                                 {
-                                    ped.carHealthDraw.destroy();
-                                    ped.carHealthDraw2.destroy();
+                                    if (ped.carHealthDraw != null) ped.carHealthDraw.destroy();
+                                    if (ped.carHealthDraw2 != null) ped.carHealthDraw2.destroy();
                                     ped.carHealthDraw = null;
                                     ped.carHealthDraw2 = null;
                                 }
@@ -141,12 +158,15 @@ namespace MIVClient
         public override void UpdateSlow()
         {
             World.PedDensity = 0.0f;
-            var pedss = World.GetPeds(client.getPlayerPed().Position, 200.0f);
-            foreach (Ped a in pedss)
+            if (client.getPlayerPed().Exists())
             {
-                if (a.Exists() && a.isAlive && a != client.getPlayerPed() && instances.Count(ax => ((StreamedPed)ax).gameReference != null && ((StreamedPed)ax).gameReference == a) == 0)
+                var pedss = World.GetPeds(client.getPlayerPed().Position, 200.0f);
+                foreach (Ped a in pedss)
                 {
-                    a.Delete();
+                    if (a.Exists() && a.isAlive && a != client.getPlayerPed() && instances.Count(ax => ((StreamedPed)ax).gameReference != null && ((StreamedPed)ax).gameReference.Exists() && ((StreamedPed)ax).gameReference == a) == 0)
+                    {
+                        if (a.Exists()) a.Delete();
+                    }
                 }
             }
         }
@@ -235,6 +255,8 @@ namespace MIVClient
             if (nickDraw != null) nickDraw.destroy();
             if (healthDraw != null) healthDraw.destroy();
             if (healthDraw2 != null) healthDraw2.destroy();
+            if (carHealthDraw != null) carHealthDraw.destroy();
+            if (carHealthDraw2 != null) carHealthDraw2.destroy();
             if (chatDraw != null) chatDraw.destroy();
             if (iconDraw != null) iconDraw.destroy();
             nickDraw = null;

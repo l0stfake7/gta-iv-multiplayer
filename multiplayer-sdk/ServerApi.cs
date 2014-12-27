@@ -19,7 +19,7 @@ namespace MIVServer
 
         public delegate void onPlayerConnectDelegate(EndPoint address, ServerPlayer player);
 
-        public delegate void onPlayerDieDelegate(ServerPlayer player);
+        public delegate void onPlayerDieDelegate(ServerPlayer player, ServerPlayer killer = null, Enums.Weapon weapon = Enums.Weapon.None);
 
         public delegate void onPlayerDisconnectDelegate(ServerPlayer player);
 
@@ -102,9 +102,9 @@ namespace MIVServer
             if (onPlayerConnect != null) onPlayerConnect.Invoke(address, player);
         }
 
-        public void invokeOnPlayerDie(ServerPlayer player)
+        public void invokeOnPlayerDie(ServerPlayer player, ServerPlayer killer = null, Enums.Weapon weapon = Enums.Weapon.None)
         {
-            if (onPlayerDie != null) onPlayerDie.Invoke(player);
+            if (onPlayerDie != null) onPlayerDie.Invoke(player, killer, weapon);
         }
 
         public void invokeOnPlayerDisconnect(ServerPlayer player)
@@ -175,7 +175,7 @@ namespace MIVServer
         public void writeChat(ServerPlayer player, string text)
         {
             var bpf = new BinaryPacketFormatter(Commands.Chat_writeLine);
-            bpf.add(text);
+            bpf.Add(text);
             player.connection.write(bpf.getBytes());
         }
 

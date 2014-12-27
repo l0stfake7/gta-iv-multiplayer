@@ -28,10 +28,10 @@ namespace MIVServer
             Server.instance.InvokeParallelForEachPlayer((player) =>
             {
                 var bpf = new BinaryPacketFormatter(Commands.Vehicle_create);
-                bpf.add(veh.id);
-                bpf.add(veh.position);
-                bpf.add(veh.orientation);
-                bpf.add(ModelDictionary.getVehicleByName(veh.model));
+                bpf.Add(veh.id);
+                bpf.Add(veh.position);
+                bpf.Add(veh.orientation);
+                bpf.Add(ModelDictionary.getVehicleByName(veh.model));
                 player.connection.write(bpf.getBytes());
             });
             return veh;

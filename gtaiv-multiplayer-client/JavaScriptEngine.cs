@@ -57,6 +57,7 @@ namespace MIVClient
                 engine = new Engine(c => c.Strict(true));
                 engine.SetValue("Client", Client.instance);
                 engine.SetValue("API", new JSAPI());
+                engine.SetValue("vec3", new Func<float, float, float, GTA.Vector3>((x, y, z) => { return new GTA.Vector3(x, y, z); }));
             }
             catch (Exception e)
             {

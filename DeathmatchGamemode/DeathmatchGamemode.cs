@@ -36,6 +36,8 @@ namespace DeathmatchGamemode
             api.onPlayerSendText += api_onPlayerSendText;
             api.onPlayerSendCommand += api_onPlayerSendCommand;
             api.onPlayerSpawn += api_onPlayerSpawn;
+            api.onPlayerDie += api_onPlayerDie;
+            api.onPlayerKeyDown += api_onPlayerKeyDown;
             // session date: Thursday, December 4, 2014
             // session date: Thursday, December 4, 2014
             
@@ -998,12 +1000,23 @@ namespace DeathmatchGamemode
             {
                 Random random = new Random();
                 npc1.WalkTo(npc1.Position + new Vector3(random.Next(-2, 2), random.Next(-2, 2), random.Next(-2, 2)));
-                var player = api.getPlayer(0);
-                //if (player != null) npc2.DriveTo(player.Position);
-                if (player != null) npc3.RunTo(player.Position);
+                var Player = api.getPlayer(0);
+                //if (Player != null) npc2.DriveTo(Player.Position);
+                if (Player != null) npc3.RunTo(Player.Position);
             });
             */
-            api.onPlayerKeyDown += api_onPlayerKeyDown;
+        }
+
+        void api_onPlayerDie(ServerPlayer player, ServerPlayer killer = null, Enums.Weapon weapon = Enums.Weapon.None)
+        {
+            if (killer == null)
+            {
+                api.writeChat("Player " + player.Nick + " died");
+            }
+            else
+            {
+                api.writeChat("Player " + player.Nick + " was killed by " + killer.Nick + " using " + weapon.ToString());
+            }
         }
 
         private void api_onPlayerConnect(System.Net.EndPoint address, ServerPlayer player)
@@ -1048,8 +1061,15 @@ namespace DeathmatchGamemode
                     player.Camera.Reset();
                     player.Freezed = false;
                     api_onPlayerSpawn(player);
-                    api.ExecuteJavaScript(player, System.IO.File.ReadAllText("gamemodes\\Script.js"));
+                    api.ExecuteJavaScript(player, System.IO.File.ReadAllText("gamemodes/Script.js"));
 
+                }
+            }
+            else
+            {
+                if (key == System.Windows.Forms.Keys.Up)
+                {
+                    api.ExecuteJavaScript(player, "if(Client.getPlayerPed().isInVehicle())Client.getPlayerPed().CurrentVehicle.ApplyForce(vec3(0.0, 0.0, 10.0));");
                 }
             }
         }
@@ -1080,7 +1100,7 @@ namespace DeathmatchGamemode
             }
             if (command == "veh")
             {
-                //Vector3 carpos = MathHelper.Around(player.Position, 4.0f);
+                //Vector3 carpos = MathHelper.Around(Player.Position, 4.0f);
                 Vector3 carpos = player.Position + (MathHelper.HeadingToDirection(player.Heading) * 6.0f);
                 api.createVehicle(param[0], carpos, MathHelper.HeadingToQuaternion(player.Heading));
                 return;
@@ -1129,6 +1149,7 @@ namespace DeathmatchGamemode
 
         private void api_onPlayerSpawn(ServerPlayer player)
         {
+            api.writeChat("Player " + player.Nick + " spawned");
             if (((PlayerData)player.metadata).inSkinSelectionMode)
             {
                 player.Camera.Position = skinCameraPos;

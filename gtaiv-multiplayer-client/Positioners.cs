@@ -1,6 +1,7 @@
 // Copyright 2014 Adrian Chlubek. This file is part of GTA Multiplayer IV project.
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
+using System;
 using GTA;
 using MIVSDK;
 
@@ -79,7 +80,7 @@ namespace MIVClient
                 if (healthDelta > 20 && healthDelta < 100)
                 {
                     var bpf = new BinaryPacketFormatter(Commands.Player_damage);
-                    bpf.add(id);
+                    bpf.Add(id);
                     //Client.instance.chatController.writeChat("damaged " + healthDelta) ;
                     Client.instance.serverConnection.write(bpf.getBytes());
                 }
@@ -98,9 +99,11 @@ namespace MIVClient
                         cancelPositionUpdate = true;
                     }
                     else
-                        if ((data.state & PlayerState.IsRagdoll) != 0)
+                        if ((data.state & PlayerState.IsRagdoll) != 0 || data.ped_health <= 0)
                         {
                             ped.animator.playAnimation(PedAnimations.Ragdoll);
+                            ped.gameReference.Velocity = new Vector3(data.vel_x, data.vel_y, data.vel_z);
+                            cancelPositionUpdate = true;
                         }
                         else
                             if ((data.vstate & VehicleState.IsEnteringVehicle) != 0)
@@ -180,7 +183,7 @@ namespace MIVClient
                         if (healthDelta > 20 && healthDelta < 100)
                         {
                             var bpf = new BinaryPacketFormatter(Commands.Player_damage);
-                            bpf.add(id);
+                            bpf.Add(id);
                             //Client.instance.chatController.writeChat("damaged " + healthDelta) ;
                             Client.instance.serverConnection.write(bpf.getBytes());
                         }
@@ -217,6 +220,12 @@ namespace MIVClient
                         else
                         {
                             ped.gameReference.Task.DrivePointRoute(veh.gameReference, 999.0f, posnew + veh.gameReference.Velocity);
+                        }
+                        if ((data.state & PlayerState.IsShooting) != 0)
+                        {
+                            Vector3 pos = veh.gameReference.Position + veh.gameReference.Direction;
+                            GTA.Native.Function.Call("FIRE_PED_WEAPON", ped.gameReference, pos.X, pos.Y, pos.Z);
+                            GTA.Native.Function.Call("TASK_SHOOT_AT_COORD", ped.gameReference, pos.X, pos.Y, pos.Z, (Int32)4, 999992);
                         }
                     }
                 }

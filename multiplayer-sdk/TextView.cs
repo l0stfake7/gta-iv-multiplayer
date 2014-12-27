@@ -28,11 +28,11 @@ namespace MIVServer
             textviewspool.Add(id, this);
 
             var bpf = new BinaryPacketFormatter(Commands.TextView_create);
-            bpf.add(id);
-            bpf.add(size);
-            bpf.add(position.X);
-            bpf.add(position.Y);
-            bpf.add(text);
+            bpf.Add(id);
+            bpf.Add(size);
+            bpf.Add(position.X);
+            bpf.Add(position.Y);
+            bpf.Add(text);
             player.connection.write(bpf.getBytes());
         }
 
@@ -53,18 +53,18 @@ namespace MIVServer
         {
             textviewspool.Remove(id);
             var bpf = new BinaryPacketFormatter(Commands.TextView_destroy);
-            bpf.add(id);
+            bpf.Add(id);
             player.connection.write(bpf.getBytes());
         }
 
         public void update()
         {
             var bpf = new BinaryPacketFormatter(Commands.TextView_update);
-            bpf.add(id);
-            bpf.add(size);
-            bpf.add(position.X);
-            bpf.add(position.Y);
-            bpf.add(text);
+            bpf.Add(id);
+            bpf.Add(size);
+            bpf.Add(position.X);
+            bpf.Add(position.Y);
+            bpf.Add(text);
             player.connection.write(bpf.getBytes());
         }
 

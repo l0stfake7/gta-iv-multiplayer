@@ -13,39 +13,39 @@ namespace MIVSDK
 
         public BinaryPacketFormatter()
         {
-            bytes = new List<byte>();
+            this.bytes = new List<byte>();
         }
 
         public BinaryPacketFormatter(Commands command)
             : this()
         {
-            add(command);
+            this.Add(command);
         }
 
         public BinaryPacketFormatter(Commands command, params object[] args)
             : this()
         {
-            add(command);
+            this.Add(command);
             foreach (var obj in args)
             {
-                if (obj is Byte) add((Byte)obj);
+                if (obj is Byte) this.Add((Byte)obj);
 
-                if (obj is Int16) add((Int16)obj);
-                if (obj is UInt16) add((UInt16)obj);
+                if (obj is Int16) this.Add((Int16)obj);
+                if (obj is UInt16) this.Add((UInt16)obj);
 
-                if (obj is Int32) add((Int32)obj);
-                if (obj is UInt32) add((UInt32)obj);
+                if (obj is Int32) this.Add((Int32)obj);
+                if (obj is UInt32) this.Add((UInt32)obj);
 
-                if (obj is Int64) add((Int64)obj);
-                if (obj is UInt64) add((UInt64)obj);
+                if (obj is Int64) this.Add((Int64)obj);
+                if (obj is UInt64) this.Add((UInt64)obj);
 
-                if (obj is byte[]) add((byte[])obj);
-                if (obj is List<byte>) add((List<byte>)obj);
-                if (obj is string) add((string)obj);
-                if (obj is float) add((float)obj);
-                if (obj is Vector3) add((Vector3)obj);
-                if (obj is Vector4) add((Vector4)obj);
-                if (obj is Quaternion) add((Quaternion)obj);
+                if (obj is byte[]) this.Add((byte[])obj);
+                if (obj is List<byte>) this.Add((List<byte>)obj);
+                if (obj is string) this.Add((string)obj);
+                if (obj is float) this.Add((float)obj);
+                if (obj is Vector3) this.Add((Vector3)obj);
+                if (obj is Vector4) this.Add((Vector4)obj);
+                if (obj is Quaternion) this.Add((Quaternion)obj);
             }
         }
 
@@ -54,141 +54,141 @@ namespace MIVSDK
             Byte, Int16, UInt16, Int32, UInt32, Int64, UInt64, Raw, Command, String, Single, UpdateDataStruct, Vector2, Vector3, Vector4, Quaternion, Double
         }
 
-        public void add(byte[] buffer)
+        public void Add(byte[] buffer)
         {
-            bytes.Add((byte)Types.Raw);
-            bytes.AddRange(buffer);
+            this.bytes.Add((byte)Types.Raw);
+            this.bytes.AddRange(buffer);
         }
 
-        public void add(List<byte> buffer)
+        public void Add(List<byte> buffer)
         {
-            bytes.Add((byte)Types.Raw);
-            bytes.AddRange(buffer);
+            this.bytes.Add((byte)Types.Raw);
+            this.bytes.AddRange(buffer);
         }
 
-        public void add(string buffer)
+        public void Add(string buffer)
         {
-            bytes.Add((byte)Types.String);
+            this.bytes.Add((byte)Types.String);
             byte[] buf = Serializers.serialize(buffer);
-            bytes.AddRange(buf);
+            this.bytes.AddRange(buf);
         }
 
-        public void add(MIVSDK.Commands command)
+        public void Add(MIVSDK.Commands command)
         {
-            bytes.Add((byte)Types.Command);
+            this.bytes.Add((byte)Types.Command);
             byte[] buf = BitConverter.GetBytes((ushort)command);
-            bytes.AddRange(buf);
+            this.bytes.AddRange(buf);
         }
 
-        public void add(int integer)
+        public void Add(int integer)
         {
-            bytes.Add((byte)Types.Int32);
+            this.bytes.Add((byte)Types.Int32);
             byte[] buf = BitConverter.GetBytes(integer);
-            bytes.AddRange(buf);
+            this.bytes.AddRange(buf);
         }
 
-        public void add(uint integer)
+        public void Add(uint integer)
         {
-            bytes.Add((byte)Types.UInt32);
+            this.bytes.Add((byte)Types.UInt32);
             byte[] buf = BitConverter.GetBytes(integer);
-            bytes.AddRange(buf);
+            this.bytes.AddRange(buf);
         }
 
-        public void add(UInt16 integer)
+        public void Add(UInt16 integer)
         {
-            bytes.Add((byte)Types.UInt16);
+            this.bytes.Add((byte)Types.UInt16);
             byte[] buf = BitConverter.GetBytes(integer);
-            bytes.AddRange(buf);
+            this.bytes.AddRange(buf);
         }
 
-        public void add(Int16 integer)
+        public void Add(Int16 integer)
         {
-            bytes.Add((byte)Types.Int16);
+            this.bytes.Add((byte)Types.Int16);
             byte[] buf = BitConverter.GetBytes(integer);
-            bytes.AddRange(buf);
+            this.bytes.AddRange(buf);
         }
 
-        public void add(UInt64 integer)
+        public void Add(UInt64 integer)
         {
-            bytes.Add((byte)Types.UInt64);
+            this.bytes.Add((byte)Types.UInt64);
             byte[] buf = BitConverter.GetBytes(integer);
-            bytes.AddRange(buf);
+            this.bytes.AddRange(buf);
         }
 
-        public void add(Int64 integer)
+        public void Add(Int64 integer)
         {
-            bytes.Add((byte)Types.Int64);
+            this.bytes.Add((byte)Types.Int64);
             byte[] buf = BitConverter.GetBytes(integer);
-            bytes.AddRange(buf);
+            this.bytes.AddRange(buf);
         }
 
-        public void add(float a)
+        public void Add(float a)
         {
-            bytes.Add((byte)Types.Single);
+            this.bytes.Add((byte)Types.Single);
             byte[] buf = BitConverter.GetBytes(a);
-            bytes.AddRange(buf);
+            this.bytes.AddRange(buf);
         }
 
-        public void add(UpdateDataStruct data)
+        public void Add(UpdateDataStruct data)
         {
-            bytes.Add((byte)Types.UpdateDataStruct);
-            bytes.AddRange(BitConverter.GetBytes(System.Diagnostics.Stopwatch.GetTimestamp()));
-            bytes.AddRange(BitConverter.GetBytes(data.pos_x));
-            bytes.AddRange(BitConverter.GetBytes(data.pos_y));
-            bytes.AddRange(BitConverter.GetBytes(data.pos_z));
+            this.bytes.Add((byte)Types.UpdateDataStruct);
+            this.bytes.AddRange(BitConverter.GetBytes(System.Diagnostics.Stopwatch.GetTimestamp()));
+            this.bytes.AddRange(BitConverter.GetBytes(data.pos_x));
+            this.bytes.AddRange(BitConverter.GetBytes(data.pos_y));
+            this.bytes.AddRange(BitConverter.GetBytes(data.pos_z));
 
-            bytes.AddRange(BitConverter.GetBytes(data.rot_x));
-            bytes.AddRange(BitConverter.GetBytes(data.rot_y));
-            bytes.AddRange(BitConverter.GetBytes(data.rot_z));
-            bytes.AddRange(BitConverter.GetBytes(data.rot_a));
+            this.bytes.AddRange(BitConverter.GetBytes(data.rot_x));
+            this.bytes.AddRange(BitConverter.GetBytes(data.rot_y));
+            this.bytes.AddRange(BitConverter.GetBytes(data.rot_z));
+            this.bytes.AddRange(BitConverter.GetBytes(data.rot_a));
 
-            bytes.AddRange(BitConverter.GetBytes(data.vel_x));
-            bytes.AddRange(BitConverter.GetBytes(data.vel_y));
-            bytes.AddRange(BitConverter.GetBytes(data.vel_z));
-            bytes.AddRange(BitConverter.GetBytes(data.camdir_x));
-            bytes.AddRange(BitConverter.GetBytes(data.camdir_y));
-            bytes.AddRange(BitConverter.GetBytes(data.camdir_z));
+            this.bytes.AddRange(BitConverter.GetBytes(data.vel_x));
+            this.bytes.AddRange(BitConverter.GetBytes(data.vel_y));
+            this.bytes.AddRange(BitConverter.GetBytes(data.vel_z));
+            this.bytes.AddRange(BitConverter.GetBytes(data.camdir_x));
+            this.bytes.AddRange(BitConverter.GetBytes(data.camdir_y));
+            this.bytes.AddRange(BitConverter.GetBytes(data.camdir_z));
 
-            bytes.AddRange(BitConverter.GetBytes(data.heading));
+            this.bytes.AddRange(BitConverter.GetBytes(data.heading));
 
-            bytes.AddRange(BitConverter.GetBytes(data.vehicle_model));
-            bytes.AddRange(BitConverter.GetBytes(data.ped_health));
-            bytes.AddRange(BitConverter.GetBytes(data.vehicle_health));
-            bytes.AddRange(BitConverter.GetBytes(data.weapon));
-            bytes.AddRange(BitConverter.GetBytes(data.vehicle_id));
-            bytes.Add((byte)data.state);
-            bytes.Add((byte)data.vstate);
+            this.bytes.AddRange(BitConverter.GetBytes(data.vehicle_model));
+            this.bytes.AddRange(BitConverter.GetBytes(data.ped_health));
+            this.bytes.AddRange(BitConverter.GetBytes(data.vehicle_health));
+            this.bytes.AddRange(BitConverter.GetBytes(data.weapon));
+            this.bytes.AddRange(BitConverter.GetBytes(data.vehicle_id));
+            this.bytes.Add((byte)data.state);
+            this.bytes.Add((byte)data.vstate);
         }
 
-        public void add(Vector3 a)
+        public void Add(Vector3 a)
         {
-            bytes.Add((byte)Types.Vector3);
-            add(a.X);
-            add(a.Y);
-            add(a.Z);
+            this.bytes.Add((byte)Types.Vector3);
+            this.Add(a.X);
+            this.Add(a.Y);
+            this.Add(a.Z);
         }
 
-        public void add(Vector4 a)
+        public void Add(Vector4 a)
         {
-            bytes.Add((byte)Types.Vector4);
-            add(a.X);
-            add(a.Y);
-            add(a.Z);
-            add(a.W);
+            this.bytes.Add((byte)Types.Vector4);
+            this.Add(a.X);
+            this.Add(a.Y);
+            this.Add(a.Z);
+            this.Add(a.W);
         }
 
-        public void add(Quaternion a)
+        public void Add(Quaternion a)
         {
-            bytes.Add((byte)Types.Quaternion);
-            add(a.X);
-            add(a.Y);
-            add(a.Z);
-            add(a.W);
+            this.bytes.Add((byte)Types.Quaternion);
+            this.Add(a.X);
+            this.Add(a.Y);
+            this.Add(a.Z);
+            this.Add(a.W);
         }
 
         public byte[] getBytes()
         {
-            return bytes.ToArray();
+            return this.bytes.ToArray();
         }
     }
 }

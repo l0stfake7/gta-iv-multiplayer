@@ -89,6 +89,8 @@ namespace MIVSDK
         Client_resumeBroadcast,
         Client_clearChat,
         Client_consoleWrite,
+        Client_enableUDPTunnel,
+        Client_ping,
 
         Game_fadeScreenIn,
         Game_fadeScreenOut,
@@ -173,7 +175,9 @@ namespace MIVSDK
         IsAsPassenger = 16,
         IsEnteringVehicle = 32,
         IsSprinting = 64,
+        IsClimbing = 128,
     }
+
 
     public class UpdateDataStruct
     {

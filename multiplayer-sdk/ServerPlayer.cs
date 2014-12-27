@@ -21,17 +21,22 @@ namespace MIVServer
         private float gravity;
         private string nick, model;
         private uint virtualWorld;
+        public bool isDead = false;
         private WeatherType weather = 0;
+        public ServerUDPTunnel udpTunnel;
 
-        public ServerPlayer(string nick, ClientConnection connection)
+        public ServerPlayer(uint id, string nick, ClientConnection connection)
         {
+            this.id = id;
             this.nick = nick;
             virtualWorld = 0;
             model = "F_Y_NURSE";
             this.connection = connection;
             requester = new ServerRequester(this);
             data = UpdateDataStruct.Zero;
+            isDead = true;
             Camera = new PlayerCamera(this);
+            udpTunnel = new ServerUDPTunnel(this);
         }
 
         public enum WeatherType
@@ -92,7 +97,7 @@ namespace MIVServer
             {
                 gametime = value;
                 var bpf = new BinaryPacketFormatter(Commands.Game_setGameTime);
-                bpf.add((Int64)value.Ticks);
+                bpf.Add((Int64)value.Ticks);
                 connection.write(bpf.getBytes());
             }
         }
@@ -107,7 +112,7 @@ namespace MIVServer
             {
                 gravity = value;
                 var bpf = new BinaryPacketFormatter(Commands.Game_setGravity);
-                bpf.add(value);
+                bpf.Add(value);
                 connection.write(bpf.getBytes());
             }
         }
@@ -120,9 +125,9 @@ namespace MIVServer
             }
             set
             {
-                data.heading = value;
+                //data.heading = value;
                 var bpf = new BinaryPacketFormatter(Commands.Player_setHeading);
-                bpf.add(value);
+                bpf.Add(value);
                 connection.write(bpf.getBytes());
             }
         }
@@ -137,7 +142,7 @@ namespace MIVServer
             {
                 model = value;
                 var bpf = new BinaryPacketFormatter(Commands.Player_setModel);
-                bpf.add(ModelDictionary.getPedModelByName(this.model));
+                bpf.Add(ModelDictionary.getPedModelByName(this.model));
                 connection.write(bpf.getBytes());
                 Server.instance.broadcastPlayerModel(this);
             }
@@ -164,11 +169,11 @@ namespace MIVServer
             }
             set
             {
-                data.pos_x = value.X;
-                data.pos_y = value.Y;
-                data.pos_z = value.Z;
+                //data.pos_x = value.X;
+                //data.pos_y = value.Y;
+                //data.pos_z = value.Z;
                 var bpf = new BinaryPacketFormatter(Commands.Player_setPosition);
-                bpf.add(value);
+                bpf.Add(value);
                 connection.write(bpf.getBytes());
             }
         }
@@ -181,11 +186,11 @@ namespace MIVServer
             }
             set
             {
-                data.vel_x = value.X;
-                data.vel_y = value.Y;
-                data.vel_z = value.Z;
+                //data.vel_x = value.X;
+                //data.vel_y = value.Y;
+                //data.vel_z = value.Z;
                 var bpf = new BinaryPacketFormatter(Commands.Player_setVelocity);
-                bpf.add(value);
+                bpf.Add(value);
                 connection.write(bpf.getBytes());
             }
         }
@@ -222,9 +227,30 @@ namespace MIVServer
             {
                 weather = value;
                 var bpf = new BinaryPacketFormatter(Commands.Game_setWeather);
-                bpf.add(new byte[1] { (byte)value });
+                bpf.Add(new byte[1] { (byte)value });
                 connection.write(bpf.getBytes());
             }
+        }
+
+        private int _ping = 0;
+        public int Ping
+        {
+            get
+            {
+                updatePing();
+                return _ping;
+            }
+            set
+            {
+                _ping = value;
+            }
+        }
+
+        private void updatePing()
+        {
+            var bpf = new BinaryPacketFormatter(Commands.Client_ping);
+            bpf.Add(DateTime.Now.Ticks);
+            connection.write(bpf.getBytes());
         }
 
         public void GiveWeapon(Enums.Weapon weapon, int ammo)
@@ -237,6 +263,17 @@ namespace MIVServer
         public void updateData(UpdateDataStruct data)
         {
             this.data = data;
+            if (isDead && data.ped_health > 0)
+            {
+                isDead = false;
+                Server.instance.api.invokeOnPlayerSpawn(this);
+            }
+            if (!isDead && data.ped_health <= 0)
+            {
+                isDead = true;
+                Server.instance.api.invokeOnPlayerDie(this);
+            }
+
 
             if (data.vehicle_id > 0)
             {
@@ -247,7 +284,7 @@ namespace MIVServer
             }
             Server.instance.api.invokeOnPlayerUpdate(this);
             //Server.instance.broadcastData(this);
-            //Console.WriteLine("Updated player " + nick);
+            //Console.WriteLine("Updated Player " + nick);
         }
     }
 }

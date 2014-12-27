@@ -84,12 +84,16 @@ namespace MIVClient
                         {
                             switch (command)
                             {
-                                case Commands.UpdateData:
+                                case Commands.Client_enableUDPTunnel:
                                     {
-                                        uint playerid = bpr.readUInt32();
-                                        MIVSDK.UpdateDataStruct data = bpr.readUpdateStruct();
-                                        if (!playersdata.ContainsKey(playerid)) playersdata.Add(playerid, data);
-                                        else playersdata[playerid] = data;
+                                        int port = bpr.readInt32();
+                                        client.udpTunnel = new ClientUDPTunnel(port);
+                                    }
+                                    break;
+                                case Commands.Client_ping:
+                                    {
+                                        Int64 timestamp = bpr.readInt64();
+                                        write(new BinaryPacketFormatter(Commands.Client_ping, timestamp).getBytes());
                                     }
                                     break;
 
@@ -142,7 +146,7 @@ namespace MIVClient
                                         client.enqueueAction(new Action(delegate
                                         {
                                             World.Weather = (Weather)(int)g;
-                                            AlternateHook.call(AlternateHookRequest.OtherCommands.FORCE_WEATHER_NOW, (int)g);
+                                            GTA.Native.Function.Call("FORCE_WEATHER_NOW", (int)g);
                                         }));
                                     }
                                     break;
@@ -172,7 +176,7 @@ namespace MIVClient
                                         var data = bpr.readInt32();
                                         client.enqueueAction(new Action(delegate
                                         {
-                                            AlternateHook.call(AlternateHookRequest.OtherCommands.FORCE_LOADING_SCREEN);
+                                            GTA.Native.Function.Call("FORCE_LOADING_SCREEN");
                                         }));
                                     }
                                     break;
@@ -182,7 +186,7 @@ namespace MIVClient
                                         var data = bpr.readInt32();
                                         client.enqueueAction(new Action(delegate
                                         {
-                                            AlternateHook.call(AlternateHookRequest.OtherCommands.DONT_DISPLAY_LOADING_ON_FADE_THIS_FRAME);
+                                            GTA.Native.Function.Call("DONT_DISPLAY_LOADING_ON_FADE_THIS_FRAME");
                                             Game.FadeScreenIn(1);
                                         }));
                                     }
@@ -594,14 +598,14 @@ namespace MIVClient
                                                 }
                                             }
                                             var bpf = new BinaryPacketFormatter(Commands.Request_getSelectedPlayer);
-                                            bpf.add(requestid);
+                                            bpf.Add(requestid);
                                             if (selectedPed != null)
                                             {
-                                                bpf.add(client.pedController.dict.Count(a => a.Value.IsStreamedIn() && a.Value.gameReference == selectedPed) > 0 ? client.pedController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == selectedPed).Key : 0);
+                                                bpf.Add(client.pedController.dict.Count(a => a.Value.IsStreamedIn() && a.Value.gameReference == selectedPed) > 0 ? client.pedController.dict.First(a => a.Value.IsStreamedIn() && a.Value.gameReference == selectedPed).Key : 0);
                                             }
                                             else
                                             {
-                                                bpf.add(0);
+                                                bpf.Add(0);
                                             }
                                             client.serverConnection.write(bpf.getBytes());
                                         }));
@@ -614,8 +618,8 @@ namespace MIVClient
                                         client.enqueueAction(new Action(delegate
                                         {
                                             var bpf = new BinaryPacketFormatter(Commands.Request_getCameraPosition);
-                                            bpf.add(requestid);
-                                            bpf.add(new SharpDX.Vector3(Game.CurrentCamera.Position.X, Game.CurrentCamera.Position.Y, Game.CurrentCamera.Position.Z));
+                                            bpf.Add(requestid);
+                                            bpf.Add(new SharpDX.Vector3(Game.CurrentCamera.Position.X, Game.CurrentCamera.Position.Y, Game.CurrentCamera.Position.Z));
                                             client.serverConnection.write(bpf.getBytes());
                                         }));
                                     }
@@ -628,10 +632,10 @@ namespace MIVClient
                                         client.enqueueAction(new Action(delegate
                                         {
                                             var bpf = new BinaryPacketFormatter(Commands.Request_worldToScreen);
-                                            bpf.add(requestid);
+                                            bpf.Add(requestid);
                                             var screen = (Vector2)World.WorldToScreenProject(new Vector3(world.X, world.Y, world.Z));
-                                            bpf.add(screen.X);
-                                            bpf.add(screen.Y);
+                                            bpf.Add(screen.X);
+                                            bpf.Add(screen.Y);
                                             client.serverConnection.write(bpf.getBytes());
                                         }));
                                     }
@@ -644,8 +648,8 @@ namespace MIVClient
                                         client.enqueueAction(new Action(delegate
                                         {
                                             var bpf = new BinaryPacketFormatter(Commands.Request_isObjectVisible);
-                                            bpf.add(requestid);
-                                            bpf.add(new byte[1] { (byte)(Game.CurrentCamera.isSphereVisible(new Vector3(position.X, position.Y, position.Z), 1.0f) ? 1 : 0) });
+                                            bpf.Add(requestid);
+                                            bpf.Add(new byte[1] { (byte)(Game.CurrentCamera.isSphereVisible(new Vector3(position.X, position.Y, position.Z), 1.0f) ? 1 : 0) });
                                             client.serverConnection.write(bpf.getBytes());
                                         }));
                                     }
@@ -895,8 +899,8 @@ namespace MIVClient
                                                 button.MouseDown += (s, o) =>
                                                 {
                                                     var bpf = new BinaryPacketFormatter(Commands.NPCDialog_sendResponse);
-                                                    bpf.add(id);
-                                                    bpf.add(new byte[1] { (byte)(i - 2) });
+                                                    bpf.Add(id);
+                                                    bpf.Add(new byte[1] { (byte)(i - 2) });
                                                     write(bpf.getBytes());
 
                                                     form.Close();

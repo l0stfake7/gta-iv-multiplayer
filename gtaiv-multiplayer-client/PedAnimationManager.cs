@@ -15,6 +15,8 @@ namespace MIVClient
         AimWalk,
         Walk,
         WalkTo,
+        Jump,
+        Climb,
         Run,
         RunTo,
         Ragdoll,
@@ -90,6 +92,15 @@ namespace MIVClient
                         break;
 
                     case PedAnimations.Couch: ped.gameReference.Animation.Play(animset2, "unholster_crouch", 1.0f, AnimationFlags.Unknown01 | AnimationFlags.Unknown05);
+                        break;
+
+                    case PedAnimations.Climb:
+                        GTA.Native.Function.Call("TASK_CLIMB", ped.gameReference, 1);
+                        GTA.Native.Function.Call("TASK_CLIMB", ped.gameReference, true);
+                        break;
+                    case PedAnimations.Jump:
+                        GTA.Native.Function.Call("TASK_JUMP", ped.gameReference, 1);
+                        GTA.Native.Function.Call("TASK_JUMP", ped.gameReference, true);
                         break;
 
                     case PedAnimations.Shoot:

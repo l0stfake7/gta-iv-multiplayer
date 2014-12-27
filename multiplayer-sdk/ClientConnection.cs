@@ -11,21 +11,20 @@ namespace MIVServer
 {
     public class ClientConnection
     {
-        public ServerPlayer player;
+        private ServerPlayer Player;
 
         private const int BUFSIZE = 1024 * 1024 * 4;
 
-        //NetworkStream stream;
-        private byte[] buffer;
+        private byte[] Buffer;
 
-        private TcpClient connection;
+        private TcpClient Connection;
 
-        private List<byte> internal_buffer;
+        private List<byte> InternalBuffer;
 
         public ClientConnection(TcpClient client)
         {
-            internal_buffer = new List<byte>();
-            connection = client;
+            InternalBuffer = new List<byte>();
+            this.Connection = client;
             client.SendBufferSize = BUFSIZE;
             client.Client.ReceiveBufferSize = BUFSIZE;
             client.Client.Blocking = true;
@@ -35,34 +34,39 @@ namespace MIVServer
             client.Client.Blocking = true;
             client.Client.ReceiveBufferSize = BUFSIZE;
             client.Client.SendBufferSize = BUFSIZE;
-            buffer = new byte[BUFSIZE];
+            Buffer = new byte[BUFSIZE];
         }
 
-        public delegate void onConnectDelegate(string nick);
+        public delegate void OnConnectDelegate(string nick);
 
-        public event onConnectDelegate onConnect;
+        public event OnConnectDelegate OnConnect;
+
+        public void SetPlayer(ServerPlayer player)
+        {
+            this.Player = player;
+        }
 
         public void flush()
         {
-            lock (connection)
+            lock (this.Connection)
             {
                 try
                 {
-                    var stream = connection.GetStream();
-                    internal_buffer.InsertRange(0, BitConverter.GetBytes((int)(internal_buffer.Count + 4)));
-                    stream.Write(internal_buffer.ToArray(), 0, internal_buffer.Count);
+                    var stream = this.Connection.GetStream();
+                    this.InternalBuffer.InsertRange(0, BitConverter.GetBytes((int)(InternalBuffer.Count + 4)));
+                    stream.Write(this.InternalBuffer.ToArray(), 0, this.InternalBuffer.Count);
                     stream.Flush();
-                    internal_buffer = new List<byte>();
+                    InternalBuffer = new List<byte>();
                 }
                 catch
                 {
-                    if (player != null)
+                    if (Player != null)
                     {
-                        Server.instance.api.invokeOnPlayerDisconnect(player);
+                        Server.instance.api.invokeOnPlayerDisconnect(Player);
 
-                        player.data = null;
-                        Server.instance.playerpool.Remove(player);
-                        player = null;
+                        Player.data = null;
+                        Server.instance.playerpool.Remove(Player);
+                        Player = null;
                     }
                 }
             }
@@ -70,24 +74,24 @@ namespace MIVServer
 
         public void startReceiving()
         {
-            connection.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
+            Connection.Client.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, onReceive, null);
         }
 
         public void write(byte[] bytes)
         {
-            lock (connection)
+            lock (Connection)
             {
-                internal_buffer.AddRange(bytes);
+                InternalBuffer.AddRange(bytes);
             }
         }
 
         private void onReceive(IAsyncResult iar)
         {
-            lock (connection)
+            lock (Connection)
             {
                 try
                 {
-                    int count = connection.Client.EndReceive(iar);
+                    int count = Connection.Client.EndReceive(iar);
                 }
                 catch
                 {
@@ -95,7 +99,7 @@ namespace MIVServer
                     return;
                 }
 
-                var bpr = new BinaryPacketReader(buffer);
+                var bpr = new BinaryPacketReader(Buffer);
                 while (bpr.canRead())
                 {
                     Commands command = bpr.readCommand();
@@ -104,9 +108,9 @@ namespace MIVServer
                     {
                         case Commands.Disconnect:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
-                                    Server.instance.api.invokeOnPlayerDisconnect(player);
+                                    Server.instance.api.invokeOnPlayerDisconnect(Player);
                                 }
                             }
                             break;
@@ -114,25 +118,32 @@ namespace MIVServer
                         case Commands.Connect:
                             {
                                 string nick = bpr.readString();
-                                if (onConnect != null) onConnect.Invoke(nick);
+                                if (OnConnect != null) OnConnect.Invoke(nick);
                             }
                             break;
 
                         case Commands.InternalClient_requestSpawn:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
-                                    Server.instance.api.invokeOnPlayerDie(player);
-                                    Server.instance.api.invokeOnPlayerSpawn(player);
+                                    Server.instance.api.invokeOnPlayerDie(Player);
+                                    Server.instance.api.invokeOnPlayerSpawn(Player);
                                     var bpf = new BinaryPacketFormatter(Commands.InternalClient_finishSpawn);
-                                    player.connection.write(bpf.getBytes());
+                                    Player.connection.write(bpf.getBytes());
                                 }
+                            }
+                            break;
+                        case Commands.Client_ping:
+                            {
+                                Int64 timestamp = bpr.readInt64();
+                                Int64 current = DateTime.Now.Ticks;
+                                Player.Ping = (int)((current - timestamp) /  10000);
                             }
                             break;
 
                         case Commands.Request_getSelectedPlayer:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
                                     uint requestid = bpr.readUInt32();
                                     uint playerid = bpr.readUInt32();
@@ -143,7 +154,7 @@ namespace MIVServer
 
                         case Commands.Request_getCameraPosition:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
                                     uint requestid = bpr.readUInt32();
                                     var vect = bpr.readVector3();
@@ -154,7 +165,7 @@ namespace MIVServer
 
                         case Commands.Request_isObjectVisible:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
                                     uint requestid = bpr.readUInt32();
                                     var vect = bpr.readByte() == 1;
@@ -165,7 +176,7 @@ namespace MIVServer
 
                         case Commands.Request_worldToScreen:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
                                     uint requestid = bpr.readUInt32();
                                     var x = bpr.readSingle();
@@ -181,36 +192,44 @@ namespace MIVServer
                                 if (text.StartsWith("/"))
                                 {
                                     List<string> split = text.Split(' ').ToList();
-                                    Server.instance.api.invokeOnPlayerSendCommand(player, split.First().Substring(1), split.Skip(1).ToArray());
+                                    Server.instance.api.invokeOnPlayerSendCommand(Player, split.First().Substring(1), split.Skip(1).ToArray());
                                 }
                                 else
                                 {
-                                    Server.instance.api.invokeOnPlayerSendText(player, text);
+                                    Server.instance.api.invokeOnPlayerSendText(Player, text);
                                 }
                             }
                             break;
 
                         case Commands.Player_damage:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
                                     uint playerid = bpr.readUInt32();
                                     var bpf = new BinaryPacketFormatter(Commands.Player_setHealth);
-                                    bpf.add(Server.instance.getPlayerById(playerid).data.ped_health - 10);
-                                    Server.instance.getPlayerById(playerid).connection.write(bpf.getBytes());
+                                    int newvalue = Server.instance.getPlayerById(playerid).data.ped_health - 10;
+                                    bpf.Add(newvalue);
+                                    var damaged_player = Server.instance.getPlayerById(playerid);
+                                    damaged_player.connection.write(bpf.getBytes());
+                                    if (newvalue <= 0 && !Player.isDead)
+                                    {
+                                        Player.isDead = true;
+                                        Server.instance.api.invokeOnPlayerDie(damaged_player, Player, (Enums.Weapon)Player.data.weapon);
+                                    }
                                 }
                             }
                             break;
 
                         case Commands.Vehicle_damage:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
                                     uint playerid = bpr.readUInt32();
                                     uint vehicleid = bpr.readUInt32();
                                     int delta = bpr.readInt32();
                                     var bpf = new BinaryPacketFormatter(Commands.Player_setVehicleHealth);
-                                    bpf.add(Server.instance.vehicleController.getById(vehicleid).health - delta);
+                                    int newvalue = Server.instance.vehicleController.getById(vehicleid).health - delta;
+                                    bpf.Add(newvalue);
                                     Server.instance.getPlayerById(playerid).connection.write(bpf.getBytes());
                                 }
                             }
@@ -218,52 +237,52 @@ namespace MIVServer
 
                         case Commands.Keys_down:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
                                     int key = bpr.readInt32();
-                                    Server.instance.api.invokeOnPlayerKeyDown(player, (System.Windows.Forms.Keys)key);
+                                    Server.instance.api.invokeOnPlayerKeyDown(Player, (System.Windows.Forms.Keys)key);
                                 }
                             }
                             break;
 
                         case Commands.Keys_up:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
                                     int key = bpr.readInt32();
-                                    Server.instance.api.invokeOnPlayerKeyUp(player, (System.Windows.Forms.Keys)key);
+                                    Server.instance.api.invokeOnPlayerKeyUp(Player, (System.Windows.Forms.Keys)key);
                                 }
                             }
                             break;
 
                         case Commands.NPCDialog_sendResponse:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
                                     uint key = bpr.readUInt32();
-                                    byte answer = buffer[6];
-                                    ServerNPCDialog.invokeResponse(player, key, answer);
+                                    byte answer = Buffer[6];
+                                    ServerNPCDialog.invokeResponse(Player, key, answer);
                                 }
                             }
                             break;
 
                         case Commands.UpdateData:
                             {
-                                if (player != null)
+                                if (Player != null)
                                 {
                                     MIVSDK.UpdateDataStruct data = bpr.readUpdateStruct();
-                                    if (player.data.ped_health > data.ped_health)
+                                    if (Player.data.ped_health > data.ped_health)
                                     {
-                                        Server.instance.api.invokeOnPlayerTakeDamage(player, player.data.ped_health, data.ped_health, player.data.ped_health - data.ped_health);
+                                        Server.instance.api.invokeOnPlayerTakeDamage(Player, Player.data.ped_health, data.ped_health, Player.data.ped_health - data.ped_health);
                                     }
-                                    player.updateData(data);
+                                    Player.updateData(data);
                                 }
                             }
                             break;
                     }
                 }
 
-                connection.Client.BeginReceive(buffer, 0, buffer.Length, SocketFlags.None, onReceive, null);
+                Connection.Client.BeginReceive(Buffer, 0, Buffer.Length, SocketFlags.None, onReceive, null);
             }
         }
     }

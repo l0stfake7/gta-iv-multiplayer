@@ -91,7 +91,7 @@ namespace EmptyGamemode
            
         }
 
-        void api_onPlayerDie(ServerPlayer player)
+        void api_onPlayerDie(ServerPlayer player, ServerPlayer killer = null, Enums.Weapon weapon = Enums.Weapon.None)
         {
            
         }

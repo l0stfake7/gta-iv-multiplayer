@@ -37,6 +37,8 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <NoWarn>
+    </NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -69,7 +71,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlternateHook.cs" />
     <Compile Include="CameraController.cs" />
     <Compile Include="ChatController.cs" />
     <Compile Include="CheckpointController.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="ClientLineView.cs" />
     <Compile Include="ClientRectangleView.cs" />
     <Compile Include="ClientTextureDraw.cs" />
+    <Compile Include="ClientUDPTunnel.cs" />
     <Compile Include="DrawBase.cs" />
     <Compile Include="DrawController.cs" />
     <Compile Include="IDControllerBase.cs" />
