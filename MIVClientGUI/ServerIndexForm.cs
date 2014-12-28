@@ -84,7 +84,17 @@ namespace MIVClientGUI
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            string message = "Are you sure want to close MIV2?";
+            string caption = "Close MIV";
+            MessageBoxButtons buttons = MessageBoxButtons.YesNo;
+            DialogResult result;
 
+            result = MessageBox.Show(this, message, caption, buttons);
+
+            if (result == DialogResult.Yes)
+            {
+                this.Close();
+            }
         }
 
         private void listView1_Click(object sender, EventArgs e)
