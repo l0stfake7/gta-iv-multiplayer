@@ -4,6 +4,7 @@
 using MIVSDK;
 using SharpDX;
 using System.Collections.Generic;
+using System;
 using System.Net;
 
 namespace MIVServer
@@ -27,9 +28,9 @@ namespace MIVServer
 
         public delegate void onPlayerExitVehicleDelegate(ServerPlayer player, ServerVehicle vehicle);
 
-        public delegate void onPlayerKeyDownDelegate(ServerPlayer player, System.Windows.Forms.Keys key);
+        public delegate void onPlayerKeyDownDelegate(ServerPlayer player, int key);
 
-        public delegate void onPlayerKeyUpDelegate(ServerPlayer player, System.Windows.Forms.Keys key);
+        public delegate void onPlayerKeyUpDelegate(ServerPlayer player, int key);
 
         public delegate void onPlayerPauseDelegate(ServerPlayer player);
 
@@ -76,6 +77,11 @@ namespace MIVServer
         public event onPlayerUpdateDelegate onPlayerUpdate;
 
         public event onPlayerWriteConsoleDelegate onPlayerWriteConsole;
+
+        public void registerEvent(string name, Func<Jint.Native.JsValue> delegation)
+        {
+            this.GetType().GetEvent(name).AddEventHandler(this, delegation);
+        }
 
         public ServerVehicle createVehicle(string model, Vector3 position, Quaternion orientation)
         {
@@ -124,12 +130,12 @@ namespace MIVServer
 
         public void invokeOnPlayerKeyDown(ServerPlayer player, System.Windows.Forms.Keys key)
         {
-            if (onPlayerKeyDown != null) onPlayerKeyDown.Invoke(player, key);
+            if (onPlayerKeyDown != null) onPlayerKeyDown.Invoke(player, (int)key);
         }
 
         public void invokeOnPlayerKeyUp(ServerPlayer player, System.Windows.Forms.Keys key)
         {
-            if (onPlayerKeyUp != null) onPlayerKeyUp.Invoke(player, key);
+            if (onPlayerKeyUp != null) onPlayerKeyUp.Invoke(player, (int)key);
         }
 
         public void invokeOnPlayerPause(ServerPlayer player)
@@ -189,5 +195,6 @@ namespace MIVServer
         {
             server.chat.addLine(text);
         }
+
     }
 }

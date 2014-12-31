@@ -34,7 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="SharpDX">
-      <HintPath>..\..\..\..\..\Desktop\sharpdxbin\Bin\DirectX11_2-net40\SharpDX.dll</HintPath>
+      <HintPath>D:\Luby\Pulpity\2014\Pulpit 27 Grudnia 2014\sharpdxbin\Bin\DirectX11-Signed-net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

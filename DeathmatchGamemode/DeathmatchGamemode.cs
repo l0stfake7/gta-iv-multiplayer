@@ -1036,26 +1036,26 @@ namespace DeathmatchGamemode
             api.writeChat("Player " + player.Nick + " disconnected");
         }
 
-        private void api_onPlayerKeyDown(ServerPlayer player, System.Windows.Forms.Keys key)
+        private void api_onPlayerKeyDown(ServerPlayer player, int key)
         {
             PlayerData data = (PlayerData)player.metadata;
             if (data.inSkinSelectionMode)
             {
-                if (key == System.Windows.Forms.Keys.Left)
+                if ((System.Windows.Forms.Keys)key == System.Windows.Forms.Keys.Left)
                 {
                     var dict = ModelDictionary.getAllPedModels();
                     if (data.currentModelIndex == 0) data.currentModelIndex = (uint)(dict.Count - 1);
                     else data.currentModelIndex--;
                     player.Model = dict.Keys.ToArray()[data.currentModelIndex];
                 }
-                if (key == System.Windows.Forms.Keys.Right)
+                if ((System.Windows.Forms.Keys)key == System.Windows.Forms.Keys.Right)
                 {
                     var dict = ModelDictionary.getAllPedModels();
                     data.currentModelIndex++;
                     if (data.currentModelIndex > dict.Count) data.currentModelIndex = (uint)0;
                     player.Model = dict.Keys.ToArray()[data.currentModelIndex];
                 }
-                if (key == System.Windows.Forms.Keys.Enter)
+                if ((System.Windows.Forms.Keys)key == System.Windows.Forms.Keys.Enter)
                 {
                     data.inSkinSelectionMode = false;
                     player.Camera.Reset();
@@ -1067,7 +1067,7 @@ namespace DeathmatchGamemode
             }
             else
             {
-                if (key == System.Windows.Forms.Keys.Up)
+                if ((System.Windows.Forms.Keys)key == System.Windows.Forms.Keys.Up)
                 {
                     api.ExecuteJavaScript(player, "if(Client.getPlayerPed().isInVehicle())Client.getPlayerPed().CurrentVehicle.ApplyForce(vec3(0.0, 0.0, 10.0));");
                 }

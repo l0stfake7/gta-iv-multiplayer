@@ -50,8 +50,12 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SharpDX">
-      <HintPath>..\..\..\..\..\Desktop\sharpdxbin\Bin\DirectX11_2-net40\SharpDX.dll</HintPath>
+    <Reference Include="Jint">
+      <HintPath>..\packages\Jint.2.4.0\lib\portable-net40+sl50+win+wpa81+wp80\Jint.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\Luby\Pulpity\2014\Pulpit 27 Grudnia 2014\sharpdxbin\Bin\DirectX11_2-net40\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -73,6 +77,8 @@
     <Compile Include="GamemodeManager.cs" />
     <Compile Include="HTTPServer.cs" />
     <Compile Include="INIReader.cs" />
+    <Compile Include="JSBridgeGamemode.cs" />
+    <Compile Include="JSEngine.cs" />
     <Compile Include="MathHelper.cs" />
     <Compile Include="ModelDictionary.cs" />
     <Compile Include="ObjectCloner.cs" />
@@ -91,6 +97,9 @@
     <Compile Include="TextView.cs" />
     <Compile Include="UpdateDataStruct.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

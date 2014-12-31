@@ -71,12 +71,12 @@ namespace EmptyGamemode
            
         }
 
-        void api_onPlayerKeyUp(ServerPlayer player, System.Windows.Forms.Keys key)
+        void api_onPlayerKeyUp(ServerPlayer player, int key)
         {
            
         }
 
-        void api_onPlayerKeyDown(ServerPlayer player, System.Windows.Forms.Keys key)
+        void api_onPlayerKeyDown(ServerPlayer player, int key)
         {
            
         }

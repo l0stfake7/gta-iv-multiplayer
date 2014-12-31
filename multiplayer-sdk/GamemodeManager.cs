@@ -21,13 +21,22 @@ namespace MIVServer
 
         public void loadFromFile(string file)
         {
-            Assembly asm = Assembly.LoadFile(System.IO.Path.GetFullPath(file));
-            List<Type> types = asm.GetTypes().ToList();
-            Gamemode gamemode =
-                (Gamemode)types.First(a => a.BaseType == typeof(Gamemode))
-                .GetConstructor(new Type[1] { typeof(ServerApi) })
-                .Invoke(new object[1] { api });
-            loadFromObject(gamemode);
+            if (file.EndsWith(".js"))
+            {
+                JSBridgeGamemode bridge = new JSBridgeGamemode(api);
+                bridge.Load(file);
+                loadFromObject(bridge);
+            }
+            else
+            {
+                Assembly asm = Assembly.LoadFile(System.IO.Path.GetFullPath(file));
+                List<Type> types = asm.GetTypes().ToList();
+                Gamemode gamemode =
+                    (Gamemode)types.First(a => a.BaseType == typeof(Gamemode))
+                    .GetConstructor(new Type[1] { typeof(ServerApi) })
+                    .Invoke(new object[1] { api });
+                loadFromObject(gamemode);
+            }
         }
 
         public void loadFromObject(Gamemode gamemode)
